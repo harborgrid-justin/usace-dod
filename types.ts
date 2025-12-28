@@ -1,11 +1,10 @@
-
 export * from './types/common';
 export * from './types/shared_records';
 export * from './types/usace';
 export * from './types/remis';
 export * from './types/financial';
 
-export type AgencyContext = 'ARMY_GFEBS' | 'USACE_CEFMS' | 'USACE_REMIS' | 'OSD_BRAC' | 'OSD_HAP' | 'OSD_LGH' | 'USACE_HAPMIS';
+export type AgencyContext = 'ARMY_GFEBS' | 'USACE_CEFMS' | 'USACE_REMIS' | 'OSD_BRAC' | 'OSD_HAP' | 'OSD_LGH';
 export type UserRole = 'REMIS_APPRAISER' | 'REMIS_REVIEWER' | 'REMIS_APPROVER' | 'REMIS_VIEWER' | string;
 
 /**
@@ -69,44 +68,6 @@ export interface ResponsibleParty {
     proximateCauseAnalysis: string;
     rebuttalReceived: boolean;
     isConfirmed: boolean;
-}
-
-/**
- * Contingency Operations Types
- */
-export interface ContingencyOperation {
-    id: string;
-    name: string;
-    status: 'Planning' | 'Active' | 'Completed';
-    type: string;
-    location: string;
-    fundingSource: 'OCOTF' | 'OHDACA' | 'Base';
-    isBaseFunded: boolean;
-    personnelDeployed: number;
-    executeOrderRef: string;
-    sfisCode: string;
-    cjcsProjectCode: string;
-    baselineCosts: number;
-    incrementalCosts: { personnel: number; operatingSupport: number; investment: number; retrograde: number; reset: number };
-    billableIncrementalCosts: number;
-    costOffsets: { name: string; amount: number }[];
-    incrementalCostsBreakdown: any[];
-    reimbursement: { billed: number; received: number };
-    justificationMaterials: Record<string, JustificationDocStatus>;
-    estimates: { preDeployment: any; budget: any; working: any };
-    linkedThreadIds: string[];
-    ohdacaDetails?: { fadNumber: string; dscaFunding: number; reimbursementRequests: any[] };
-    endDate?: string;
-}
-
-export type JustificationDocStatus = 'Draft' | 'Submitted' | 'Approved';
-export type OHDAReimbursementStatus = 'Pending Validation' | 'Validated' | 'Reimbursed';
-
-export interface ContingencyFinding {
-    finding: string;
-    risk_level: 'Low' | 'Medium' | 'High' | 'Critical';
-    fmr_reference: string;
-    recommendation: string;
 }
 
 /**

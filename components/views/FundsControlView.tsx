@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Gavel, AlertTriangle, Layers, FileWarning } from 'lucide-react';
+import { Gavel, Layers, FileWarning, ArrowLeft } from 'lucide-react';
 import FundControlTree from '../ada/FundControlTree';
 import ViolationManager from '../ada/ViolationManager';
 import { AgencyContext } from '../../types';
@@ -40,7 +39,15 @@ const FundsControlView: React.FC<FundsControlViewProps> = ({ agency }) => {
       </div>
 
       <div className="flex-1 bg-white border border-zinc-200 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] flex flex-col overflow-hidden">
-        {activeTab === 'hierarchy' ? <FundControlTree /> : <ViolationManager />}
+        {activeTab === 'hierarchy' ? (
+          <div className="flex-1 overflow-hidden animate-in fade-in">
+             <FundControlTree />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-hidden animate-in fade-in">
+             <ViolationManager />
+          </div>
+        )}
       </div>
     </div>
   );

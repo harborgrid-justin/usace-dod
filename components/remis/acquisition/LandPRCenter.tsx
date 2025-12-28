@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { acquisitionService } from '../../../services/AcquisitionDataService';
 import { useService } from '../../../hooks/useService';
@@ -22,16 +21,8 @@ const LandPRCenter: React.FC = () => {
 
     return (
         <div className="flex-1 flex flex-col md:flex-row h-full min-h-0 overflow-hidden">
-            <PRSidebar 
-                prs={prs} 
-                selectedId={selectedId} 
-                onSelect={setSelectedId} 
-                onAdd={() => setIsFormOpen(true)} 
-            />
-            <PRDetails 
-                pr={selectedPR || null} 
-                onDelete={(id) => { acquisitionService.updatePR({...selectedPR!, status: 'Awarded'}); }}
-            />
+            <PRSidebar prs={prs} selectedId={selectedId} onSelect={setSelectedId} onAdd={() => setIsFormOpen(true)} />
+            <PRDetails pr={selectedPR || null} onDelete={() => {}} />
             {isFormOpen && <PRFormModal onClose={() => setIsFormOpen(false)} onSubmit={handleCreate} />}
         </div>
     );

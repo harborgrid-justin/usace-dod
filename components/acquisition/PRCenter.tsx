@@ -21,7 +21,7 @@ interface Props {
 const PRCenter: React.FC<Props> = ({ prs }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [isCreating, setIsCreating] = useState(false);
+    const [viewState, setViewState] = useState<'LIST' | 'CREATE'>('LIST');
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const { addToast } = useToast();
 
@@ -34,7 +34,6 @@ const PRCenter: React.FC<Props> = ({ prs }) => {
 
     const handleCertify = (id: string) => {
         const result = IntegrationOrchestrator.certifyPR(id, 'G8_USER_ADMIN', fundsService.getHierarchy());
-        
         if (result.success) {
             addToast(`Financial Success: Commitment posted. ${result.message}`, 'success');
         } else {
@@ -44,24 +43,24 @@ const PRCenter: React.FC<Props> = ({ prs }) => {
 
     const handleCreate = (newPR: PurchaseRequest) => {
         acquisitionService.addPR(newPR);
-        setIsCreating(false);
+        setViewState('LIST');
+        setSelectedId(newPR.id);
         addToast('Purchase Request Created', 'success');
     };
 
-    if (isCreating) {
-        return <PRForm onCancel={() => setIsCreating(false)} onSubmit={handleCreate} />;
+    if (viewState === 'CREATE') {
+        return <PRForm onCancel={() => setViewState('LIST')} onSubmit={handleCreate} />;
     }
 
     return (
         <div className="flex-1 flex flex-col md:flex-row h-full">
-            {/* List Panel */}
             <div className="w-full md:w-[450px] border-r border-zinc-100 flex flex-col bg-zinc-50/30">
                 <div className="p-4 border-b border-zinc-100 space-y-4">
                     <div className="flex justify-between items-center">
                         <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
                             <ShoppingCart size={14}/> Open Requirements
                         </h3>
-                        <button onClick={() => setIsCreating(true)} className="p-1.5 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors">
+                        <button onClick={() => setViewState('CREATE')} className="p-1.5 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors">
                             <Plus size={14}/>
                         </button>
                     </div>
@@ -84,7 +83,7 @@ const PRCenter: React.FC<Props> = ({ prs }) => {
                             className={`w-full text-left p-4 rounded-2xl border transition-all ${
                                 selectedId === pr.id 
                                 ? 'bg-zinc-900 border-zinc-900 text-white shadow-xl scale-[1.01]' 
-                                : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300'
+                                : 'bg-white border-zinc-100 hover:border-zinc-300'
                             }`}
                         >
                             <div className="flex justify-between items-start mb-2">
@@ -110,7 +109,6 @@ const PRCenter: React.FC<Props> = ({ prs }) => {
                 </div>
             </div>
 
-            {/* Detail Panel */}
             <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
                 {selectedPR ? (
                     <div className="p-8 space-y-8 animate-in fade-in">

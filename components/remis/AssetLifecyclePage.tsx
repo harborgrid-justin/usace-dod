@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Building2, Save, History, CheckCircle2 } from 'lucide-react';
 import { RealPropertyAsset } from '../../types';
@@ -16,7 +15,7 @@ const AssetLifecyclePage: React.FC<any> = ({ asset, onBack, onUpdate }) => {
         <div className="flex flex-col h-full bg-zinc-50/50 overflow-hidden animate-in fade-in">
             <div className="bg-white border-b border-zinc-200 px-6 py-6 flex flex-col gap-6 shrink-0 z-20 shadow-sm">
                 <div className="flex justify-between items-center">
-                    <button onClick={onBack} className="text-xs font-bold text-zinc-500 hover:text-zinc-900 uppercase"><ArrowLeft size={16}/></button>
+                    <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 uppercase"><ArrowLeft size={16}/> Back</button>
                     <button onClick={() => onUpdate(formData)} className={`px-6 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg flex items-center gap-2 ${REMIS_THEME.classes.buttonPrimary}`}>
                         <Save size={16}/> Save Protocol
                     </button>

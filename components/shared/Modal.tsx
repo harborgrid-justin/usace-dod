@@ -1,59 +1,73 @@
-
 import React, { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { ArrowLeft, X, ShieldCheck } from 'lucide-react';
 
 interface ModalProps {
   title: string;
   subtitle?: string;
   onClose: () => void;
   children: React.ReactNode;
-  maxWidth?: 'max-w-md' | 'max-w-lg' | 'max-w-2xl' | 'max-w-3xl' | 'max-w-4xl';
+  maxWidth?: string; // Kept for API compatibility but unused in full-page layout
 }
 
+/**
+ * Global Full-Page Workspace Container
+ * Replaces the legacy center-popup modal with a dedicated slide-in workspace.
+ */
 const Modal: React.FC<ModalProps> = ({ 
   title, 
   subtitle, 
   onClose, 
-  children, 
-  maxWidth = 'max-w-lg' 
+  children
 }) => {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEsc);
-    
-    modalRef.current?.focus();
-
+    containerRef.current?.focus();
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 bg-zinc-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div 
-        ref={modalRef}
-        className={`bg-white border border-zinc-200 rounded-2xl w-full ${maxWidth} p-6 shadow-2xl animate-in slide-in-from-top-2 flex flex-col max-h-[90vh] focus:outline-none`}
-        role="dialog"
-        aria-modal="true"
-        tabIndex={-1}
-      >
-        <div className="flex items-center justify-between mb-6 shrink-0">
-          <div>
-            <h3 className="text-lg font-bold text-zinc-900 uppercase tracking-tight">{title}</h3>
-            {subtitle && <p className="text-xs text-zinc-500 mt-0.5">{subtitle}</p>}
-          </div>
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-right duration-300 focus:outline-none"
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+    >
+      {/* Header Bar */}
+      <div className="h-20 bg-zinc-50 border-b border-zinc-200 px-8 flex items-center justify-between shrink-0 shadow-sm">
+        <div className="flex items-center gap-6">
           <button 
             onClick={onClose} 
-            className="p-1 text-zinc-400 hover:text-zinc-800 transition-colors rounded-full hover:bg-zinc-100"
-            aria-label="Close modal"
+            className="p-2.5 bg-white border border-zinc-200 rounded-xl text-zinc-500 hover:text-rose-700 hover:border-rose-200 transition-all shadow-sm active:scale-95 flex items-center gap-2 text-xs font-bold uppercase"
           >
-            <X size={18} />
+            <ArrowLeft size={16} /> Back
           </button>
+          <div>
+            <h3 className="text-xl font-bold text-zinc-900 uppercase tracking-tight">{title}</h3>
+            {subtitle && (
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                <ShieldCheck size={12} className="text-emerald-600"/> {subtitle}
+              </p>
+            )}
+          </div>
         </div>
-        
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+        <button 
+          onClick={onClose} 
+          className="p-2 text-zinc-400 hover:text-zinc-900 transition-colors rounded-full hover:bg-zinc-100"
+          aria-label="Close Workspace"
+        >
+          <X size={20} />
+        </button>
+      </div>
+      
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-8 lg:p-12 bg-zinc-50/20">
+        <div className="max-w-5xl mx-auto">
           {children}
         </div>
       </div>

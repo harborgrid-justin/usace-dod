@@ -1,4 +1,3 @@
-
 import { AuditLogEntry } from './shared_records';
 import { RuleEvaluationResult, GPCStatus, QuarterlyReviewStatus } from './common';
 
@@ -464,6 +463,50 @@ export interface CostTransfer {
     requestedBy: string;
     glTransactionId?: string;
     auditLog: AuditLogEntry[];
+}
+
+// Fix: Added missing OHDAReimbursementStatus and JustificationDocStatus
+export type OHDAReimbursementStatus = 'Pending Validation' | 'Validated' | 'Reimbursed';
+export type JustificationDocStatus = 'Ready' | 'Draft' | 'Required';
+
+/**
+ * Contingency Operation Logic Entity
+ */
+export interface ContingencyOperation {
+    id: string;
+    name: string;
+    status: string;
+    type: string;
+    location: string;
+    fundingSource: 'OHDACA' | 'OCOTF' | 'Base' | string;
+    isBaseFunded: boolean;
+    executeOrderRef: string;
+    sfisCode: string;
+    startDate: string;
+    endDate?: string;
+    baselineCosts: number;
+    billableIncrementalCosts: number;
+    incrementalCosts: {
+        personnel: number;
+        operatingSupport: number;
+        investment: number;
+        retrograde: number;
+        reset: number;
+    };
+    costOffsets: { name: string; amount: number }[];
+    incrementalCostsBreakdown: { id: string; name: string; description: string; isApplicable: boolean; cost?: number }[];
+    ohdacaDetails?: {
+        fadNumber: string;
+        dscaFunding: number;
+        reimbursementRequests: { id: string; amount: number; status: OHDAReimbursementStatus }[];
+    };
+    justificationMaterials: Record<string, JustificationDocStatus>;
+    linkedThreadIds: string[];
+    estimates: {
+        preDeployment?: { cost: number; date: string };
+        budget?: { cost: number; date: string };
+        working?: { cost: number; date: string };
+    };
 }
 
 /**

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavigationTab } from '../../types';
 import RealPropertyDashboard from '../remis/RealPropertyDashboard';
@@ -15,6 +14,8 @@ import RemisAcquisitionView from '../remis/RemisAcquisitionView';
 import InternalControlsDashboard from '../remis/InternalControlsDashboard';
 import RemisReports from '../remis/RemisReports';
 import AnalyticsView from '../views/AnalyticsView';
+// Fix: Corrected import name to REMISAdminView to match component definition
+import REMISAdminView from '../views/REMISAdminView';
 
 const RemisRouter: React.FC<any> = ({ tab, navigate }) => {
     switch (tab) {
@@ -32,6 +33,8 @@ const RemisRouter: React.FC<any> = ({ tab, navigate }) => {
         case NavigationTab.COMPLIANCE: return <InternalControlsDashboard />;
         case NavigationTab.REPORTS: return <RemisReports />;
         case NavigationTab.ANALYTICS: return <AnalyticsView />;
+        // Fix: Changed component name to REMISAdminView
+        case NavigationTab.REMIS_ADMIN: return <REMISAdminView />;
         default: return <RealPropertyDashboard />;
     }
 };

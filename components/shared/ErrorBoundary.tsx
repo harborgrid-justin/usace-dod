@@ -15,13 +15,16 @@ interface State {
  * ErrorBoundary
  * catch-all domain for handling runtime exceptions.
  */
-// Use Component directly to ensure generic types are correctly associated with class members
+/* Fix: Use the explicitly imported Component class to ensure state, setState, and props are correctly identified by TypeScript */
 class ErrorBoundary extends Component<Props, State> {
-  // Explicit state declaration and initialization resolves property lookup issues such as 'state' and 'props'
-  state: State = { 
-    hasError: false, 
-    errorMessage: '' 
-  };
+  // Explicit state initialization ensures 'this.state' is available
+  constructor(props: Props) {
+    super(props);
+    this.state = { 
+      hasError: false, 
+      errorMessage: '' 
+    };
+  }
 
   static getDerivedStateFromError(error: any): State {
     const message = error instanceof Error 
@@ -38,12 +41,12 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleTryAgain = () => {
-    // setState is inherited from Component<Props, State>
+    // setState is inherited from Component
     this.setState({ hasError: false, errorMessage: '' });
   };
 
   render() {
-    // state is inherited from Component<Props, State> and correctly typed via generics
+    // state and props are correctly accessible on this after correctly extending Component
     if (this.state.hasError) {
       return (
         <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 p-8 text-center animate-in fade-in">
@@ -73,7 +76,6 @@ class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    // props is inherited from Component<Props, State> and provides access to children
     return this.props.children;
   }
 }

@@ -1,10 +1,10 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { DWCFActivity, DWCFOrder, DWCFBilling, DWCFBillingStatus } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
 import { ArrowLeft, Plus, ArrowRight, BookOpen } from 'lucide-react';
 import { FMR_V11B_CH3_CONTENT } from '../../utils/fmrContent';
 import UnfundedOrdersManager from './UnfundedOrdersManager';
+import DWCFOrderForm from './DWCFOrderForm'; // Assumed component name for full page form
 
 interface Props {
     activity: DWCFActivity;
@@ -12,16 +12,27 @@ interface Props {
     billings: DWCFBilling[];
     onBack: () => void;
     onSelectOrder: (order: DWCFOrder) => void;
-    onNewOrder: () => void;
+    onAddOrder: (orderData: any) => void;
 }
 
-const DWCFActivityDetail: React.FC<Props> = ({ activity, orders, billings, onBack, onSelectOrder, onNewOrder }) => {
+const DWCFActivityDetail: React.FC<Props> = ({ activity, orders, billings, onBack, onSelectOrder, onAddOrder }) => {
+    const [viewState, setViewState] = useState<'VIEW' | 'CREATE_ORDER'>('VIEW');
     
     const getBilledAmount = (orderId: string) => {
         return billings
             .filter(b => b.orderId === orderId && b.status !== 'Canceled')
             .reduce((sum, b) => sum + b.total, 0);
     };
+
+    if (viewState === 'CREATE_ORDER') {
+        return (
+            <DWCFOrderForm 
+                activityId={activity.id} 
+                onCancel={() => setViewState('VIEW')} 
+                onSubmit={(data) => { onAddOrder(data); setViewState('VIEW'); }} 
+            />
+        );
+    }
 
     return (
         <div className="flex flex-col h-full space-y-6 animate-in slide-in-from-right-4">
@@ -52,7 +63,7 @@ const DWCFActivityDetail: React.FC<Props> = ({ activity, orders, billings, onBac
                     <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
                         <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Customer Orders</h3>
                         <button 
-                            onClick={onNewOrder}
+                            onClick={() => setViewState('CREATE_ORDER')}
                             className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-zinc-800 transition-colors"
                         >
                             <Plus size={12}/> New Order
@@ -99,9 +110,6 @@ const DWCFActivityDetail: React.FC<Props> = ({ activity, orders, billings, onBac
                                         </tr>
                                     );
                                 })}
-                                {orders.length === 0 && (
-                                    <tr><td colSpan={5} className="p-8 text-center text-zinc-400 text-xs">No orders found.</td></tr>
-                                )}
                             </tbody>
                         </table>
                     </div>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useTransition, useDeferredValue } from 'react';
 import { 
     DollarSign, Plus, Trash2, Edit, Save, ArrowLeft, 
-    FileText, Search, AlertTriangle, CheckCircle2, History, CreditCard, ShieldCheck, PlusCircle
+    FileText, Search, AlertTriangle, CheckCircle2, History, CreditCard, ShieldCheck, PlusCircle, Eye
 } from 'lucide-react';
 import { TravelVoucher, TravelOrder, TravelExpense } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
@@ -10,10 +10,12 @@ import { glService } from '../../services/GLDataService';
 import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
 import { useService } from '../../hooks/useService';
 import Badge from '../shared/Badge';
+import { DD1351_2Preview } from './TravelForms';
+import Modal from '../shared/Modal';
 
 const TravelVoucherManager: React.FC<{ orders: TravelOrder[] }> = ({ orders }) => {
     const vouchers = useService(travelService, () => travelService.getVouchers());
-    const [viewMode, setViewMode] = useState<'List' | 'Create' | 'Edit'>('List');
+    const [viewMode, setViewMode] = useState<'List' | 'Create' | 'Edit' | 'Preview'>('List');
     const [currentVoucher, setCurrentVoucher] = useState<TravelVoucher | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const deferredSearch = useDeferredValue(searchTerm);
@@ -34,6 +36,11 @@ const TravelVoucherManager: React.FC<{ orders: TravelOrder[] }> = ({ orders }) =
             setCurrentVoucher({ ...voucher });
             setViewMode('Edit');
         });
+    };
+
+    const handlePreview = (voucher: TravelVoucher) => {
+        setCurrentVoucher(voucher);
+        setViewMode('Preview');
     };
 
     const handleProcessPayment = (voucher: TravelVoucher) => {
@@ -125,19 +132,31 @@ const TravelVoucherManager: React.FC<{ orders: TravelOrder[] }> = ({ orders }) =
 
                             <div className="flex justify-between items-end border-t border-zinc-100 pt-6 mt-6">
                                 <div>
-                                    <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest mb-1">Magnitude</p>
+                                    <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Magnitude</p>
                                     <p className="text-2xl font-mono font-bold text-zinc-900 tracking-tighter">{formatCurrency(voucher.totalClaimed)}</p>
                                 </div>
                                 <div className="flex gap-1.5">
                                     {voucher.status === 'Approved' && (
-                                        <button onClick={() => handleProcessPayment(voucher)} className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 shadow-xl flex items-center gap-2 active:scale-95"><CreditCard size={14}/> Disburse</button>
+                                        <button onClick={() => handleProcessPayment(voucher)} className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 shadow-xl flex items-center gap-2 active:scale-95"><CreditCard size={14}/> Disburse</button>
                                     )}
+                                    <button onClick={() => handlePreview(voucher)} className="p-2.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-xl transition-all shadow-sm"><Eye size={16}/></button>
                                     <button onClick={() => handleEditVoucher(voucher)} className="p-2.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all shadow-sm"><Edit size={16}/></button>
                                     <button onClick={() => travelService.deleteVoucher(voucher.id)} className="p-2.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all shadow-sm"><Trash2 size={16}/></button>
                                 </div>
                             </div>
                         </div>
                     ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (viewMode === 'Preview' && currentVoucher) {
+        return (
+            <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in p-8">
+                <button onClick={() => setViewMode('List')} className="self-start mb-8 flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 uppercase transition-all"><ArrowLeft size={16}/> Back to Registry</button>
+                <div className="max-w-4xl mx-auto w-full flex-1">
+                    <DD1351_2Preview voucher={currentVoucher} />
                 </div>
             </div>
         );

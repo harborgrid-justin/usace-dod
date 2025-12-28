@@ -11,15 +11,16 @@ import MaintenanceManager from '../maintenance/MaintenanceManager';
 
 const AssetLifecycleView: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'ledger' | 'batch' | 'maintenance' | 'config' | 'reports'>('ledger');
+    const [viewState, setViewState] = useState<'LIST' | 'DETAIL'>('LIST');
     const [isPending, startTransition] = useTransition();
     
     const [assets, setAssets] = useState<Asset[]>(MOCK_ASSETS);
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleTabChange = useCallback((id: string) => {
         startTransition(() => {
             setActiveTab(id as any);
+            setViewState('LIST');
         });
     }, []);
 
@@ -29,8 +30,13 @@ const AssetLifecycleView: React.FC = () => {
             if (exists) return prev.map(a => a.id === savedAsset.id ? savedAsset : a);
             return [savedAsset, ...prev];
         });
-        setIsModalOpen(false);
+        setViewState('LIST');
     }, []);
+
+    const handleOpenDetail = (asset: Asset | null) => {
+        setSelectedAsset(asset);
+        setViewState('DETAIL');
+    };
 
     const tabs = useMemo(() => [
         {id: 'ledger', label: 'Asset Ledger'}, 
@@ -72,12 +78,12 @@ const AssetLifecycleView: React.FC = () => {
                                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"/>
                                 <input type="text" placeholder="Search by asset..." className="w-full pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:border-zinc-400 transition-colors"/>
                             </div>
-                            <button onClick={() => { setSelectedAsset(null); setIsModalOpen(true); }} className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-900 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-zinc-800 transition-colors shadow-sm">
+                            <button onClick={() => handleOpenDetail(null)} className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-900 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-zinc-800 transition-colors shadow-sm">
                                 <Plus size={12}/> New Asset
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                            <AssetTable assets={assets} onSelect={(a) => { setSelectedAsset(a); setIsModalOpen(true); }} />
+                            <AssetTable assets={assets} onSelect={(a) => handleOpenDetail(a)} />
                         </div>
                     </div>
                 )}
@@ -87,7 +93,14 @@ const AssetLifecycleView: React.FC = () => {
                 {activeTab === 'config' && <RateConfig />}
                 {activeTab === 'reports' && <AssetReports assets={assets} />}
             </div>
-            {isModalOpen && <AssetDetailModal asset={selectedAsset} onClose={() => setIsModalOpen(false)} onSave={handleSaveAsset} />}
+            
+            {viewState === 'DETAIL' && (
+              <AssetDetailModal 
+                asset={selectedAsset} 
+                onClose={() => setViewState('LIST')} 
+                onSave={handleSaveAsset} 
+              />
+            )}
         </div>
     );
 };

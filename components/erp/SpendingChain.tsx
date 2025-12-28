@@ -32,7 +32,8 @@ const SpendingChain: React.FC<Props> = ({ onSelectThread }) => {
                         <div className="text-center bg-zinc-50 border border-zinc-200 p-2 rounded-lg w-full group-hover:bg-white group-hover:shadow-sm transition-all">
                         <p className="text-[10px] font-bold text-zinc-400 mb-1">{doc.type} Document</p>
                         <p className="text-xs font-mono font-bold text-zinc-800">{doc.docNumber}</p>
-                        <p className="text-[10px] text-zinc-500 mt-1">${(doc.amount/1000).toFixed(0)}k</p>
+                        {/* Fix: Cast amount string to number for arithmetic operation at line 35 */}
+                        <p className="text-[10px] text-zinc-500 mt-1">${(Number(doc.amount)/1000).toFixed(0)}k</p>
                         <div className={`mt-2 text-[9px] font-bold uppercase py-0.5 rounded ${doc.status === 'Blocked' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>{doc.status}</div>
                         </div>
                     </button>

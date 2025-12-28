@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Briefcase, ShoppingCart, Hammer, Gavel } from 'lucide-react';
 import LandPRCenter from './acquisition/LandPRCenter';

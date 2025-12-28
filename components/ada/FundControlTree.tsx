@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ChevronRight, Plus, Edit, AlertTriangle, ShieldCheck, History } from 'lucide-react';
+import { ChevronRight, Plus, Edit, AlertTriangle, ShieldCheck, History, ArrowLeft } from 'lucide-react';
 import { FundControlNode } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
 import FundNodeModal from './FundNodeModal';
@@ -38,7 +37,6 @@ const FundNodeRow = ({
             className={`flex items-stretch border rounded-xl shadow-sm transition-all hover:shadow-md ${riskStyles[risk]}`}
             style={{ marginLeft: `${level * 1.5}rem` }}
         >
-            {/* Left Section: Info & Hierarchy */}
             <div className="p-4 border-r border-zinc-100 flex-grow">
                 <div className="flex justify-between items-start mb-3">
                     <div>
@@ -74,7 +72,6 @@ const FundNodeRow = ({
                 </div>
             </div>
             
-            {/* Right Section: Execution Breakdown */}
             <div className="w-64 p-4 shrink-0 grid grid-rows-4 gap-2">
                 <div className="flex justify-between items-center text-xs">
                     <span className="text-zinc-500 font-medium">Committed</span>
@@ -94,7 +91,6 @@ const FundNodeRow = ({
                 </div>
             </div>
 
-            {/* Actions */}
             <div className="flex flex-col border-l border-zinc-100">
                 {canAddChild && <button onClick={onAddChild} className="flex-1 px-3 text-zinc-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"><Plus size={16}/></button>}
                 <button onClick={onEdit} className="flex-1 px-3 text-zinc-400 hover:bg-amber-50 hover:text-amber-700 transition-colors"><Edit size={16}/></button>
@@ -107,14 +103,31 @@ const FundNodeRow = ({
 const FundControlTree: React.FC = () => {
   const { hierarchy, expandedNodes, toggleExpand, calculateRisk, saveNode, determineNextLevel } = useFundHierarchy();
   
+  const [viewState, setViewState] = useState<'TREE' | 'EDIT' | 'HISTORY'>('TREE');
   const [editingNode, setEditingNode] = useState<FundControlNode | null>(null);
   const [addingChildTo, setAddingChildTo] = useState<FundControlNode | null>(null);
   const [historyNode, setHistoryNode] = useState<FundControlNode | null>(null);
 
   const handleSave = (node: FundControlNode) => {
       saveNode(node);
+      setViewState('TREE');
       setEditingNode(null);
       setAddingChildTo(null);
+  };
+
+  const handleEdit = (node: FundControlNode) => {
+      setEditingNode(node);
+      setViewState('EDIT');
+  };
+
+  const handleAddChild = (parent: FundControlNode) => {
+      setAddingChildTo(parent);
+      setViewState('EDIT');
+  };
+
+  const handleViewHistory = (node: FundControlNode) => {
+      setHistoryNode(node);
+      setViewState('HISTORY');
   };
 
   const renderRecursive = (node: FundControlNode, level: number) => {
@@ -123,9 +136,7 @@ const FundControlTree: React.FC = () => {
       
       return (
           <div key={node.id} className="relative">
-              {/* Vertical Connector */}
               {level > 0 && <div className="absolute top-0 -left-5 h-full w-px bg-zinc-200" />}
-              {/* Horizontal Connector */}
               <div className="absolute top-1/2 -left-5 w-5 h-px bg-zinc-200" />
               
               <div className="flex items-start gap-3">
@@ -138,12 +149,12 @@ const FundControlTree: React.FC = () => {
                   <div className="flex-1">
                       <FundNodeRow 
                           node={node}
-                          level={0} // Indentation is handled by margin instead
+                          level={0}
                           risk={calculateRisk(node)}
                           canAddChild={determineNextLevel(node.level) !== null}
-                          onEdit={() => setEditingNode(node)}
-                          onAddChild={() => setAddingChildTo(node)}
-                          onHistory={() => setHistoryNode(node)}
+                          onEdit={() => handleEdit(node)}
+                          onAddChild={() => handleAddChild(node)}
+                          onHistory={() => handleViewHistory(node)}
                       />
                   </div>
               </div>
@@ -156,24 +167,34 @@ const FundControlTree: React.FC = () => {
       );
   };
 
+  if (viewState === 'EDIT') {
+      return (
+          <FundNodeModal 
+            node={editingNode} 
+            parentNode={addingChildTo}
+            onClose={() => setViewState('TREE')}
+            onSave={handleSave}
+          />
+      );
+  }
+
+  if (viewState === 'HISTORY' && historyNode) {
+      return (
+          <AEAHistoryModal 
+            node={historyNode} 
+            onClose={() => setViewState('TREE')} 
+          />
+      );
+  }
+
   return (
-    <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
+    <div className="flex flex-col h-full overflow-hidden">
+        <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center shrink-0">
             <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Appropriation Expenditure Authority (AEA) Hierarchy</h3>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
             {hierarchy.map(node => renderRecursive(node, 0))}
         </div>
-        
-        {(editingNode || addingChildTo) && (
-            <FundNodeModal 
-                node={editingNode} 
-                parentNode={addingChildTo}
-                onClose={() => { setEditingNode(null); setAddingChildTo(null); }}
-                onSave={handleSave}
-            />
-        )}
-        {historyNode && <AEAHistoryModal node={historyNode} onClose={() => setHistoryNode(null)} />}
     </div>
   );
 };
