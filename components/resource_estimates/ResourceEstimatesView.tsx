@@ -1,9 +1,10 @@
+
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { BarChart3, FileSpreadsheet, Layers, FileText, Landmark, ShieldCheck } from 'lucide-react';
 import REDashboard from './REDashboard';
 import BudgetWorksheet from './BudgetWorksheet';
 import POMBuilder from './POMBuilder';
-// Fix: Changed import for JSheetGenerator to a named import to resolve module resolution error.
+// Fix: Changed to named import
 import { JSheetGenerator } from './JSheetGenerator';
 import { AgencyContext, BudgetLineItem, POMEntry, BusinessLine } from '../../types';
 import { MOCK_POM_ENTRIES, MOCK_BUDGET_LINE_ITEMS } from '../../constants';

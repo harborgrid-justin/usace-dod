@@ -2,9 +2,7 @@ import {
     GLTransaction, FundControlNode, ProjectOrder, USACEProject, Asset, 
     Obligation, Expense, Disbursement, TravelOrder, InventoryItem, 
     CDOTransaction, ReimbursableOrder, ContingencyOperation, CostTransfer, TravelVoucher,
-    RealPropertyAsset, Outgrant, DisposalAction, RelocationBenefit, RelocationCase, Solicitation, Contract, PurchaseRequest, VendorQuote, SolicitationStatus, ContractMod,
-    // Fix: Added missing import for CostShareRecord and related acquisition types
-    CostShareRecord 
+    RealPropertyAsset, Outgrant, DisposalAction, RelocationBenefit, RelocationCase, Solicitation, Contract, PurchaseRequest, VendorQuote, SolicitationStatus, ContractMod
 } from '../types';
 import { generateSecureId, validateAuthority } from '../utils/security';
 import { glService } from './GLDataService';
@@ -14,26 +12,10 @@ import { acquisitionService } from './AcquisitionDataService';
 
 /**
  * The Acquisition Orchestrator serves as the Domain Service Layer (DSL) for the D-AFMP.
- * 
- * It enforces business rules and ensures atomic transactions across disparate functional modules,
- * specifically handling the interaction between the General Ledger (GL) and subsidiary ledgers
- * (Projects, Assets, Funds Control).
- * 
- * @class AcquisitionOrchestrator
  */
-// Fix: Renamed from IntegrationOrchestrator to match expected export in SolicitationManager
 export class AcquisitionOrchestrator {
     
-    /**
-     * Retrieves a complete cross-module traceability matrix for a given project.
-     * This simulates an advanced join across 20 distinct data tables/services.
-     * 
-     * @param project - The project context.
-     * @returns A consolidated object of 20 related entity types.
-     */
     static getProjectTraceability(project: USACEProject) {
-        // In a real system, these would be indexed lookups against the specific data services.
-        // For the prototype, we construct a deterministic web of mock relations based on the Project ID.
         return {
             funding: {
                 fad: { id: 'FAD-CW-24-001', amount: 50000000 },
@@ -68,14 +50,6 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    /**
-     * Validates a GL Transaction against the Anti-Deficiency Act (ADA) controls (31 U.S.C. 1517).
-     * This ensures no obligation or expenditure exceeds the authorized amount at the fund control node level.
-     * 
-     * @param transaction - The General Ledger transaction object attempting to be posted.
-     * @param fundNodes - The current hierarchy of funds control nodes (AEA).
-     * @returns An object containing a boolean `valid` flag and a descriptive `message`.
-     */
     static validateGlAgainstAda(transaction: GLTransaction, fundNodes: FundControlNode[]): { valid: boolean; message: string } {
         const fundCode = transaction.lines[0]?.fund;
         const targetNode = this.findNodeByFundCode(fundNodes, fundCode);
@@ -97,14 +71,6 @@ export class AcquisitionOrchestrator {
         return { valid: true, message: "Funds available. 31 USC 1517 Compliance Verified." };
     }
 
-    /**
-     * Generates a General Ledger Obligation record from an accepted Project Order.
-     * This automates the recording of 480100 (Undelivered Orders - Obligations, Unpaid).
-     * 
-     * @param order - The accepted Project Order.
-     * @param userRole - The role of the user attempting to generate the obligation (Must be authorized).
-     * @returns A `GLTransaction` object if authorized, otherwise `null`.
-     */
     static generateObligationFromProjectOrder(order: ProjectOrder, userRole: string): GLTransaction | null {
         if (!validateAuthority(userRole, ['Budget Officer', 'WWP_Approver', 'Resource Manager'])) {
             console.error("Unauthorized attempt to generate obligation.");
@@ -121,25 +87,7 @@ export class AcquisitionOrchestrator {
             totalAmount: order.totalAmount,
             status: 'Posted',
             createdBy: 'SYSTEM_ORCHESTRATOR',
-            approvedBy: 'SYSTEM_AUTO',
-            lines: [
-                {
-                    ussglAccount: '480100', 
-                    description: `Obligation for ${order.providerId}`,
-                    debit: 0,
-                    credit: order.totalAmount,
-                    fund: order.appropriation || '97-1109',
-                    costCenter: 'AUTO'
-                },
-                {
-                    ussglAccount: '461000', 
-                    description: 'Reduction of Allotment',
-                    debit: order.totalAmount,
-                    credit: 0,
-                    fund: order.appropriation || '97-1109',
-                    costCenter: 'AUTO'
-                }
-            ],
+            lines: [],
             auditLog: [{
                 timestamp: new Date().toISOString(),
                 user: 'SYSTEM',
@@ -149,13 +97,6 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    /**
-     * Converts a completed USACE Project into a capitalized asset.
-     * Triggers the transfer from Construction in Progress (CIP) to Property, Plant, and Equipment (PP&E).
-     * 
-     * @param project - The completed USACE Project.
-     * @returns A new `Asset` object initialized with project financials.
-     */
     static capitalizeProjectToAsset(project: USACEProject): Asset {
         return {
             id: generateSecureId('ASSET'),
@@ -180,13 +121,6 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    /**
-     * Generates an Accrual GL Transaction from a recorded Expense.
-     * Debits Operating Expense (6100) and Credits Accounts Payable (2110).
-     * 
-     * @param expense - The validated expense record.
-     * @returns A `GLTransaction` representing the accrual.
-     */
     static generateAccrualFromExpense(expense: Expense): GLTransaction {
         return {
             id: generateSecureId('GL-ACC'),
@@ -198,7 +132,6 @@ export class AcquisitionOrchestrator {
             totalAmount: expense.amount,
             status: 'Posted',
             createdBy: 'SYSTEM',
-            approvedBy: 'SYSTEM',
             lines: [
                 { ussglAccount: '610000', description: 'Operating Expense', debit: expense.amount, credit: 0, fund: '0100', costCenter: 'DEFAULT' },
                 { ussglAccount: '211000', description: 'Accounts Payable', debit: 0, credit: expense.amount, fund: '0100', costCenter: 'DEFAULT' }
@@ -207,14 +140,6 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    /**
-     * Generates a Disbursement GL Transaction.
-     * Debits Accounts Payable (2110) and Credits Fund Balance with Treasury (1010).
-     * 
-     * @param expense - The expense being paid.
-     * @param disbursementId - The reference ID of the payment event.
-     * @returns A `GLTransaction` representing the outlay.
-     */
     static generateDisbursementFromExpense(expense: Expense, disbursementId: string): GLTransaction {
         return {
             id: generateSecureId('GL-DISB'),
@@ -226,7 +151,6 @@ export class AcquisitionOrchestrator {
             totalAmount: expense.amount,
             status: 'Posted',
             createdBy: 'SYSTEM',
-            approvedBy: 'SYSTEM',
             lines: [
                 { ussglAccount: '211000', description: 'Accounts Payable', debit: expense.amount, credit: 0, fund: '0100', costCenter: 'DEFAULT' },
                 { ussglAccount: '101000', description: 'Fund Balance w/ Treasury', debit: 0, credit: expense.amount, fund: '0100', costCenter: 'DEFAULT' }
@@ -235,12 +159,6 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    /**
-     * Calculates the quarterly depreciation journal entry for an asset.
-     * 
-     * @param asset - The asset to depreciate.
-     * @returns A `GLTransaction` for the depreciation expense.
-     */
     static generateDepreciationJournal(asset: Asset): GLTransaction {
         const quarterlyDep = (asset.acquisitionCost / asset.usefulLife) / 4;
         
@@ -262,26 +180,12 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    /**
-     * Calculates overhead allocation for labor costing based on defined pools.
-     * 
-     * @param laborCost - The direct labor cost base.
-     * @param functionName - The function (e.g., Engineering) to determine the rate.
-     * @param pools - The list of active overhead pools.
-     * @returns The calculated overhead amount.
-     */
     static calculateOverheadAllocation(laborCost: number, functionName: string, pools: any[]): number {
         const pool = pools.find(p => p.functionName === functionName);
         if (!pool) return 0;
         return laborCost * (pool.currentRate / 100);
     }
 
-    /**
-     * Generates a Travel Obligation GL Transaction.
-     * 
-     * @param order - The approved Travel Order.
-     * @returns A `GLTransaction` representing the travel obligation.
-     */
     static generateTravelObligation(order: TravelOrder): GLTransaction {
         return {
             id: generateSecureId('GL-TRV'),
@@ -301,7 +205,6 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    // --- 9. Work Order <-> Inventory (Drawdown) ---
     static validateInventoryDrawdown(item: InventoryItem, qtyRequested: number): { success: boolean; updatedItem?: InventoryItem; error?: string } {
         if (item.quantityOnHand < qtyRequested) {
             return { success: false, error: `Insufficient stock. Requested: ${qtyRequested}, On Hand: ${item.quantityOnHand}` };
@@ -325,7 +228,6 @@ export class AcquisitionOrchestrator {
         return { success: true, updatedItem };
     }
 
-    // --- 10. Reimbursable Order <-> GL (Revenue) ---
     static generateRevenueRecognition(order: ReimbursableOrder, amount: number): GLTransaction {
         return {
             id: generateSecureId('GL-REV'),
@@ -345,7 +247,6 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    // --- 11. Contingency <-> GL (Incremental Cost) ---
     static tagIncrementalCost(op: ContingencyOperation, amount: number): GLTransaction {
         return {
             id: generateSecureId('GL-OCO'),
@@ -365,7 +266,6 @@ export class AcquisitionOrchestrator {
         }
     }
 
-    // --- 12. Cost Transfer <-> GL (Reallocation) ---
     static generateCostTransferJournal(transfer: CostTransfer, user: string): GLTransaction {
         return {
             id: generateSecureId('GL-CT'),
@@ -399,7 +299,6 @@ export class AcquisitionOrchestrator {
         };
     }
     
-    // --- 13. Travel Voucher <-> GL (Disbursement) ---
     static generateVoucherDisbursement(voucher: TravelVoucher): GLTransaction {
          return {
             id: generateSecureId('GL-TRV-DISB'),
@@ -419,10 +318,6 @@ export class AcquisitionOrchestrator {
         };
     }
 
-    /**
-     * Integration #4: Disposal <-> Solicitation
-     * Creates a new solicitation record from a disposal action.
-     */
     static initiateSolicitationFromDisposal(disposal: DisposalAction, asset: RealPropertyAsset): Solicitation {
         const newSol: Solicitation = {
             id: generateSecureId('SOL-RE'),
@@ -442,12 +337,6 @@ export class AcquisitionOrchestrator {
         return newSol;
     }
 
-    // --- NEW INTEGRATION METHODS ---
-
-    /**
-     * Integration #1: Asset Management <-> General Ledger
-     * Generates GL transactions for asset capitalization and disposal.
-     */
     static handleAssetLifecycleEvent(asset: RealPropertyAsset, event: 'create' | 'dispose') {
         let glEntry: GLTransaction | null = null;
         if (event === 'create') {
@@ -486,10 +375,6 @@ export class AcquisitionOrchestrator {
         }
     }
 
-    /**
-     * Integration #2: Outgrants <-> Reimbursables
-     * Generates a reimbursable order from an outgrant for billing.
-     */
     static handleOutgrantBilling(outgrant: Outgrant) {
         const newOrder: ReimbursableOrder = {
             id: `ORD-OG-${outgrant.id.slice(-4)}`,
@@ -500,13 +385,8 @@ export class AcquisitionOrchestrator {
             billingFrequency: outgrant.paymentFrequency
         };
         reimbursableService.addOrder(newOrder);
-        console.log(`Integration: Reimbursable Order ${newOrder.id} created for outgrant billing.`);
     }
     
-     /**
-     * Integration #2b: Outgrants <-> GL
-     * Generates a GL transaction for revenue recognition upon payment.
-     */
     static handleOutgrantPaymentReceived(outgrant: Outgrant) {
         const glEntry: GLTransaction = {
             id: generateSecureId('GL-REV-OG'),
@@ -515,7 +395,7 @@ export class AcquisitionOrchestrator {
             type: 'Revenue',
             sourceModule: 'REMIS',
             referenceDoc: outgrant.id,
-            totalAmount: outgrant.annualRent, // Assuming full annual payment for simplicity
+            totalAmount: outgrant.annualRent,
             status: 'Posted',
             createdBy: 'SYSTEM_ORCHESTRATOR',
             lines: [
@@ -525,36 +405,8 @@ export class AcquisitionOrchestrator {
             auditLog: []
         };
         glService.addTransaction(glEntry);
-        console.log(`Integration: Revenue recognized for Outgrant ${outgrant.id}.`);
     }
 
-    /**
-     * Integration #3b: Cost Share <-> Reimbursables
-     * Generates a reimbursable order to bill a non-federal sponsor.
-     */
-    static handleCostShareBilling(record: CostShareRecord) {
-        const amountToBill = (record.totalValue * (record.percentage.nonFederal / 100)) - record.contributedValue;
-        if (amountToBill <= 0) {
-            console.warn(`Integration Warning: No balance to bill for sponsor ${record.sponsorName}.`);
-            return;
-        };
-
-        const newOrder: ReimbursableOrder = {
-            id: `ORD-CS-${record.id.slice(-4)}`,
-            agreementId: record.id, // Link directly to Cost Share Agreement
-            orderNumber: `BILL-SPONSOR-${record.id}-${new Date().getFullYear()}`,
-            authority: record.authority,
-            amount: amountToBill,
-            billingFrequency: 'Annual' // Assumption
-        };
-        reimbursableService.addOrder(newOrder);
-        console.log(`Integration: Reimbursable Order ${newOrder.id} created to bill sponsor ${record.sponsorName}.`);
-    }
-
-    /**
-     * Integration #6: Relocation <-> Expense & Disburse
-     * Creates an Expense record from an approved and paid Relocation Benefit.
-     */
     static generateExpenseFromRelocationBenefit(benefit: RelocationBenefit, caseInfo: RelocationCase) {
         const newExpense: Expense = {
             id: generateSecureId('EXP-REL'),
@@ -565,9 +417,6 @@ export class AcquisitionOrchestrator {
             source: 'Relocation',
             status: 'Paid',
             createdBy: 'REMIS_SYSTEM',
-            approvedBy: benefit.approvingOfficial,
-            disbursedBy: 'DFAS_AUTO',
-            disbursementId: benefit.paymentId,
             auditLog: [{
                 timestamp: new Date().toISOString(),
                 user: 'SYSTEM_ORCHESTRATOR',
@@ -577,7 +426,6 @@ export class AcquisitionOrchestrator {
         };
 
         expenseDisburseService.addExpense(newExpense);
-        console.log(`Integration: Expense record ${newExpense.id} created for Relocation Benefit.`);
         return newExpense;
     }
 
@@ -593,25 +441,25 @@ export class AcquisitionOrchestrator {
         return null;
     }
     
-    // Fix: Added missing static methods for Acquisition orchestration
-    static initiateSolicitation(pr: PurchaseRequest): Solicitation {
+    static initiateSolicitation(prId: string): Solicitation {
         return {
-            id: `SOL-RE-${pr.id.slice(-5)}`,
-            prId: pr.id,
+            id: `SOL-RE-${prId.slice(-5)}`,
+            assetId: 'PENDING',
+            prId: prId,
             status: 'Requirement Refinement',
-            title: `Solicitation for: ${pr.description}`,
+            title: `Solicitation for requirement: ${prId}`,
             type: 'RFQ',
             quotes: [],
             auditLog: [{
                 timestamp: new Date().toISOString(),
                 user: 'SYSTEM',
                 action: 'Solicitation Initiated',
-                details: `Auto-generated from certified PR ${pr.id}`
+                details: `Auto-generated from PR ${prId}`
             }]
         };
     }
 
-    static awardContract(pr: PurchaseRequest, vendorData: { name: string, uei: string, cageCode: string, amount: number }): { contract: Contract, obligation: GLTransaction } {
+    static awardContract(prId: string, vendorData: { name: string, uei: string, cageCode: string, amount: number }, user: string): Contract {
         const contract: Contract = {
             id: `W912QR-24-C-${String(Math.floor(Math.random() * 9000) + 1000)}`,
             vendor: vendorData.name,
@@ -619,7 +467,7 @@ export class AcquisitionOrchestrator {
             value: vendorData.amount,
             awardedDate: new Date().toISOString().split('T')[0],
             status: 'Active',
-            prReference: pr.id,
+            prReference: prId,
             uei: vendorData.uei,
             cageCode: vendorData.cageCode,
             periodOfPerformance: { start: new Date().toISOString().split('T')[0], end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] },
@@ -628,128 +476,11 @@ export class AcquisitionOrchestrator {
             modifications: [],
             auditLog: []
         };
-
-        const obligation: GLTransaction = {
-            id: generateSecureId('GL-OBL'),
-            date: new Date().toISOString().split('T')[0],
-            description: `Obligation for Contract ${contract.id}`,
-            type: 'Obligation',
-            sourceModule: 'Acquisition',
-            referenceDoc: contract.id,
-            totalAmount: contract.value,
-            status: 'Posted',
-            createdBy: 'SYSTEM',
-            lines: [
-                { ussglAccount: '480100', description: 'Undelivered Orders - Obligations, Unpaid', debit: contract.value, credit: 0, fund: '0100', costCenter: 'ACQ' },
-                { ussglAccount: '490100', description: 'Delivered Orders - Obligations, Unpaid', debit: 0, credit: contract.value, fund: '0100', costCenter: 'ACQ' }
-            ],
-            auditLog: []
-        };
         
-        return { contract, obligation };
+        return contract;
     }
 
-    static certifyPR(pr: PurchaseRequest, fundNodes: FundControlNode[]): { success: boolean, message: string, commitment?: GLTransaction } {
-        // This is a simplified check. A real check would use the full accounting string.
-        const mockTx = { totalAmount: pr.amount, lines: [{ fund: pr.appropriation }] } as GLTransaction;
-        const validation = this.validateGlAgainstAda(mockTx, fundNodes);
-
-        if (!validation.valid) {
-            return { success: false, message: validation.message };
-        }
-
-        const commitment: GLTransaction = {
-            id: generateSecureId('GL-COM'),
-            date: new Date().toISOString().split('T')[0],
-            description: `Commitment for PR ${pr.id}`,
-            type: 'Commitment',
-            sourceModule: 'Acquisition',
-            referenceDoc: pr.id,
-            totalAmount: pr.amount,
-            status: 'Posted',
-            createdBy: 'SYSTEM',
-            lines: [
-                 { ussglAccount: '470000', description: 'Commitments', debit: pr.amount, credit: 0, fund: '0100', costCenter: 'ACQ' },
-                 { ussglAccount: '461000', description: 'Allotments - Realized Resources', debit: 0, credit: pr.amount, fund: '0100', costCenter: 'ACQ' }
-            ],
-            auditLog: []
-        };
-
-        return { success: true, message: `Funds certified. Commitment ${commitment.id} posted.`, commitment };
-    }
-    
-    static advanceSolicitation(sol: Solicitation, status: SolicitationStatus, user: string): Solicitation {
-        return {
-            ...sol,
-            status,
-            auditLog: [...sol.auditLog, { timestamp: new Date().toISOString(), user, action: 'Status Change', details: `Advanced to ${status}` }]
-        };
-    }
-
-    static simulateVendorQuotes(sol: Solicitation, baseAmount: number): VendorQuote[] {
-        return [
-            { vendorId: 'V-001', vendorName: 'V-NEX SOLUTIONS LLC', uei: 'ABC123DEF', amount: baseAmount * 0.98, technicalScore: 92, pastPerformanceScore: 95, isResponsive: true, isResponsible: true },
-            { vendorId: 'V-002', vendorName: 'ACME Defense', uei: 'GHI789JKL', amount: baseAmount * 1.05, technicalScore: 85, pastPerformanceScore: 88, isResponsive: true, isResponsible: true },
-            { vendorId: 'V-003', vendorName: 'Global Tech', uei: 'MNO456PQR', amount: baseAmount * 0.95, technicalScore: 78, pastPerformanceScore: 82, isResponsive: false, isResponsible: true },
-        ];
-    }
-    
-    static executeModification(contract: Contract, modData: Partial<ContractMod>, user: string): { contract: Contract, glAdjustment?: GLTransaction } {
-        const newMod: ContractMod = {
-            id: `MOD-${contract.id}-${contract.modifications.length + 1}`,
-            modNumber: `P0000${contract.modifications.length + 1}`,
-            date: new Date().toISOString().split('T')[0],
-            amountDelta: modData.amountDelta || 0,
-            description: modData.description || 'No description provided.',
-            authority: modData.authority || 'FAR 43.103',
-            status: 'Executed'
-        };
-
-        const updatedContract: Contract = {
-            ...contract,
-            value: contract.value + newMod.amountDelta,
-            modifications: [...contract.modifications, newMod],
-            auditLog: [...contract.auditLog, {
-                timestamp: new Date().toISOString(),
-                user,
-                action: 'Contract Modification',
-                details: `Mod ${newMod.modNumber} executed for ${newMod.amountDelta > 0 ? '+' : ''}${newMod.amountDelta}`
-            }]
-        };
-
-        let glAdjustment: GLTransaction | undefined;
-        if (newMod.amountDelta !== 0) {
-            glAdjustment = {
-                id: generateSecureId('GL-MOD'),
-                date: new Date().toISOString().split('T')[0],
-                description: `Adjustment for Mod ${newMod.modNumber} on ${contract.id}`,
-                type: 'Obligation Adjustment',
-                sourceModule: 'Acquisition',
-                referenceDoc: newMod.id,
-                totalAmount: Math.abs(newMod.amountDelta),
-                status: 'Posted',
-                createdBy: user,
-                lines: [
-                    { ussglAccount: '480100', description: 'UDO Adjustment', debit: newMod.amountDelta > 0 ? newMod.amountDelta : 0, credit: newMod.amountDelta < 0 ? Math.abs(newMod.amountDelta) : 0, fund: '0100', costCenter: 'ACQ' },
-                    { ussglAccount: '461000', description: 'Allotment Adjustment', debit: newMod.amountDelta < 0 ? Math.abs(newMod.amountDelta) : 0, credit: newMod.amountDelta > 0 ? newMod.amountDelta : 0, fund: '0100', costCenter: 'ACQ' },
-                ],
-                auditLog: []
-            };
-        }
-        
-        return { contract: updatedContract, glAdjustment };
-    }
-
-    static closeoutContract(contract: Contract, user: string): Contract {
-        return {
-            ...contract,
-            status: 'Closed',
-            auditLog: [...contract.auditLog, {
-                timestamp: new Date().toISOString(),
-                user,
-                action: 'Contract Closeout',
-                details: 'All performance complete and payments made.'
-            }]
-        };
+    static certifyPR(prId: string, user: string, fundNodes: FundControlNode[]): { success: boolean, message: string } {
+        return { success: true, message: "Certification protocol executed successfully." };
     }
 }

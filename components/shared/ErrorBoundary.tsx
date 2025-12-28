@@ -1,5 +1,5 @@
 
-import React, { ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
 interface Props {
@@ -15,10 +15,10 @@ interface State {
  * ErrorBoundary
  * catch-all domain for handling runtime exceptions.
  */
-// Fix: Use React.Component to ensure base class properties like state and props are correctly inherited
-class ErrorBoundary extends React.Component<Props, State> {
-  // Fix: Initialize state as a class property for clearer type definition and to satisfy property access checks
-  public state: State = { 
+// Use Component directly to ensure generic types are correctly associated with class members
+class ErrorBoundary extends Component<Props, State> {
+  // Explicit state declaration and initialization resolves property lookup issues such as 'state' and 'props'
+  state: State = { 
     hasError: false, 
     errorMessage: '' 
   };
@@ -33,18 +33,17 @@ class ErrorBoundary extends React.Component<Props, State> {
     return { hasError: true, errorMessage: message };
   }
 
-  // Fix: Explicitly use ErrorInfo from react
   componentDidCatch(error: any, errorInfo: ErrorInfo) {
     console.error("D-AFMP Critical Runtime Exception:", error, errorInfo);
   }
 
-  // Fix: handleTryAgain method uses this.setState which is inherited from React.Component
   handleTryAgain = () => {
+    // setState is inherited from Component<Props, State>
     this.setState({ hasError: false, errorMessage: '' });
   };
 
   render() {
-    // Fix: Access hasError from inherited state
+    // state is inherited from Component<Props, State> and correctly typed via generics
     if (this.state.hasError) {
       return (
         <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 p-8 text-center animate-in fade-in">
@@ -61,7 +60,6 @@ class ErrorBoundary extends React.Component<Props, State> {
               <div className="w-1.5 h-1.5 rounded-full bg-rose-600" />
               Runtime Trace
             </div>
-            {/* Fix: Access errorMessage from inherited state */}
             {this.state.errorMessage}
           </div>
 
@@ -75,7 +73,7 @@ class ErrorBoundary extends React.Component<Props, State> {
       );
     }
 
-    // Fix: Access children from inherited props
+    // props is inherited from Component<Props, State> and provides access to children
     return this.props.children;
   }
 }

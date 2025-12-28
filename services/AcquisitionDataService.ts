@@ -1,3 +1,4 @@
+
 import { 
     PurchaseRequest, Contract, Solicitation, VendorQuote, ContractMod, SolicitationStatus 
 } from '../types';
@@ -17,6 +18,8 @@ class AcquisitionDataService {
             .filter(p => p.status === 'Funds Certified')
             .map(pr => ({
                 id: `SOL-RE-${pr.id.slice(-5)}`,
+                // Fix: assetId is a required property in the Solicitation interface
+                assetId: 'PENDING',
                 prId: pr.id,
                 status: 'Requirement Refinement' as SolicitationStatus,
                 title: `Solicitation for: ${pr.description}`,

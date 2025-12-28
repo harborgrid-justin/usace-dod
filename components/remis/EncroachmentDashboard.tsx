@@ -18,7 +18,8 @@ const EncroachmentDashboard: React.FC<EncroachmentDashboardProps> = ({ onNavigat
     const selectedCase = useMemo(() => cases.find(c => c.id === selectedCaseId), [cases, selectedCaseId]);
 
     const stats = useMemo(() => {
-        const active = cases.filter(c => c.status !== 'Closed' && c.status !== 'Archived').length;
+        // Corrected comparison logic to match EncroachmentStatus type
+        const active = cases.filter(c => c.status !== 'Closed' && c.status !== 'Archived' && c.status !== 'Resolved').length;
         const structural = cases.filter(c => c.type === 'Structure').length;
         return { total: cases.length, active, structural };
     }, [cases]);
@@ -91,7 +92,7 @@ const EncroachmentDashboard: React.FC<EncroachmentDashboardProps> = ({ onNavigat
 
                 {activeTab === 'GIS' && (
                     <div className="bg-white border border-zinc-200 rounded-[32px] p-10 shadow-sm flex flex-col items-center justify-center h-[500px] text-center gap-6">
-                        <div className="p-6 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shadow-inner animate-pulse"><MapIcon size={48}/></div>
+                        <div className="p-6 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 shadow-inner animate-pulse"><MapIcon size={48}/></div>
                         <div>
                             <h3 className="text-xl font-bold text-zinc-900">Spatial Intelligence View</h3>
                             <p className="text-sm text-zinc-500 max-w-sm mx-auto mt-2">Visualizing encroachment points against authoritative boundary layers (SDSVIE Compliant).</p>

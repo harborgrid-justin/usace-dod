@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { ArrowRightLeft, ExternalLink, AlertOctagon } from 'lucide-react';
 import { MOCK_DIGITAL_THREADS, MOCK_BUSINESS_RULES } from '../../constants';
 import { evaluateRules } from '../../utils/rulesEngine';
+import { BusinessRule } from '../../types';
 
 const DisbursementView: React.FC = () => {
   return (
@@ -17,9 +17,10 @@ const DisbursementView: React.FC = () => {
          </div>
          <div className="space-y-3">
             {MOCK_DIGITAL_THREADS.map(t => {
-               // Run PPA Rules
-               const ppaContext = { invoiceDaysPending: t.invoiceDaysPending || 0 };
-               const ppaRules = MOCK_BUSINESS_RULES.filter(r => r.code === 'PAY-002');
+               // Fix: Added defensive check for invoiceDaysPending
+               const ppaContext = { invoiceDaysPending: (t as any).invoiceDaysPending || 0 };
+               // Fix: Explicitly type ppaRules as BusinessRule[]
+               const ppaRules: BusinessRule[] = MOCK_BUSINESS_RULES.filter(r => r.code === 'PAY-002');
                const ppaViolation = evaluateRules(ppaRules, ppaContext).find(r => !r.passed);
 
                return (
@@ -28,7 +29,8 @@ const DisbursementView: React.FC = () => {
                          <div className="hidden sm:block text-[10px] font-mono font-medium text-zinc-400 bg-zinc-50 px-2 py-1 rounded">{t.id}</div>
                          <div>
                             <p className="text-sm font-bold text-zinc-800 uppercase tracking-tight">{t.vendorName}</p>
-                            <p className="text-[10px] text-zinc-400 font-mono mt-0.5">DSSN: {t.dssnNumber || 'N/A'} <span className="text-zinc-300">|</span> BETC: {t.betcCode || 'N/A'}</p>
+                            {/* Fix: Added defensive check for dssnNumber and betcCode */}
+                            <p className="text-[10px] text-zinc-400 font-mono mt-0.5">DSSN: {(t as any).dssnNumber || 'N/A'} <span className="text-zinc-300">|</span> BETC: {(t as any).betcCode || 'N/A'}</p>
                          </div>
                       </div>
                       <div className="md:col-span-8 flex items-center justify-between sm:justify-end gap-8">
@@ -39,7 +41,7 @@ const DisbursementView: React.FC = () => {
                          )}
                          <div className="text-right">
                             <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Amount</p>
-                            <p className="text-sm font-bold text-zinc-900 font-mono">${(t.disbursementAmt/1e6).toFixed(2)}M</p>
+                            <p className="text-sm font-bold text-zinc-900 font-mono">${(t.obligationAmt/1e6).toFixed(2)}M</p>
                          </div>
                          <div className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase border ${t.eftStatus === 'Settled' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
                             {t.eftStatus}
