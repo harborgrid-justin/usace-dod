@@ -2,19 +2,15 @@
 import React, { useState } from 'react';
 import { DWCFRateProfile, DWCFActivity } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
-import { Settings, Save, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import { Settings, Save, AlertTriangle, TrendingUp, Info, Check, X, Percent, ArrowRight } from 'lucide-react';
 
 interface Props {
+    rates: DWCFRateProfile[];
     activities: DWCFActivity[];
+    onUpdateRate: (rate: DWCFRateProfile) => void;
 }
 
-const INITIAL_RATES: DWCFRateProfile[] = [
-    { id: 'RATE-24-SUP', activityId: 'ACT-SUP', fiscalYear: 2024, compositeRate: 115.00, overheadRate: 18.5, surchargeRate: 12.0, accumulatedOperatingResult: -500000, netOperatingResult: 125000, status: 'Active' },
-    { id: 'RATE-24-IND', activityId: 'ACT-IND', fiscalYear: 2024, compositeRate: 210.00, overheadRate: 22.0, surchargeRate: 15.0, accumulatedOperatingResult: 200000, netOperatingResult: -50000, status: 'Active' },
-];
-
-const DWCFRateManager: React.FC<Props> = ({ activities }) => {
-    const [rates, setRates] = useState<DWCFRateProfile[]>(INITIAL_RATES);
+const DWCFRateManager: React.FC<Props> = ({ rates, activities, onUpdateRate }) => {
     const [selectedRate, setSelectedRate] = useState<DWCFRateProfile | null>(null);
     const [isEditing, setIsEditing] = useState(false);
 
@@ -29,7 +25,8 @@ const DWCFRateManager: React.FC<Props> = ({ activities }) => {
 
     const handleSave = () => {
         if (!selectedRate) return;
-        setRates(prev => prev.map(r => r.id === selectedRate.id ? { ...r, ...formState } as DWCFRateProfile : r));
+        const updatedRate = { ...selectedRate, ...formState } as DWCFRateProfile;
+        onUpdateRate(updatedRate);
         setIsEditing(false);
         setSelectedRate(null);
     };

@@ -1,51 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shuffle, ArrowLeft, Search, Plus, Filter } from 'lucide-react';
-import { CostTransfer } from '../../types'; // Using CostTransfer from updated types
+import { CostTransfer } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
 import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
+import { costTransferService } from '../../services/CostTransferDataService';
 import TransferDashboard from '../cost_transfer/TransferDashboard';
 import TransferWizard from '../cost_transfer/TransferWizard';
 import TransferDetail from '../cost_transfer/TransferDetail';
-
-// Seed Initial Data
-const MOCK_TRANSFERS: CostTransfer[] = [
-    { 
-        id: 'CT-24-001', 
-        requestDate: '2024-03-10T10:00:00Z', 
-        description: 'Labor correction', 
-        amount: 2500, 
-        sourceProjectId: '123456 - Ohio River Lock', 
-        targetProjectId: '998877 - Miss. River Maint', 
-        sourceWorkItem: '01.01', 
-        targetWorkItem: '02.05', 
-        justification: 'Correction of labor charge to wrong work item.', 
-        status: 'Pending Approval', 
-        requestedBy: 'J. Smith',
-        auditLog: [{ timestamp: '2024-03-10T10:00:00Z', user: 'J. Smith', action: 'Created', details: 'Initial Request' }] 
-    },
-    { 
-        id: 'CT-24-002', 
-        requestDate: '2024-03-08T14:30:00Z', 
-        description: 'Material reallocation', 
-        amount: 15000, 
-        sourceProjectId: '123456 - Ohio River Lock', 
-        targetProjectId: '234567 - Levee Repair', 
-        sourceWorkItem: '05.00', 
-        targetWorkItem: '01.00', 
-        justification: 'Reallocation of material costs per PPA amendment.', 
-        status: 'Posted', 
-        requestedBy: 'A. Johnson', 
-        approvedBy: 'M. Director', 
-        postedDate: '2024-03-09T09:00:00Z',
-        glTransactionId: 'GL-CT-8821',
-        auditLog: [
-            { timestamp: '2024-03-08T14:30:00Z', user: 'A. Johnson', action: 'Created', details: 'Initial Request' },
-            { timestamp: '2024-03-09T08:00:00Z', user: 'M. Director', action: 'Approved', details: 'Valid PPA Amendment' },
-            { timestamp: '2024-03-09T09:00:00Z', user: 'SYSTEM', action: 'Posted', details: 'GL Updated' }
-        ] 
-    },
-];
 
 interface Props {
     onSelectProject: (projectId: string) => void;
@@ -53,10 +15,18 @@ interface Props {
 
 const CostTransferView: React.FC<Props> = ({ onSelectProject }) => {
     const [view, setView] = useState<'dashboard' | 'list' | 'create' | 'detail'>('dashboard');
-    const [transfers, setTransfers] = useState<CostTransfer[]>(MOCK_TRANSFERS);
+    const [transfers, setTransfers] = useState<CostTransfer[]>(costTransferService.getTransfers());
     const [selectedTransfer, setSelectedTransfer] = useState<CostTransfer | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState<string>('All');
+
+    // Subscribe to live data
+    useEffect(() => {
+        const unsubscribe = costTransferService.subscribe(() => {
+            setTransfers([...costTransferService.getTransfers()]);
+        });
+        return unsubscribe;
+    }, []);
 
     // -- Actions --
 
@@ -73,28 +43,28 @@ const CostTransferView: React.FC<Props> = ({ onSelectProject }) => {
                 details: 'Transfer request submitted via Wizard.'
             }]
         };
-        setTransfers([newTransfer, ...transfers]);
+        costTransferService.addTransfer(newTransfer);
         setView('list');
     };
 
     const handleUpdateStatus = (id: string, newStatus: CostTransfer['status'], details: string) => {
-        setTransfers(prev => prev.map(t => {
-            if (t.id === id) {
-                return {
-                    ...t,
-                    status: newStatus,
-                    auditLog: [...t.auditLog, {
-                        timestamp: new Date().toISOString(),
-                        user: 'Approver', // Mock user
-                        action: newStatus,
-                        details
-                    }]
-                };
-            }
-            return t;
-        }));
+        const t = transfers.find(tr => tr.id === id);
+        if (!t) return;
+
+        const updatedTransfer: CostTransfer = {
+            ...t,
+            status: newStatus,
+            auditLog: [...t.auditLog, {
+                timestamp: new Date().toISOString(),
+                user: 'Approver', // Mock user
+                action: newStatus,
+                details
+            }]
+        };
+        
+        costTransferService.updateTransfer(updatedTransfer);
         if (selectedTransfer && selectedTransfer.id === id) {
-            setSelectedTransfer(prev => prev ? { ...prev, status: newStatus } : null);
+            setSelectedTransfer(updatedTransfer);
         }
     };
 
@@ -102,7 +72,7 @@ const CostTransferView: React.FC<Props> = ({ onSelectProject }) => {
         const t = transfers.find(tr => tr.id === id);
         if (!t) return;
 
-        // Integration Logic
+        // Integration Logic: Create GL Entry
         const glEntry = IntegrationOrchestrator.generateCostTransferJournal(t, 'System Admin');
         
         const updatedTransfer: CostTransfer = {
@@ -118,7 +88,7 @@ const CostTransferView: React.FC<Props> = ({ onSelectProject }) => {
             }]
         };
 
-        setTransfers(prev => prev.map(tr => tr.id === id ? updatedTransfer : tr));
+        costTransferService.updateTransfer(updatedTransfer);
         setSelectedTransfer(updatedTransfer);
     };
 
@@ -131,7 +101,7 @@ const CostTransferView: React.FC<Props> = ({ onSelectProject }) => {
     });
 
     return (
-        <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto h-full flex flex-col">
+        <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col">
             {/* Top Navigation */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
                 <div className="flex items-center gap-3">

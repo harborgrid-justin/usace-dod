@@ -25,8 +25,6 @@ const Modal: React.FC<ModalProps> = ({
     };
     window.addEventListener('keydown', handleEsc);
     
-    // Focus trap logic could be expanded here with a library or custom hook
-    // For now, simple focus on mount
     modalRef.current?.focus();
 
     return () => window.removeEventListener('keydown', handleEsc);

@@ -2,24 +2,33 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Clock, Check, AlertTriangle } from 'lucide-react';
 import { UnfundedCustomerOrder } from '../../types';
-import { MOCK_UNFUNDED_ORDERS } from '../../constants';
 import { formatCurrency } from '../../utils/formatting';
+import { revolvingFundService } from '../../services/RevolvingFundDataService';
 
 const UnfundedOrdersManager: React.FC = () => {
-    const [orders, setOrders] = useState<UnfundedCustomerOrder[]>(MOCK_UNFUNDED_ORDERS);
+    const [orders, setOrders] = useState<UnfundedCustomerOrder[]>(revolvingFundService.getUnfundedOrders());
     const [time, setTime] = useState(Date.now());
 
     useEffect(() => {
+        // Subscribe to service
+        const unsubscribe = revolvingFundService.subscribe(() => {
+            setOrders([...revolvingFundService.getUnfundedOrders()]);
+        });
+
+        // Ticker for countdown
         const interval = setInterval(() => setTime(Date.now()), 1000);
-        return () => clearInterval(interval);
+        
+        return () => {
+            unsubscribe();
+            clearInterval(interval);
+        };
     }, []);
 
     const handleNotify = (orderId: string) => {
-        setOrders(orders.map(o => 
-            o.id === orderId 
-            ? { ...o, status: 'Pending OUSD(C)', notificationTimestamp: Date.now() } 
-            : o
-        ));
+        revolvingFundService.updateUnfundedOrder(orderId, {
+            status: 'Pending OUSD(C)',
+            notificationTimestamp: Date.now()
+        });
     };
 
     const getRemainingTime = (timestamp?: number) => {

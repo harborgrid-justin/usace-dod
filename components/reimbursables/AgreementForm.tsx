@@ -19,9 +19,13 @@ const AgreementForm: React.FC<Props> = ({ onClose, onSubmit }) => {
         e.preventDefault();
         if (!buyer || !gtcNumber || !ceiling) return;
 
+        /**
+         * Fix: Added missing 'sender' property to satisfy ReimbursableAgreement interface
+         */
         const newAgreement: ReimbursableAgreement = {
             id: `AGR-${Date.now().toString().slice(-5)}`,
             buyer,
+            sender: seller,
             seller,
             gtcNumber,
             status: 'Active',

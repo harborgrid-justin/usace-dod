@@ -13,7 +13,7 @@ const FundsControlView: React.FC<FundsControlViewProps> = ({ agency }) => {
   const [activeTab, setActiveTab] = useState<'hierarchy' | 'violations'>('hierarchy');
 
   return (
-    <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto h-full flex flex-col">
+    <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
             <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { WorkOrder, InventoryItem, Vendor, LaborEntry, MaterialEntry, ServiceEntry } from '../../types';
 import { formatCurrency } from '../../utils/formatting';

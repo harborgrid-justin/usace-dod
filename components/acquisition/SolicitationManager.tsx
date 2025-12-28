@@ -4,7 +4,7 @@ import {
     Briefcase, Activity
 } from 'lucide-react';
 import { PurchaseRequest, Contract } from '../../types';
-import { AcquisitionOrchestrator } from '../../services/AcquisitionOrchestrator';
+import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
 import { formatCurrency } from '../../utils/formatting';
 import { useToast } from '../shared/ToastContext';
 
@@ -23,24 +23,24 @@ const SolicitationManager: React.FC<Props> = ({ prs, setPrs, contracts, setContr
         const vendorData = {
             name: 'V-NEX SOLUTIONS LLC',
             uei: 'Z82LK912P',
-            cageCode: '1A9F4'
+            cageCode: '1A9F4',
+            amount: pr.amount
         };
 
-        const result = AcquisitionOrchestrator.awardContract(pr, vendorData);
+        const result = IntegrationOrchestrator.awardContract(pr.id, vendorData, 'KO_ADMIN');
         
-        setContracts(prev => [result.contract, ...prev]);
+        setContracts(prev => [result, ...prev]);
         setPrs(prev => prev.map(p => p.id === pr.id ? { 
             ...p, 
             status: 'Awarded',
             auditLog: [...p.auditLog, { timestamp: new Date().toISOString(), user: 'KO_ADMIN', action: 'Awarded', details: `Awarded to ${vendorData.name}` }]
         } : p));
 
-        addToast(`CONTRACT AWARDED: PIID ${result.contract.id} to ${vendorData.name}`, 'success');
+        addToast(`CONTRACT AWARDED: PIID ${result.id} to ${vendorData.name}`, 'success');
     };
 
     return (
         <div className="p-6 h-full overflow-y-auto custom-scrollbar space-y-8 animate-in fade-in">
-             {/* ... (Header) ... */}
             <div className="space-y-4">
                 <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
                     <Activity size={14} className="text-zinc-400"/> Actionable Requirements
@@ -49,7 +49,6 @@ const SolicitationManager: React.FC<Props> = ({ prs, setPrs, contracts, setContr
                 <div className="grid grid-cols-1 gap-4">
                     {certRequirements.map(pr => (
                         <div key={pr.id} className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm hover:border-rose-200 transition-all flex flex-col md:flex-row justify-between items-center gap-6">
-                            {/* ... (Row content) ... */}
                              <div className="flex-1 w-full">
                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="text-[10px] font-mono font-bold text-zinc-400 bg-zinc-50 px-2 py-0.5 rounded">{pr.id}</span>

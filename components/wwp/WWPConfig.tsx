@@ -91,7 +91,8 @@ const WWPConfig: React.FC<Props> = ({ laborRates: initialRates, laborStandards: 
                     </div>
                 </div>
                 
-                <div className="flex-1 overflow-x-auto custom-scrollbar">
+                {/* Desktop Table */}
+                <div className="hidden sm:block flex-1 overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left">
                         <thead className="bg-zinc-50 border-b border-zinc-100">
                             <tr>
@@ -130,6 +131,32 @@ const WWPConfig: React.FC<Props> = ({ laborRates: initialRates, laborStandards: 
                         </tbody>
                     </table>
                 </div>
+
+                {/* Mobile Cards for Rates */}
+                <div className="sm:hidden p-4 space-y-3">
+                    {rates.map(rate => (
+                        <div key={rate.laborCategory} className="bg-white border border-zinc-100 rounded-lg p-3 shadow-sm flex items-center justify-between">
+                            <span className="text-sm font-bold text-zinc-700">{rate.laborCategory}</span>
+                            <div className="flex items-center gap-3">
+                                {editingRate === rate.laborCategory ? (
+                                    <input 
+                                        type="number" 
+                                        value={rateValue} 
+                                        onChange={e => setRateValue(Number(e.target.value))}
+                                        className="w-24 p-1 border rounded text-right text-sm font-mono focus:border-rose-700 focus:outline-none"
+                                    />
+                                ) : (
+                                    <span className="font-mono text-sm font-bold text-zinc-900">{formatCurrency(rate.rate)}/hr</span>
+                                )}
+                                {editingRate === rate.laborCategory ? (
+                                    <button onClick={handleSaveRate} className="p-1.5 text-emerald-600 bg-emerald-50 rounded"><Check size={14}/></button>
+                                ) : (
+                                    <button onClick={() => handleEditRate(rate)} className="p-1.5 text-zinc-400 hover:text-zinc-800"><Edit size={14}/></button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Standards Section */}
@@ -140,7 +167,9 @@ const WWPConfig: React.FC<Props> = ({ laborRates: initialRates, laborStandards: 
                         <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Efficiency Benchmarks</h3>
                     </div>
                 </div>
-                <div className="flex-1 overflow-x-auto custom-scrollbar">
+
+                {/* Desktop Table */}
+                <div className="hidden sm:block flex-1 overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left">
                         <thead className="bg-zinc-50 border-b border-zinc-100">
                             <tr>
@@ -159,6 +188,19 @@ const WWPConfig: React.FC<Props> = ({ laborRates: initialRates, laborStandards: 
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Cards for Standards */}
+                <div className="sm:hidden p-4 space-y-3">
+                    {standards.map((std, idx) => (
+                        <div key={idx} className="bg-white border border-zinc-100 rounded-lg p-3 shadow-sm">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm font-bold text-zinc-800">{std.workloadUnit}</span>
+                                <span className="text-xs font-mono font-bold bg-zinc-50 px-2 py-1 rounded border border-zinc-200">{std.hoursPerUnit} Hrs/Unit</span>
+                            </div>
+                            <span className="text-[10px] font-bold bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded border uppercase">{std.laborCategory}</span>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

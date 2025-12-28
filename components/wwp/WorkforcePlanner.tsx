@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { WorkforcePlan, LaborCategory } from '../../types';
-import { Users, Building2, TrendingUp, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Users, Building2, TrendingUp, ArrowRight, ShieldCheck, User } from 'lucide-react';
 
 interface Props {
     plans: WorkforcePlan[];
@@ -51,7 +51,8 @@ const WorkforcePlanner: React.FC<Props> = ({ plans, onUpdatePlan }) => {
                                 </div>
                             </div>
                             
-                            <div className="overflow-x-auto">
+                            {/* Desktop Table View */}
+                            <div className="hidden sm:block overflow-x-auto">
                                 <table className="w-full text-left min-w-[600px]">
                                     <thead className="bg-white border-b border-zinc-100">
                                         <tr>
@@ -92,6 +93,44 @@ const WorkforcePlanner: React.FC<Props> = ({ plans, onUpdatePlan }) => {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="sm:hidden p-4 space-y-4">
+                                {plan.entries.map(entry => (
+                                    <div key={entry.laborCategory} className="bg-white border border-zinc-100 rounded-lg p-3 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-zinc-50">
+                                            <User size={14} className="text-zinc-400" />
+                                            <span className="font-bold text-sm text-zinc-800">{entry.laborCategory}</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-emerald-600 uppercase mb-1 block">Funded FTE</label>
+                                                <input 
+                                                    type="number" 
+                                                    step="0.1"
+                                                    value={entry.fundedFTE}
+                                                    onChange={e => handleFTEChange(plan, entry.laborCategory, 'fundedFTE', Number(e.target.value))}
+                                                    className="w-full text-center font-mono text-lg font-bold text-zinc-900 bg-zinc-50 border border-zinc-200 rounded py-2"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-amber-600 uppercase mb-1 block">Unfunded</label>
+                                                <input 
+                                                    type="number" 
+                                                    step="0.1"
+                                                    value={entry.unfundedFTE}
+                                                    onChange={e => handleFTEChange(plan, entry.laborCategory, 'unfundedFTE', Number(e.target.value))}
+                                                    className="w-full text-center font-mono text-lg font-bold text-zinc-900 bg-zinc-50 border border-zinc-200 rounded py-2"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 text-right text-xs text-zinc-400 border-t border-zinc-50 pt-2 flex justify-between">
+                                            <span>Total Authorized</span>
+                                            <span className="font-mono font-bold text-zinc-800">{(entry.fundedFTE + entry.unfundedFTE).toFixed(1)}</span>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     );

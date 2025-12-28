@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
     Construction, ArrowLeft, Ruler, Hammer, 
-    FileText, DollarSign, Box, List, Landmark
+    FileText, DollarSign, Box, List, Landmark, Share2
 } from 'lucide-react';
 import { USACEProject } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
@@ -16,6 +16,7 @@ import { RealEstateStatus, LocalSponsorCard } from './RealEstateWidgets';
 import { ContractProgress, ChangeOrderLog, ContractRetainageTracker } from './ContractingWidgets';
 import { EngForm93Preview } from './Forms';
 import WorkItemManager from './WorkItemManager';
+import DeepTracePanel from './DeepTracePanel';
 
 interface Props {
     project: USACEProject;
@@ -23,7 +24,7 @@ interface Props {
 }
 
 const USACEProjectDashboard: React.FC<Props> = ({ project, onBack }) => {
-    const [activeTab, setActiveTab] = useState<'Financials' | 'WI' | 'PM' | 'Contracting' | 'Real Estate' | 'Reports'>('Financials');
+    const [activeTab, setActiveTab] = useState<'Financials' | 'WI' | 'PM' | 'Contracting' | 'Real Estate' | 'Reports' | 'Trace'>('Financials');
     const [assetCreatedMsg, setAssetCreatedMsg] = useState('');
 
     const percentObligated = useMemo(() => {
@@ -54,6 +55,7 @@ const USACEProjectDashboard: React.FC<Props> = ({ project, onBack }) => {
                 <div className="flex-1 overflow-y-auto custom-scrollbar py-2">
                     {[
                         { id: 'Financials', icon: DollarSign, label: 'Financials' },
+                        { id: 'Trace', icon: Share2, label: 'Deep Trace (20)' },
                         { id: 'WI', icon: List, label: 'Work Items (WBS)' },
                         { id: 'PM', icon: Ruler, label: 'Proj Mgmt' },
                         { id: 'Contracting', icon: Hammer, label: 'Contracting' },
@@ -116,7 +118,6 @@ const USACEProjectDashboard: React.FC<Props> = ({ project, onBack }) => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
-                    {/* ... Rest of existing dashboard logic ... */}
                     {activeTab === 'Financials' && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-in fade-in">
                             <div className="xl:col-span-2 space-y-6">
@@ -129,6 +130,8 @@ const USACEProjectDashboard: React.FC<Props> = ({ project, onBack }) => {
                             </div>
                         </div>
                     )}
+
+                    {activeTab === 'Trace' && <DeepTracePanel project={project} />}
 
                     {activeTab === 'WI' && <WorkItemManager project={project} />}
 

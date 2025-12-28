@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { User, Search, Plus, MapPin, Award, Edit, Shield, FileText, X, CheckCircle2 } from 'lucide-react';
+import { User, Search, Plus, MapPin, Award, Edit, Shield, FileText, X, CheckCircle2, ChevronRight } from 'lucide-react';
 import Modal from '../shared/Modal';
 
 interface Employee {
@@ -37,11 +36,12 @@ const PersonnelRoster: React.FC = () => {
     return (
         <div className="bg-white border border-zinc-200 rounded-xl shadow-sm h-full flex flex-col overflow-hidden animate-in fade-in">
             <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div>
+                <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
                     <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Personnel Roster (HR)</h3>
+                    <span className="hidden sm:inline text-zinc-300">|</span>
                     <p className="text-xs text-zinc-500">Manage TDA/MTOE Positions</p>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:flex-none">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"/>
                         <input 
@@ -52,14 +52,15 @@ const PersonnelRoster: React.FC = () => {
                             className="pl-9 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs w-full sm:w-64 focus:outline-none focus:border-zinc-400"
                         />
                     </div>
-                    <button className="flex items-center justify-center gap-2 px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-zinc-800 transition-colors">
+                    <button className="flex items-center justify-center gap-2 px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-zinc-800 transition-colors whitespace-nowrap">
                         <Plus size={12}/> Add Personnel
                     </button>
                 </div>
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <table className="w-full text-left">
+                {/* Desktop Table View */}
+                <table className="w-full text-left hidden sm:table">
                     <thead className="bg-white border-b border-zinc-100 sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th className="p-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Employee</th>
@@ -114,6 +115,52 @@ const PersonnelRoster: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
+
+                {/* Mobile Card View */}
+                <div className="sm:hidden p-4 space-y-3">
+                    {filtered.map(emp => (
+                        <div 
+                            key={emp.id} 
+                            onClick={() => setSelectedEmployee(emp)}
+                            className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm hover:border-zinc-300 transition-all cursor-pointer"
+                        >
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-500 text-sm font-bold uppercase">
+                                        {emp.name.split(',')[1].trim().charAt(0)}{emp.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-zinc-900">{emp.name}</p>
+                                        <p className="text-xs text-zinc-500 font-mono">{emp.id}</p>
+                                    </div>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${
+                                    emp.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                    emp.status === 'Detail' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                    'bg-zinc-100 text-zinc-600 border-zinc-200'
+                                }`}>{emp.status}</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs border-t border-zinc-50 pt-3">
+                                <div>
+                                    <span className="text-[10px] text-zinc-400 uppercase font-bold block">Position</span>
+                                    <span className="text-zinc-800">{emp.positionNum}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] text-zinc-400 uppercase font-bold block">Series/Grade</span>
+                                    <span className="text-zinc-800">{emp.series.split(' - ')[0]} / {emp.grade}</span>
+                                </div>
+                                <div className="col-span-2">
+                                     <span className="text-[10px] text-zinc-400 uppercase font-bold block mb-1">Clearance</span>
+                                     <div className="flex items-center gap-2">
+                                        <Shield size={12} className={emp.clearance === 'TS/SCI' ? 'text-indigo-600' : 'text-zinc-400'} />
+                                        <span className="text-zinc-700">{emp.clearance}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {selectedEmployee && (

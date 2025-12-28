@@ -1,22 +1,30 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-    FileSignature, Plus, Search, FileText, CheckCircle2, 
-    TrendingDown, ArrowUpRight, Clock, AlertTriangle, Filter,
+    FileSignature, Plus, Search, 
     LayoutDashboard, List, ShieldAlert 
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatting';
 import { Obligation } from '../../types';
-import { MOCK_OBLIGATIONS } from '../../constants';
 import ObligationDashboard from '../obligations/ObligationDashboard';
 import ObligationForm from '../obligations/ObligationForm';
 import DormantAccountReview from '../obligations/DormantAccountReview';
+import { obligationsService } from '../../services/ObligationsDataService';
 
 const ObligationsView: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'Dashboard' | 'Ledger' | 'DAR'>('Dashboard');
-    const [obligations, setObligations] = useState<Obligation[]>(MOCK_OBLIGATIONS);
+    
+    // Live Data from Service
+    const [obligations, setObligations] = useState<Obligation[]>(obligationsService.getObligations());
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
+
+    useEffect(() => {
+        const unsubscribe = obligationsService.subscribe(() => {
+            setObligations([...obligationsService.getObligations()]);
+        });
+        return unsubscribe;
+    }, []);
 
     const filteredObligations = obligations.filter(o => 
         o.vendor.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -24,12 +32,12 @@ const ObligationsView: React.FC = () => {
     );
 
     const handleCreate = (newObligation: Obligation) => {
-        setObligations([newObligation, ...obligations]);
+        obligationsService.addObligation(newObligation);
         setIsFormOpen(false);
     };
 
     const handleUpdate = (updatedObligation: Obligation) => {
-        setObligations(prev => prev.map(o => o.id === updatedObligation.id ? updatedObligation : o));
+        obligationsService.updateObligation(updatedObligation);
     };
 
     return (

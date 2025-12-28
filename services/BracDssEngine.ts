@@ -1,4 +1,3 @@
-
 import { BracInstallation, BracScenario, BracAnalysisResult } from '../types';
 
 /**

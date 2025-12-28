@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { Save, X, AlertTriangle } from 'lucide-react';
+import { Save, AlertTriangle } from 'lucide-react';
 import { Obligation } from '../../types';
 import Modal from '../shared/Modal';
 import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
-import { MOCK_FUND_HIERARCHY } from '../../constants';
+import { fundsService } from '../../services/FundsDataService';
 
 interface Props {
     onClose: () => void;
@@ -29,7 +29,8 @@ const ObligationForm: React.FC<Props> = ({ onClose, onSubmit }) => {
         if (formData.amount) {
             // Mocking a GL transaction structure to reuse the validator
             const mockTx: any = { lines: [{ fund: formData.appropriation }], totalAmount: formData.amount };
-            const validation = IntegrationOrchestrator.validateGlAgainstAda(mockTx, MOCK_FUND_HIERARCHY);
+            // Use live funds hierarchy for validation
+            const validation = IntegrationOrchestrator.validateGlAgainstAda(mockTx, fundsService.getHierarchy());
             if (!validation.valid) {
                 setAdaWarning(validation.message);
                 return; // Block submission on ADA violation

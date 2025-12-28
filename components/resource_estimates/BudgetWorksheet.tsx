@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BudgetLineItem, CapabilityLevel, BusinessLine, REStatus } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
@@ -101,6 +100,7 @@ const BudgetWorksheet: React.FC<Props> = ({ items, onAdd, onDelete }) => {
                         type="text" 
                         required
                         value={form.projectId || ''} 
+                        // Fix: Changed setFormData to setForm
                         onChange={e => setForm({...form, projectId: e.target.value})} 
                         className="w-full p-2.5 text-xs border border-zinc-300 rounded-lg focus:border-rose-500 focus:outline-none bg-white font-mono"
                         placeholder="e.g. 123456"
@@ -138,7 +138,7 @@ const BudgetWorksheet: React.FC<Props> = ({ items, onAdd, onDelete }) => {
                         type="number" 
                         required
                         value={form.amount || ''} 
-                        onChange={e => setForm({...form, amount: e.target.value})} 
+                        onChange={e => setForm({...form, amount: Number(e.target.value)})} 
                         className="w-full p-2.5 text-xs border border-zinc-300 rounded-lg focus:border-rose-500 focus:outline-none bg-white font-mono font-bold"
                         placeholder="0.00"
                     />

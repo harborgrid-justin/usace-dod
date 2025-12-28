@@ -1,9 +1,9 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo, useTransition } from 'react';
 import { LGHLease, LeaseStatus, LeaseScoring } from '../../types';
 import Modal from '../shared/Modal';
+import { AlertTriangle, ShieldCheck, Landmark, DollarSign, Calculator, Info, FileText, Check, Shield } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatting';
-import { Calendar, Building, DollarSign, AlertTriangle, ShieldCheck } from 'lucide-react';
+import Badge from '../shared/Badge';
 
 interface Props {
     lease: LGHLease | null;
@@ -15,21 +15,13 @@ const LeaseDetailModal: React.FC<Props> = ({ lease, onClose, onSave }) => {
     const isNew = !lease;
     const [formData, setFormData] = useState<Partial<LGHLease>>(
         lease || {
-            leaseNumber: '',
-            propertyName: '',
-            address: '',
-            lessor: '',
-            annualRent: 0,
-            startDate: new Date().toISOString().split('T')[0],
-            expirationDate: '',
-            status: 'Active',
-            occupancyRate: 0,
-            units: 0,
-            scoring: 'Operating',
-            fairMarketValue: 0,
-            auditLog: []
+            leaseNumber: '', propertyName: '', address: '', lessor: '',
+            annualRent: 0, startDate: new Date().toISOString().split('T')[0],
+            expirationDate: '', status: 'Active', occupancyRate: 0,
+            units: 0, scoring: 'Operating', fairMarketValue: 0, auditLog: []
         }
     );
+    const [isPending, startTransition] = useTransition();
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,164 +39,120 @@ const LeaseDetailModal: React.FC<Props> = ({ lease, onClose, onSave }) => {
             status: formData.status as LeaseStatus,
             occupancyRate: Number(formData.occupancyRate),
             units: Number(formData.units),
-            scoring: formData.scoring as LeaseScoring,
+            scoring: isCapitalScore ? 'Capital' : 'Operating',
             fairMarketValue: Number(formData.fairMarketValue),
-            auditLog: lease?.auditLog || []
+            auditLog: lease?.auditLog || [{ timestamp: new Date().toISOString(), user: 'CurrentUser', action: 'Record Established' }]
         };
-        onSave(newLease);
+        
+        startTransition(() => {
+            onSave(newLease);
+        });
     };
 
-    // OMB A-11 Scoring Logic Check
-    const totalLeaseValue = Number(formData.annualRent) * 5; // Simplified 5-year assumption
-    const isCapitalLease = totalLeaseValue > (Number(formData.fairMarketValue) * 0.9);
+    // OMB A-11 Scoring Decision Engine (90% Threshold Test)
+    const isCapitalScore = useMemo(() => {
+        const rent = Number(formData.annualRent) || 0;
+        const fmv = Number(formData.fairMarketValue) || 1;
+        const term = 10; // Nominal evaluation term per regulation
+        const totalRentNominal = rent * term;
+        // In reality, this uses Net Present Value (NPV), using 90% test as simplified proxy
+        return totalRentNominal > (fmv * 0.9);
+    }, [formData.annualRent, formData.fairMarketValue]);
 
     return (
-        <Modal title={isNew ? "Add New Lease" : `Lease: ${formData.leaseNumber}`} onClose={onClose} maxWidth="max-w-3xl">
-            <form onSubmit={handleSave} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Property Name</label>
-                        <input 
-                            type="text" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm"
-                            value={formData.propertyName}
-                            onChange={e => setFormData({...formData, propertyName: e.target.value})}
-                            required
-                        />
-                    </div>
-                    
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Lease Number</label>
-                        <input 
-                            type="text" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm font-mono"
-                            value={formData.leaseNumber}
-                            onChange={e => setFormData({...formData, leaseNumber: e.target.value})}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Lessor</label>
-                        <input 
-                            type="text" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm"
-                            value={formData.lessor}
-                            onChange={e => setFormData({...formData, lessor: e.target.value})}
-                        />
+        <Modal title={isNew ? "Register Portfolio Lease" : "Strategic Asset Profile"} subtitle="OMB Circular A-11 Scoring Compliance" onClose={onClose} maxWidth="max-w-4xl">
+            <form onSubmit={handleSave} className="space-y-8 animate-in fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-8">
+                        <div>
+                            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">Property Designation</label>
+                            <input 
+                                type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-sm font-bold bg-zinc-50/50 focus:bg-white focus:border-cyan-500 transition-all outline-none shadow-inner"
+                                value={formData.propertyName}
+                                onChange={e => setFormData({...formData, propertyName: e.target.value})}
+                                placeholder="e.g. Sunset Heights (Phase II)" required
+                            />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">PIID / Lease #</label>
+                                <input type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-xs font-mono bg-zinc-50/50" value={formData.leaseNumber} onChange={e => setFormData({...formData, leaseNumber: e.target.value})} required />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">Execution Status</label>
+                                <select className="w-full border border-zinc-200 rounded-2xl p-4 text-xs font-bold bg-zinc-50/50 focus:bg-white transition-all outline-none" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as LeaseStatus})}>
+                                    <option>Active</option><option>Expiring</option><option>Pending Renewal</option><option>Holdover</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">Situs Address</label>
+                            <input type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-sm bg-zinc-50/50" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                        </div>
                     </div>
 
-                    <div className="md:col-span-2">
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Address</label>
-                        <input 
-                            type="text" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm"
-                            value={formData.address}
-                            onChange={e => setFormData({...formData, address: e.target.value})}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Start Date</label>
-                        <input 
-                            type="date" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm"
-                            value={formData.startDate}
-                            onChange={e => setFormData({...formData, startDate: e.target.value})}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Expiration Date</label>
-                        <input 
-                            type="date" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm"
-                            value={formData.expirationDate}
-                            onChange={e => setFormData({...formData, expirationDate: e.target.value})}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Annual Rent ($)</label>
-                        <input 
-                            type="number" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm font-mono"
-                            value={formData.annualRent}
-                            onChange={e => setFormData({...formData, annualRent: Number(e.target.value)})}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Fair Market Value ($)</label>
-                        <input 
-                            type="number" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm font-mono"
-                            value={formData.fairMarketValue}
-                            onChange={e => setFormData({...formData, fairMarketValue: Number(e.target.value)})}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Units</label>
-                        <input 
-                            type="number" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm"
-                            value={formData.units}
-                            onChange={e => setFormData({...formData, units: Number(e.target.value)})}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Occupancy Rate (%)</label>
-                        <input 
-                            type="number" 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm"
-                            value={formData.occupancyRate}
-                            onChange={e => setFormData({...formData, occupancyRate: Number(e.target.value)})}
-                        />
-                    </div>
-                    
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Status</label>
-                        <select 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm bg-white"
-                            value={formData.status}
-                            onChange={e => setFormData({...formData, status: e.target.value as LeaseStatus})}
-                        >
-                            <option>Active</option>
-                            <option>Expiring</option>
-                            <option>Pending Renewal</option>
-                            <option>Holdover</option>
-                            <option>Terminated</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Scoring (OMB A-11)</label>
-                        <select 
-                            className="w-full mt-1 border border-zinc-200 rounded-lg p-2.5 text-sm bg-white"
-                            value={formData.scoring}
-                            onChange={e => setFormData({...formData, scoring: e.target.value as LeaseScoring})}
-                        >
-                            <option>Operating</option>
-                            <option>Capital</option>
-                        </select>
+                    <div className="bg-zinc-900 rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
+                        <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12"><Calculator size={120}/></div>
+                        <h4 className="text-xs font-bold uppercase tracking-[0.2em] mb-10 flex items-center gap-3 text-cyan-400">
+                             <DollarSign size={16}/> Financial Commitment
+                        </h4>
+                        <div className="space-y-8 relative z-10">
+                            <div className="p-5 bg-white/5 border border-white/10 rounded-2xl shadow-inner">
+                                <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5 block">Calculated Annual Rent ($)</label>
+                                <input type="number" className="w-full bg-transparent border-none p-0 text-3xl font-mono font-bold text-white focus:ring-0" value={formData.annualRent || ''} onChange={e => setFormData({...formData, annualRent: Number(e.target.value)})} placeholder="0.00" />
+                            </div>
+                            <div className="p-5 bg-white/5 border border-white/10 rounded-2xl shadow-inner">
+                                <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5 block">Estimated FMV @ Inception</label>
+                                <input type="number" className="w-full bg-transparent border-none p-0 text-3xl font-mono font-bold text-white focus:ring-0" value={formData.fairMarketValue || ''} onChange={e => setFormData({...formData, fairMarketValue: Number(e.target.value)})} placeholder="0.00" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Scoring Analysis */}
-                <div className={`p-4 rounded-xl border ${isCapitalLease ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                    <h4 className={`text-sm font-bold flex items-center gap-2 ${isCapitalLease ? 'text-rose-800' : 'text-emerald-800'}`}>
-                        {isCapitalLease ? <AlertTriangle size={16}/> : <ShieldCheck size={16}/>}
-                        {isCapitalLease ? 'Capital Lease Indicator' : 'Operating Lease Indicator'}
-                    </h4>
-                    <p className={`text-xs mt-1 ${isCapitalLease ? 'text-rose-600' : 'text-emerald-600'}`}>
-                        {isCapitalLease 
-                            ? `Warning: Net Present Value of lease payments exceeds 90% of Fair Market Value. Must be scored as Capital Lease.`
-                            : `Valid: Net Present Value of lease payments is below 90% of Fair Market Value. Can be scored as Operating Lease.`
-                        }
-                    </p>
+                <div className="p-8 rounded-[40px] border border-zinc-200 bg-zinc-100/50 space-y-6 shadow-inner relative overflow-hidden">
+                    <div className="flex justify-between items-center relative z-10">
+                        <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3">
+                            <Shield size={16} className="text-cyan-700" /> Lifecycle Budget Scoring (90% Test)
+                        </h4>
+                        <div className="animate-in fade-in slide-in-from-right-2">
+                            {isCapitalScore ? (
+                                <Badge variant="danger">HIGH SCORE: CAPITAL LEASE</Badge>
+                            ) : (
+                                <Badge variant="success">LOW SCORE: OPERATING LEASE</Badge>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-6 relative z-10">
+                        <div className={`p-4 rounded-2xl shadow-xl transition-all ${isCapitalScore ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}`}>
+                            {isCapitalScore ? <AlertTriangle size={28}/> : <ShieldCheck size={28}/>}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                            <p className="text-sm font-bold text-zinc-900">
+                                {isCapitalScore ? 'Statutory Obligation Risk Detected' : 'Fiscal Authority Baseline Met'}
+                            </p>
+                            <p className="text-xs text-zinc-500 leading-relaxed font-medium">
+                                {isCapitalScore 
+                                    ? 'Warning: Total lease payments exceed 90% of asset FMV. Per OMB A-11, this requires full budget authority (up-front obligation) in the fiscal year of award.'
+                                    : 'Requirement: Lease payments are within threshold. Multi-year incremental funding is permissible subject to standard Availability of Funds clauses.'
+                                }
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
-                    <button type="button" onClick={onClose} className="px-5 py-2.5 border border-zinc-200 rounded-lg text-xs font-bold uppercase hover:bg-zinc-50">Cancel</button>
-                    <button type="submit" className="px-5 py-2.5 bg-zinc-900 text-white rounded-lg text-xs font-bold uppercase hover:bg-zinc-800">Save Lease</button>
+                <div className="flex justify-end gap-3 pt-8 border-t border-zinc-100">
+                    <button type="button" onClick={onClose} className="px-8 py-3 border border-zinc-200 rounded-2xl text-xs font-bold uppercase text-zinc-500 hover:bg-zinc-50 transition-all">Cancel</button>
+                    <button 
+                        type="submit" 
+                        disabled={isPending}
+                        className="px-12 py-3 bg-zinc-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-2xl active:scale-95 transition-all flex items-center gap-3 disabled:opacity-30"
+                    >
+                        {isPending ? <Check className="animate-pulse" size={18}/> : <FileText size={18}/>} 
+                        {isPending ? 'Syncing...' : 'Commit Portfolio Record'}
+                    </button>
                 </div>
             </form>
         </Modal>

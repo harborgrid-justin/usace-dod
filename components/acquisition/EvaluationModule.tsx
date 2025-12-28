@@ -11,14 +11,10 @@ interface Props {
 }
 
 const EvaluationModule: React.FC<Props> = ({ sol, onAward, status }) => {
-    const [mockQuotes] = useState<VendorQuote[]>([
-        { vendorId: 'V1', vendorName: 'V-NEX SOLUTIONS LLC', uei: 'X82LK991', amount: 145000, technicalScore: 92, pastPerformanceScore: 88, isResponsive: true, isResponsible: true },
-        { vendorId: 'V2', vendorName: 'DEFENSE LOGISTICS GROUP', uei: 'Z92LL992', amount: 152000, technicalScore: 95, pastPerformanceScore: 92, isResponsive: true, isResponsible: true },
-        { vendorId: 'V3', vendorName: 'SENTINEL SYSTEMS', uei: 'Y11KK111', amount: 138000, technicalScore: 78, pastPerformanceScore: 70, isResponsive: true, isResponsible: true },
-    ]);
-
-    const activeQuotes = sol.quotes.length > 0 ? sol.quotes : mockQuotes;
-
+    // Component now strictly renders data passed in via `sol` prop
+    // Data generation is handled by the service layer
+    const activeQuotes = sol.quotes;
+    
     const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
 
     const getScoreColor = (score: number) => {
@@ -26,6 +22,16 @@ const EvaluationModule: React.FC<Props> = ({ sol, onAward, status }) => {
         if (score >= 80) return 'text-blue-600 bg-blue-50 border-blue-100';
         return 'text-amber-600 bg-amber-50 border-amber-100';
     };
+
+    if (activeQuotes.length === 0) {
+        return (
+             <div className="bg-white border border-zinc-200 rounded-2xl p-12 text-center text-zinc-400 flex flex-col items-center">
+                 <Users size={32} className="opacity-20 mb-2" />
+                 <p className="text-sm font-medium">Awaiting Vendor Proposals</p>
+                 <p className="text-xs">Quotes will appear here after the solicitation closes.</p>
+             </div>
+        );
+    }
 
     return (
         <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm animate-in fade-in">

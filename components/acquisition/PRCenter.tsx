@@ -1,27 +1,27 @@
-
 import React, { useState } from 'react';
 import { 
     ShoppingCart, Plus, Search, ShieldCheck, 
     FileText, History, AlertTriangle 
 } from 'lucide-react';
 import { PurchaseRequest } from '../../types';
-import { formatCurrency } from '../../utils/formatting';
-import { AcquisitionOrchestrator } from '../../services/AcquisitionOrchestrator';
-import { MOCK_FUND_HIERARCHY } from '../../constants';
+import { formatCurrency, formatRelativeTime } from '../../utils/formatting';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useToast } from '../shared/ToastContext';
 import EmptyState from '../shared/EmptyState';
 import Badge from '../shared/Badge';
-import { formatRelativeTime } from '../../utils/formatting';
+import { acquisitionService } from '../../services/AcquisitionDataService';
+import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
+import { fundsService } from '../../services/FundsDataService';
+import PRForm from './PRForm';
 
 interface Props {
     prs: PurchaseRequest[];
-    setPrs: React.Dispatch<React.SetStateAction<PurchaseRequest[]>>;
 }
 
-const PRCenter: React.FC<Props> = ({ prs, setPrs }) => {
+const PRCenter: React.FC<Props> = ({ prs }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [isCreating, setIsCreating] = useState(false);
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const { addToast } = useToast();
 
@@ -33,24 +33,24 @@ const PRCenter: React.FC<Props> = ({ prs, setPrs }) => {
     const selectedPR = prs.find(p => p.id === selectedId);
 
     const handleCertify = (id: string) => {
-        const pr = prs.find(p => p.id === id);
-        if (!pr) return;
-
-        const result = AcquisitionOrchestrator.certifyPR(pr, MOCK_FUND_HIERARCHY);
+        const result = IntegrationOrchestrator.certifyPR(id, 'G8_USER_ADMIN', fundsService.getHierarchy());
         
         if (result.success) {
-            setPrs(prev => prev.map(p => p.id === id ? {
-                ...p,
-                status: 'Funds Certified',
-                certifiedBy: 'G8_USER_ADMIN',
-                certificationDate: new Date().toISOString().split('T')[0],
-                auditLog: [...p.auditLog, { timestamp: new Date().toISOString(), user: 'G8_USER_ADMIN', action: 'Funds Certified', details: result.message }]
-            } : p));
             addToast(`Financial Success: Commitment posted. ${result.message}`, 'success');
         } else {
             addToast(`Certification Failed: ${result.message}`, 'error');
         }
     };
+
+    const handleCreate = (newPR: PurchaseRequest) => {
+        acquisitionService.addPR(newPR);
+        setIsCreating(false);
+        addToast('Purchase Request Created', 'success');
+    };
+
+    if (isCreating) {
+        return <PRForm onCancel={() => setIsCreating(false)} onSubmit={handleCreate} />;
+    }
 
     return (
         <div className="flex-1 flex flex-col md:flex-row h-full">
@@ -61,7 +61,7 @@ const PRCenter: React.FC<Props> = ({ prs, setPrs }) => {
                         <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
                             <ShoppingCart size={14}/> Open Requirements
                         </h3>
-                        <button className="p-1.5 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors">
+                        <button onClick={() => setIsCreating(true)} className="p-1.5 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors">
                             <Plus size={14}/>
                         </button>
                     </div>

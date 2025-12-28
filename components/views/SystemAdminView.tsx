@@ -5,17 +5,27 @@ import { formatCurrency } from '../../utils/formatting';
 
 // Types & Mock Data
 interface UserRecord { id: string; name: string; email: string; role: string; org: string; status: 'Active' | 'Locked' }
+
+interface ApprovalTransaction {
+    id: string;
+    type: string;
+    amount: number;
+    requestor: string;
+    date: string;
+    status: string;
+}
+
 const MOCK_USERS: UserRecord[] = [
     { id: 'U-001', name: 'John Smith', email: 'john.smith@usace.army.mil', role: 'Budget Analyst', org: 'LRL-RM', status: 'Active' },
     { id: 'U-002', name: 'Jane Doe', email: 'jane.doe@usace.army.mil', role: 'Approving Official', org: 'LRL-ED', status: 'Active' },
 ];
 
-const MOCK_AX_QUEUE = [
+const MOCK_AX_QUEUE: ApprovalTransaction[] = [
     { id: 'PR-24-009', type: 'Purchase Request', amount: 12500, requestor: 'LRL-OPS', date: '2024-03-15', status: 'Pending Cert' },
     { id: 'OBL-9912', type: 'Obligation', amount: 450000, requestor: 'LRL-CT', date: '2024-03-14', status: 'Pending Sig' },
 ];
 
-const SystemAdminView: React.FC = () => {
+const SystemAdminView = () => {
     const [activeTab, setActiveTab] = useState<'AX' | 'Users' | 'Security'>('AX');
     
     // User Mgmt State
@@ -25,8 +35,8 @@ const SystemAdminView: React.FC = () => {
 
     // AX State
     const [axView, setAxView] = useState<'list' | 'detail'>('list');
-    const [axQueue, setAxQueue] = useState(MOCK_AX_QUEUE);
-    const [selectedTx, setSelectedTx] = useState<any>(null);
+    const [axQueue, setAxQueue] = useState<ApprovalTransaction[]>(MOCK_AX_QUEUE);
+    const [selectedTx, setSelectedTx] = useState<ApprovalTransaction | null>(null);
 
     // Handlers
     const handleAddUser = () => {
@@ -98,34 +108,38 @@ const SystemAdminView: React.FC = () => {
                     ) : (
                         <div className="bg-white border border-zinc-200 rounded-xl shadow-sm p-8 flex flex-col h-full animate-in slide-in-from-right-4">
                             <button onClick={() => setAxView('list')} className="self-start mb-6 flex items-center gap-2 text-xs font-bold uppercase text-zinc-500 hover:text-zinc-900"><ChevronLeft size={14}/> Back to Queue</button>
-                            <div className="flex justify-between items-start mb-8">
-                                <div>
-                                    <h3 className="text-2xl font-bold text-zinc-900 mb-1">{selectedTx?.type} Approval</h3>
-                                    <p className="text-sm text-zinc-500 font-mono">ID: {selectedTx?.id}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Value</p>
-                                    <p className="text-3xl font-mono font-bold text-zinc-900">{formatCurrency(selectedTx?.amount)}</p>
-                                </div>
-                            </div>
-                            <div className="flex-1 bg-zinc-50 border border-zinc-100 rounded-xl p-6 mb-6">
-                                <div className="flex items-center gap-3 mb-4 text-sm font-bold text-zinc-800 border-b border-zinc-200 pb-2">
-                                    <FileText size={16}/> Document Preview
-                                </div>
-                                <div className="text-xs font-mono text-zinc-600 space-y-2">
-                                    <p>REQUESTOR: {selectedTx?.requestor}</p>
-                                    <p>DATE: {selectedTx?.date}</p>
-                                    <p>STATUS: {selectedTx?.status}</p>
-                                    <p>--- LINE ITEMS ---</p>
-                                    <p>001  SERVICES, NON-PERSONAL   1.00 LS   ${selectedTx?.amount.toFixed(2)}</p>
-                                    <p>--- END ---</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 justify-end">
-                                <button onClick={() => setAxView('list')} className="px-6 py-3 border border-zinc-200 rounded-lg text-xs font-bold uppercase hover:bg-zinc-50">Return</button>
-                                <button className="px-6 py-3 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold uppercase hover:bg-rose-200 flex items-center gap-2"><XCircle size={16}/> Reject</button>
-                                <button onClick={() => handleApproveTx(selectedTx.id)} className="px-6 py-3 bg-zinc-900 text-white rounded-lg text-xs font-bold uppercase hover:bg-zinc-800 flex items-center gap-2"><CheckCircle size={16}/> Sign & Certify</button>
-                            </div>
+                            {selectedTx && (
+                                <>
+                                    <div className="flex justify-between items-start mb-8">
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-zinc-900 mb-1">{selectedTx.type} Approval</h3>
+                                            <p className="text-sm text-zinc-500 font-mono">ID: {selectedTx.id}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Value</p>
+                                            <p className="text-3xl font-mono font-bold text-zinc-900">{formatCurrency(selectedTx.amount)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 bg-zinc-50 border border-zinc-100 rounded-xl p-6 mb-6">
+                                        <div className="flex items-center gap-3 mb-4 text-sm font-bold text-zinc-800 border-b border-zinc-200 pb-2">
+                                            <FileText size={16}/> Document Preview
+                                        </div>
+                                        <div className="text-xs font-mono text-zinc-600 space-y-2">
+                                            <p>REQUESTOR: {selectedTx.requestor}</p>
+                                            <p>DATE: {selectedTx.date}</p>
+                                            <p>STATUS: {selectedTx.status}</p>
+                                            <p>--- LINE ITEMS ---</p>
+                                            <p>001  SERVICES, NON-PERSONAL   1.00 LS   {formatCurrency(selectedTx.amount)}</p>
+                                            <p>--- END ---</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4 justify-end">
+                                        <button onClick={() => setAxView('list')} className="px-6 py-3 border border-zinc-200 rounded-lg text-xs font-bold uppercase hover:bg-zinc-50">Return</button>
+                                        <button className="px-6 py-3 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold uppercase hover:bg-rose-200 flex items-center gap-2"><XCircle size={16}/> Reject</button>
+                                        <button onClick={() => handleApproveTx(selectedTx.id)} className="px-6 py-3 bg-zinc-900 text-white rounded-lg text-xs font-bold uppercase hover:bg-zinc-800 flex items-center gap-2"><CheckCircle size={16}/> Sign & Certify</button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>

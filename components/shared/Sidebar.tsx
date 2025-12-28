@@ -1,9 +1,9 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useTransition } from 'react';
 import { 
   ShieldCheck, LayoutDashboard, BrainCircuit, Clock, ArrowRightLeft, Target, ShieldAlert,
   Landmark, ClipboardCheck, GitMerge, Server, Library, Wallet, RefreshCw, Scale, Globe, FileText, Gavel, RefreshCcw, Cpu,
-  Construction, Castle, Grid, PieChart, Box, BookUser, TrendingDown, Users, Briefcase, Plane, UserCheck, HardHat, Shuffle, FileSignature, Building, Building2, Home, Key, MapPin
+  Construction, Castle, Grid, PieChart, Box, BookUser, TrendingDown, Users, Briefcase, Plane, UserCheck, HardHat, Shuffle, FileSignature, Building, Building2, Home, Key, MapPin, TreePine,
+  X, Hammer, Map as MapIcon
 } from 'lucide-react';
 import { NavigationTab, AgencyContext } from '../../types';
 
@@ -17,81 +17,48 @@ interface SidebarProps {
   setMobileMenuOpen: (isOpen: boolean) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, agency, setAgency, isSidebarOpen, isMobileMenuOpen, setMobileMenuOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  activeTab, 
+  setActiveTab, 
+  agency, 
+  setAgency, 
+  isSidebarOpen, 
+  isMobileMenuOpen, 
+  setMobileMenuOpen 
+}) => {
+  const [isPending, startTransition] = useTransition();
   
-  // Dynamic Navigation Groups based on Agency
   const navGroups = useMemo(() => {
-    if (agency === 'OSD_BRAC') {
+    if (agency === 'USACE_REMIS') {
         return [
             {
-                title: "OSD PROGRAM OFFICE",
+                title: "REAL ESTATE DIVISION",
                 items: [
-                    { tab: NavigationTab.DASHBOARD, icon: LayoutDashboard, label: 'BRAC Dashboard' },
-                    { tab: NavigationTab.BRAC_DSS, icon: MapPin, label: 'Decision Support (DSS)' },
-                    { tab: NavigationTab.PPBE_CYCLE, icon: Target, label: 'Program Cycle (PPBE)' },
-                    { tab: NavigationTab.APPROPRIATIONS, icon: Landmark, label: 'Appropriation Status' },
-                    { tab: NavigationTab.ANALYTICS, icon: BrainCircuit, label: 'Closure Analytics' },
+                    { tab: NavigationTab.DASHBOARD, icon: LayoutDashboard, label: 'Portfolio Summary' },
+                    { tab: NavigationTab.REAL_PROPERTY_ASSETS, icon: Building2, label: 'Inventory (RPUID)' },
+                    { tab: NavigationTab.APPRAISALS, icon: Scale, label: 'Appraisal Workspace' },
+                    { tab: NavigationTab.ANALYTICS, icon: BrainCircuit, label: 'Utilization Analytics' },
+                    { tab: NavigationTab.GIS_MAP, icon: MapIcon, label: 'GIS Map' },
                 ]
             },
             {
-                title: "REAL PROPERTY",
+                title: "TRANSACTIONS",
                 items: [
-                    { tab: NavigationTab.ASSET_LIFECYCLE, icon: Building2, label: 'Asset Disposal (Real Prop)' },
-                    { tab: NavigationTab.REIMBURSABLES, icon: RefreshCcw, label: 'Economic Adjustment' },
+                    { tab: NavigationTab.OUTGRANTS_LEASES, icon: FileSignature, label: 'Outgrants & Revenue' },
+                    { tab: NavigationTab.SOLICITATIONS, icon: Hammer, label: 'Solicitations' },
+                    { tab: NavigationTab.RELOCATION, icon: Users, label: 'Relocation' },
+                    { tab: NavigationTab.COST_SHARE, icon: PieChart, label: 'Cost Share Programs' },
+                    { tab: NavigationTab.DISPOSALS, icon: Shuffle, label: 'Disposal Actions' },
+                    { tab: NavigationTab.ACQUISITION, icon: Briefcase, label: 'Land Acquisition' },
+                    { tab: NavigationTab.ENCROACHMENT, icon: ShieldAlert, label: 'Encroachment' },
                 ]
             },
             {
-                title: "FINANCIAL CONTROLS",
+                title: "ADMINISTRATION",
                 items: [
-                    { tab: NavigationTab.ADMIN_CONTROL, icon: Gavel, label: 'Funds Control (1517)' },
-                    { tab: NavigationTab.OBLIGATIONS, icon: FileSignature, label: 'Obligations' },
-                    { tab: NavigationTab.DISBURSEMENT, icon: ArrowRightLeft, label: 'Treasury Outlays' },
-                    { tab: NavigationTab.COMPLIANCE, icon: ShieldAlert, label: 'Audit Readiness' },
-                ]
-            }
-        ];
-    }
-
-    if (agency === 'OSD_HAP') {
-        return [
-            {
-                title: "Homeowners Assistance",
-                items: [
-                    { tab: NavigationTab.DASHBOARD, icon: LayoutDashboard, label: 'Program Dashboard' },
-                    { tab: NavigationTab.HAP_CASES, icon: Users, label: 'Applicant Cases' },
-                    { tab: NavigationTab.ASSET_LIFECYCLE, icon: Home, label: 'Property Inventory' },
-                    { tab: NavigationTab.ANALYTICS, icon: BrainCircuit, label: 'Market Analytics' },
-                ]
-            },
-            {
-                title: "Financials",
-                items: [
-                    { tab: NavigationTab.APPROPRIATIONS, icon: Landmark, label: 'Fund Status (0517)' },
-                    { tab: NavigationTab.OBLIGATIONS, icon: FileSignature, label: 'Benefit Obligations' },
-                    { tab: NavigationTab.DISBURSEMENT, icon: ArrowRightLeft, label: 'Payments' },
-                    { tab: NavigationTab.ADMIN_CONTROL, icon: Gavel, label: 'Funds Control' },
-                ]
-            }
-        ];
-    }
-
-    if (agency === 'OSD_LGH') {
-        return [
-            {
-                title: "Leased Housing",
-                items: [
-                    { tab: NavigationTab.DASHBOARD, icon: LayoutDashboard, label: 'Portfolio Dashboard' },
-                    { tab: NavigationTab.LGH_PORTFOLIO, icon: Building, label: 'Lease Portfolio' },
-                    { tab: NavigationTab.ASSET_LIFECYCLE, icon: Key, label: 'Property Mgmt' },
-                ]
-            },
-            {
-                title: "Financials",
-                items: [
-                    { tab: NavigationTab.APPROPRIATIONS, icon: Landmark, label: 'Appropriations' },
-                    { tab: NavigationTab.OBLIGATIONS, icon: FileSignature, label: 'Lease Obligations' },
-                    { tab: NavigationTab.DISBURSEMENT, icon: ArrowRightLeft, label: 'Rent Payments' },
-                    { tab: NavigationTab.COMPLIANCE, icon: ShieldAlert, label: 'Audit Readiness' },
+                    { tab: NavigationTab.REMIS_ADMIN, icon: UserCheck, label: 'User Management' },
+                    { tab: NavigationTab.COMPLIANCE, icon: ShieldCheck, label: 'Audit Readiness (CFI)' },
+                    { tab: NavigationTab.REPORTS, icon: FileText, label: 'Enterprise Reports' },
                 ]
             }
         ];
@@ -100,241 +67,215 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, agency, setA
     if (agency === 'USACE_CEFMS') {
         return [
             {
-              title: "Engineer Command",
-              items: [
-                { tab: NavigationTab.DASHBOARD, icon: LayoutDashboard, label: 'Dashboard' },
-                { tab: NavigationTab.USACE_PROJECTS, icon: Construction, label: 'Projects & Work Items (WI)' },
-                { tab: NavigationTab.SYSTEM_ADMIN, icon: UserCheck, label: 'Admin & Approval (SA/AX)' },
-                { tab: NavigationTab.ANALYTICS, icon: BrainCircuit, label: 'Intelligence' },
-              ]
+                title: "STRATEGIC",
+                items: [
+                    { tab: NavigationTab.DASHBOARD, icon: LayoutDashboard, label: 'HQ Executive View' },
+                    { tab: NavigationTab.ERP_CORE, icon: Grid, label: 'CEFMS Modules' },
+                    { tab: NavigationTab.USACE_PROJECTS, icon: Construction, label: 'P2 Project Lifecycle' },
+                    { tab: NavigationTab.WWP, icon: Users, label: 'Scenario Planner' },
+                    { tab: NavigationTab.LABOR_COSTING, icon: HardHat, label: 'Labor Costing' },
+                ]
             },
             {
-              title: "PROGRAM EXECUTION",
-              items: [
-                { tab: NavigationTab.WWP, icon: Users, label: 'Workforce & HR (WWP/HR)'},
-                { tab: NavigationTab.LABOR_COSTING, icon: HardHat, label: 'Labor Costing (LC)'},
-                { tab: NavigationTab.PPBE_CYCLE, icon: Target, label: 'Resource Estimates (RE)' },
-                { tab: NavigationTab.ACQUISITION, icon: Briefcase, label: 'Acquisition (PR/CI)' },
-                { tab: NavigationTab.REVOLVING_FUNDS, icon: RefreshCw, label: 'Revolving Fund (RF)' },
-                { tab: NavigationTab.APPROPRIATIONS, icon: Landmark, label: 'Fund Distribution' },
-                { tab: NavigationTab.REIMBURSABLES, icon: RefreshCcw, label: 'Reimbursables' },
-              ]
+                title: "FINANCIAL OPS",
+                items: [
+                    { tab: NavigationTab.GENERAL_LEDGER, icon: BookUser, label: 'General Ledger' },
+                    { tab: NavigationTab.EXPENSE_DISBURSE, icon: TrendingDown, label: 'Expense & Disburse' },
+                    { tab: NavigationTab.COST_TRANSFERS, icon: Shuffle, label: 'Cost Transfers' },
+                    { tab: NavigationTab.TRAVEL, icon: Plane, label: 'Travel Management' },
+                    { tab: NavigationTab.ACQUISITION, icon: Briefcase, label: 'Contracting' },
+                ]
             },
             {
-              title: "FINANCIAL OPERATIONS",
-              items: [
-                { tab: NavigationTab.GENERAL_LEDGER, icon: BookUser, label: 'General Ledger (GL)'},
-                { tab: NavigationTab.EXPENSE_DISBURSE, icon: TrendingDown, label: 'Disburse & Pay (DP)'},
-                { tab: NavigationTab.OBLIGATIONS, icon: FileSignature, label: 'Obligations (CO)'},
-                { tab: NavigationTab.COST_TRANSFERS, icon: Shuffle, label: 'Cost Transfers'},
-                { tab: NavigationTab.TRAVEL, icon: Plane, label: 'Travel (TO/TV)' },
-                { tab: NavigationTab.CIVIL_WORKS_ALLOWANCE, icon: FileText, label: 'Civil Works Allowance' },
-                { tab: NavigationTab.CDO_MANAGEMENT, icon: PieChart, label: 'Dept Overhead (CD)' },
-                { tab: NavigationTab.ASSET_LIFECYCLE, icon: Box, label: 'Inv & Assets (IA/MA)' },
-                { tab: NavigationTab.ERP_CORE, icon: Grid, label: 'Module Inventory' },
-                { tab: NavigationTab.DISBURSEMENT, icon: ArrowRightLeft, label: 'Treasury Interface' },
-                { tab: NavigationTab.FBWT_RECONCILIATION, icon: Scale, label: 'Treasury Recon' },
-                { tab: NavigationTab.CONTINGENCY_OPS, icon: Globe, label: 'Emergency Ops' },
-              ]
-            },
-            {
-              title: "CONTROL & AUDIT",
-              items: [
-                { tab: NavigationTab.ADMIN_CONTROL, icon: Gavel, label: 'Funds Control (ADA)' },
-                { tab: NavigationTab.COMPLIANCE, icon: ShieldAlert, label: 'Audit Readiness' },
-                { tab: NavigationTab.GOVERNANCE, icon: Library, label: 'FMR Library' },
-              ]
+                title: "CIVIL WORKS",
+                items: [
+                    { tab: NavigationTab.CIVIL_WORKS_ALLOWANCE, icon: Landmark, label: 'Authority (CWA)' },
+                    { tab: NavigationTab.CDO_MANAGEMENT, icon: PieChart, label: 'CDO Management' },
+                    { tab: NavigationTab.ASSET_LIFECYCLE, icon: Box, label: 'Asset Lifecycle' },
+                    { tab: NavigationTab.REIMBURSABLES, icon: RefreshCcw, label: 'Reimbursables' },
+                ]
             }
         ];
     }
-    // Default GFEBS
-    return [
+
+    if (agency === 'OSD_HAP') {
+      return [
         {
-          title: "Command Center",
+          title: "HOMEOWNERS ASSISTANCE",
           items: [
-            { tab: NavigationTab.DASHBOARD, icon: LayoutDashboard },
-            { tab: NavigationTab.ANALYTICS, icon: BrainCircuit },
-            { tab: NavigationTab.DIGITAL_THREAD, icon: GitMerge },
-            { tab: NavigationTab.RULES_ENGINE, icon: Cpu },
-          ]
-        },
-        {
-          title: "Strategy & Budget",
-          items: [
-            { tab: NavigationTab.PPBE_CYCLE, icon: Target },
-            { tab: NavigationTab.O_AND_M_APPROPRIATIONS, icon: FileText },
-            { tab: NavigationTab.APPROPRIATIONS, icon: Clock },
-            { tab: NavigationTab.GOVERNANCE, icon: Landmark },
-          ]
-        },
-        {
-          title: "Financial Operations",
-          items: [
-            { tab: NavigationTab.ERP_CORE, icon: Server },
-            { tab: NavigationTab.REIMBURSABLES, icon: RefreshCcw },
-            { tab: NavigationTab.REVOLVING_FUNDS, icon: RefreshCw },
-            { tab: NavigationTab.OBLIGATIONS, icon: FileSignature },
-            { tab: NavigationTab.DISBURSEMENT, icon: ArrowRightLeft },
-            { tab: NavigationTab.FBWT_RECONCILIATION, icon: Scale },
-            { tab: NavigationTab.CONTINGENCY_OPS, icon: Globe },
-          ]
-        },
-        {
-          title: "Control & Audit",
-          items: [
-            { tab: NavigationTab.ADMIN_CONTROL, icon: Gavel },
-            { tab: NavigationTab.DEPOSIT_LIABILITIES, icon: Library },
-            { tab: NavigationTab.CASH_OUTSIDE_TREASURY, icon: Wallet },
-            { tab: NavigationTab.COMPLIANCE, icon: ShieldAlert },
-            { tab: NavigationTab.GAAP_AUDIT, icon: ClipboardCheck },
+            { tab: NavigationTab.HAP_CASES, icon: Home, label: 'Case Management' },
+            { tab: NavigationTab.ANALYTICS, icon: BrainCircuit, label: 'Strategic Analytics' },
           ]
         }
       ];
+    }
+
+    if (agency === 'OSD_LGH') {
+      return [
+        {
+          title: "GOVERNMENT HOUSING",
+          items: [
+            { tab: NavigationTab.LGH_PORTFOLIO, icon: Key, label: 'Portfolio Monitor' },
+            { tab: NavigationTab.ANALYTICS, icon: BrainCircuit, label: 'Strategic Analytics' },
+          ]
+        }
+      ];
+    }
+
+    if (agency === 'OSD_BRAC') {
+        return [
+          {
+            title: "DECISION SUPPORT",
+            items: [
+              { tab: NavigationTab.BRAC_DSS, icon: Building, label: 'BRAC Analysis' },
+              { tab: NavigationTab.ANALYTICS, icon: BrainCircuit, label: 'Strategic Analytics' },
+            ]
+          }
+        ];
+    }
+
+    return [
+      {
+        title: "STRATEGIC",
+        items: [
+          { tab: NavigationTab.DASHBOARD, icon: LayoutDashboard, label: 'Enterprise Dashboard' },
+          { tab: NavigationTab.DIGITAL_THREAD, icon: GitMerge, label: 'Digital Thread' },
+          { tab: NavigationTab.PPBE_CYCLE, icon: Clock, label: 'PPBE Cycle' },
+          { tab: NavigationTab.ANALYTICS, icon: BrainCircuit, label: 'Strategic Analytics' },
+        ]
+      },
+      {
+        title: "EXECUTION",
+        items: [
+          { tab: NavigationTab.APPROPRIATIONS, icon: Landmark, label: 'Appropriations' },
+          { tab: NavigationTab.ERP_CORE, icon: Server, label: 'ERP Core (GFEBS)' },
+          { tab: NavigationTab.DISBURSEMENT, icon: ArrowRightLeft, label: 'Disbursement' },
+          { tab: NavigationTab.OBLIGATIONS, icon: FileSignature, label: 'Obligation Management' },
+          { tab: NavigationTab.CONTINGENCY_OPS, icon: Globe, label: 'Contingency Ops' },
+        ]
+      },
+      {
+        title: "AUDIT & COMPLIANCE",
+        items: [
+          { tab: NavigationTab.COMPLIANCE, icon: ClipboardCheck, label: 'FIAR Readiness' },
+          { tab: NavigationTab.GAAP_AUDIT, icon: Scale, label: 'GAAP Audit' },
+          { tab: NavigationTab.FBWT_RECONCILIATION, icon: Wallet, label: 'FBwT Reconciliation' },
+          { tab: NavigationTab.RULES_ENGINE, icon: Cpu, label: 'Rules Engine' },
+        ]
+      }
+    ];
   }, [agency]);
 
-  const getHeaderIcon = () => {
-      if (agency === 'USACE_CEFMS') return <Castle size={18} className="text-white" />;
-      if (agency === 'OSD_BRAC') return <Building2 size={18} className="text-white" />;
-      if (agency === 'OSD_HAP') return <Home size={18} className="text-white" />;
-      if (agency === 'USACE_HAPMIS') return <Home size={18} className="text-white" />;
-      if (agency === 'OSD_LGH') return <Key size={18} className="text-white" />;
-      return <ShieldCheck size={18} className="text-white" />;
+  const isOpen = isSidebarOpen || isMobileMenuOpen;
+
+  const handleTabClick = (tab: NavigationTab) => {
+    startTransition(() => {
+      setActiveTab(tab);
+      if (isMobileMenuOpen) setMobileMenuOpen(false);
+    });
   };
 
-  const getHeaderColor = () => {
-      if (agency === 'USACE_CEFMS') return 'bg-rose-700';
-      if (agency === 'OSD_BRAC') return 'bg-indigo-700';
-      if (agency === 'OSD_HAP') return 'bg-teal-700';
-      if (agency === 'USACE_HAPMIS') return 'bg-orange-700';
-      if (agency === 'OSD_LGH') return 'bg-cyan-700';
-      return 'bg-zinc-900';
+  const handleAgencyClick = (newAgency: AgencyContext) => {
+    startTransition(() => {
+      setAgency(newAgency);
+      // Automatically switch to appropriate tab for special OSD agencies
+      if (newAgency === 'OSD_HAP') setActiveTab(NavigationTab.HAP_CASES);
+      if (newAgency === 'OSD_LGH') setActiveTab(NavigationTab.LGH_PORTFOLIO);
+      if (newAgency === 'OSD_BRAC') setActiveTab(NavigationTab.BRAC_DSS);
+    });
   };
-
-  const getSentinelName = () => {
-      if (agency === 'USACE_CEFMS') return 'USACE Sentinel';
-      if (agency === 'OSD_BRAC') return 'BRAC Sentinel';
-      if (agency === 'OSD_HAP') return 'HAP Sentinel';
-      if (agency === 'USACE_HAPMIS') return 'HAPMIS Sentinel';
-      if (agency === 'OSD_LGH') return 'Housing Sentinel';
-      return 'G-8 Sentinel';
-  };
-
-  const SidebarContent = () => (
-    <>
-      <div className="h-16 flex items-center px-6 border-b border-zinc-100 bg-white shrink-0 gap-3">
-        <div className={`p-1.5 rounded-lg ${getHeaderColor()}`}>
-          {getHeaderIcon()}
-        </div>
-        {(isSidebarOpen || isMobileMenuOpen) && (
-          <div className="flex flex-col">
-            <span className="font-bold text-sm tracking-tight text-zinc-900 leading-none">D-AFMP</span>
-            <span className="text-[9px] font-medium text-zinc-400 tracking-wider uppercase mt-0.5">
-                {getSentinelName()}
-            </span>
-          </div>
-        )}
-      </div>
-      
-      {/* Agency Switcher */}
-      {(isSidebarOpen || isMobileMenuOpen) && (
-          <div className="px-4 py-4">
-              <div className="p-1 bg-zinc-100 rounded-lg flex flex-col gap-1">
-                  <button 
-                    onClick={() => { setAgency('ARMY_GFEBS'); setActiveTab(NavigationTab.DASHBOARD); }}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${agency === 'ARMY_GFEBS' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
-                  >
-                      <ShieldCheck size={12}/> Dept of Army (GFEBS)
-                  </button>
-                  <button 
-                    onClick={() => { setAgency('USACE_CEFMS'); setActiveTab(NavigationTab.DASHBOARD); }}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${agency === 'USACE_CEFMS' ? 'bg-white shadow-sm text-rose-700' : 'text-zinc-500 hover:text-zinc-700'}`}
-                  >
-                      <Castle size={12}/> USACE (CEFMS)
-                  </button>
-                  <button 
-                    onClick={() => { setAgency('OSD_BRAC'); setActiveTab(NavigationTab.DASHBOARD); }}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${agency === 'OSD_BRAC' ? 'bg-white shadow-sm text-indigo-700' : 'text-zinc-500 hover:text-zinc-700'}`}
-                  >
-                      <Building2 size={12}/> OSD (BRAC)
-                  </button>
-                  <button 
-                    onClick={() => { setAgency('OSD_HAP'); setActiveTab(NavigationTab.DASHBOARD); }}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${agency === 'OSD_HAP' ? 'bg-white shadow-sm text-teal-700' : 'text-zinc-500 hover:text-zinc-700'}`}
-                  >
-                      <Home size={12}/> OSD (HAP)
-                  </button>
-                  <button 
-                    onClick={() => { setAgency('OSD_LGH'); setActiveTab(NavigationTab.DASHBOARD); }}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${agency === 'OSD_LGH' ? 'bg-white shadow-sm text-cyan-700' : 'text-zinc-500 hover:text-zinc-700'}`}
-                  >
-                      <Key size={12}/> OSD (LGH)
-                  </button>
-              </div>
-          </div>
-      )}
-
-      <nav className="flex-1 px-3 py-2 overflow-y-auto custom-scrollbar">
-        {navGroups.map((group, groupIndex) => (
-          <div key={group.title} className="mb-6 last:mb-0">
-            {(isSidebarOpen || isMobileMenuOpen) ? (
-              <h3 className="px-3 mb-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{group.title}</h3>
-            ) : (
-              <div className="my-2 border-t border-zinc-100 mx-2" />
-            )}
-            <div className="space-y-0.5">
-              {group.items.map(({ tab, icon: Icon, label }) => (
-                <button
-                  key={tab}
-                  onClick={() => { setActiveTab(tab); if (isMobileMenuOpen) setMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative ${
-                    activeTab === tab 
-                      ? (agency === 'USACE_CEFMS' ? 'bg-rose-50 text-rose-900 font-semibold shadow-sm border border-rose-100' : 'bg-zinc-100 text-zinc-900 font-semibold shadow-sm border border-zinc-200/50')
-                      : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
-                  }`}
-                  title={!isSidebarOpen ? (label || tab) : undefined}
-                >
-                  <Icon size={16} strokeWidth={1.5} className={`shrink-0 ${activeTab === tab ? (agency === 'USACE_CEFMS' ? 'text-rose-700' : 'text-zinc-900') : 'group-hover:text-zinc-700'}`} />
-                  {(isSidebarOpen || isMobileMenuOpen) && <span className="text-[11px] tracking-wide truncate">{label || tab}</span>}
-                  
-                  {/* Active Indicator */}
-                  {!isSidebarOpen && !isMobileMenuOpen && activeTab === tab && (
-                    <div className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${agency === 'USACE_CEFMS' ? 'bg-rose-600' : 'bg-zinc-900'}`} />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      {/* Footer */}
-      <div className="p-4 border-t border-zinc-100 bg-zinc-50/30">
-         {(isSidebarOpen || isMobileMenuOpen) ? (
-            <div className="text-[9px] text-zinc-400 text-center font-mono">
-               SEC: UNCLASSIFIED//FOUO
-            </div>
-         ) : (
-            <div className="flex justify-center">
-               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="System Online" />
-            </div>
-         )}
-      </div>
-    </>
-  );
 
   return (
-    <>
-      <aside className={`hidden md:flex flex-col transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] bg-white border-r border-zinc-100 shrink-0 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
-        <SidebarContent />
-      </aside>
-      
-      {/* Mobile Sidebar */}
-      <div className={`fixed inset-0 z-[100] md:hidden transition-opacity duration-300 ${isMobileMenuOpen ? 'bg-zinc-900/20 backdrop-blur-sm' : 'pointer-events-none opacity-0'}`} onClick={() => setMobileMenuOpen(false)}>
-        <div className={`absolute top-0 left-0 h-full w-64 bg-white border-r border-zinc-100 shadow-2xl transition-transform duration-300 flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
-          <SidebarContent />
+    <aside className={`fixed md:static inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-zinc-200 transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'} ${isOpen ? 'w-72' : 'w-[72px]'} h-full shrink-0 ${isPending ? 'opacity-80' : 'opacity-100'}`}>
+        <div className="h-16 flex items-center justify-between px-5 border-b border-zinc-100 bg-white shrink-0 gap-3">
+             <div className="flex items-center gap-3 overflow-hidden">
+                <div className={`p-1.5 rounded-lg shrink-0 ${agency === 'USACE_REMIS' ? 'bg-emerald-800' : 'bg-rose-900'}`}>
+                  <TreePine size={18} className="text-white" />
+                </div>
+                {isOpen && <span className="font-bold text-sm tracking-tight text-zinc-900 leading-none truncate uppercase">D-AFMP</span>}
+            </div>
+            {isMobileMenuOpen && (
+                <button onClick={() => setMobileMenuOpen(false)} className="md:hidden p-1 text-zinc-400 hover:text-zinc-800">
+                    <X size={20} />
+                </button>
+            )}
         </div>
-      </div>
-    </>
+        
+        <nav className="flex-1 px-3 py-6 overflow-y-auto custom-scrollbar">
+          <div className="px-3 mb-6">
+              {isOpen && <h3 className="px-3 mb-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest truncate">Agency Context</h3>}
+              <div className="flex flex-col gap-1">
+                  {[
+                    { id: 'ARMY_GFEBS', label: 'Army (GFEBS)', color: 'bg-emerald-400' },
+                    { id: 'USACE_CEFMS', label: 'USACE (CEFMS)', color: 'bg-rose-500' },
+                    { id: 'USACE_REMIS', label: 'USACE (REMIS)', color: 'bg-emerald-600' },
+                    { id: 'OSD_BRAC', label: 'OSD (BRAC)', color: 'bg-indigo-500' },
+                    { id: 'OSD_HAP', label: 'OSD (HAP)', color: 'bg-teal-500' },
+                    { id: 'OSD_LGH', label: 'OSD (LGH)', color: 'bg-cyan-500' }
+                  ].map(a => (
+                    <button 
+                        key={a.id}
+                        onClick={() => handleAgencyClick(a.id as AgencyContext)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-xs font-bold uppercase ${agency === a.id ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:bg-zinc-100'}`}
+                    >
+                        <div className={`w-2 h-2 rounded-full ${agency === a.id ? a.color : 'bg-zinc-300'}`} />
+                        {isOpen && <span className="truncate">{a.label}</span>}
+                    </button>
+                  ))}
+              </div>
+          </div>
+          
+          {navGroups.map((group) => (
+            <div key={group.title} className="mb-6 last:mb-0">
+              {isOpen ? (
+                <h3 className="px-3 mb-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest truncate">
+                  {group.title}
+                </h3>
+              ) : (
+                <div className="my-2 border-t border-zinc-100 mx-2" />
+              )}
+              <div className="space-y-0.5">
+                {group.items.map(({ tab, icon: Icon, label }) => (
+                  <button
+                    key={tab}
+                    onClick={() => handleTabClick(tab)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative ${
+                        activeTab === tab 
+                        ? 'bg-zinc-900 text-white font-semibold shadow-md border border-zinc-800' 
+                        : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
+                    }`}
+                  >
+                    <Icon 
+                      size={18} 
+                      strokeWidth={1.5} 
+                      className={activeTab === tab ? 'text-white' : 'group-hover:text-zinc-700'} 
+                    />
+                    {isOpen && <span className="text-[11px] tracking-wide truncate">{label || tab}</span>}
+                    
+                    {!isOpen && activeTab === tab && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-zinc-900 rounded-l-full" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {isOpen && (
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-zinc-200 shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-[10px]">
+                        JD
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-bold text-zinc-900 truncate">Doe, Jane</p>
+                        <p className="text-[9px] text-zinc-500 truncate">Budget Analyst</p>
+                    </div>
+                </div>
+            </div>
+        )}
+    </aside>
   );
 };
 

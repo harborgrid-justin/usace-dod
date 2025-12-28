@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useTransition, useCallback, useMemo } from 'react';
 import { Users, LayoutDashboard, Brain, BarChart3, Settings, UserCircle2 } from 'lucide-react';
 import WWPDashboard from '../wwp/WWPDashboard';
 import ScenarioPlanner from '../wwp/ScenarioPlanner';
@@ -17,29 +16,36 @@ import {
 
 const WWPView: React.FC<{ onSelectProject: (id: string) => void }> = ({ onSelectProject }) => {
     const [activeTab, setActiveTab] = useState<'Dashboard' | 'Planner' | 'HR' | 'Reports' | 'Config'>('Dashboard');
+    const [isPending, startTransition] = useTransition();
 
-    // Centralized state for reactivity across the module
+    // Standardized States
     const [scenarios, setScenarios] = useState<WorkforceScenario[]>(MOCK_WWP_SCENARIOS);
     const [workloadItems, setWorkloadItems] = useState<WorkloadItem[]>(MOCK_WWP_WORKLOAD_ITEMS);
     const [workforcePlans, setWorkforcePlans] = useState<WorkforcePlan[]>(MOCK_WWP_WORKFORCE_PLANS);
     const [laborRates, setLaborRates] = useState<LaborRate[]>(MOCK_WWP_LABOR_RATES);
     const [laborStandards, setLaborStandards] = useState<LaborStandard[]>(MOCK_WWP_LABOR_STANDARDS);
 
-    const handleUpdateWorkload = (updatedItem: WorkloadItem) => {
+    const handleTabChange = useCallback((id: string) => {
+        startTransition(() => {
+            setActiveTab(id as any);
+        });
+    }, []);
+
+    const handleUpdateWorkload = useCallback((updatedItem: WorkloadItem) => {
         setWorkloadItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
-    };
+    }, []);
 
-    const handleUpdateWorkforce = (updatedPlan: WorkforcePlan) => {
+    const handleUpdateWorkforce = useCallback((updatedPlan: WorkforcePlan) => {
         setWorkforcePlans(prev => prev.map(p => p.id === updatedPlan.id ? updatedPlan : p));
-    };
+    }, []);
 
-    const handleUpdateScenario = (updatedScenario: WorkforceScenario) => {
+    const handleUpdateScenario = useCallback((updatedScenario: WorkforceScenario) => {
         setScenarios(prev => prev.map(s => s.id === updatedScenario.id ? updatedScenario : s));
-    };
+    }, []);
     
-    const handleCreateScenario = (newScenario: WorkforceScenario) => {
+    const handleCreateScenario = useCallback((newScenario: WorkforceScenario) => {
         setScenarios(prev => [...prev, newScenario]);
-    };
+    }, []);
 
     const renderContent = () => {
         switch (activeTab) {
@@ -75,13 +81,13 @@ const WWPView: React.FC<{ onSelectProject: (id: string) => void }> = ({ onSelect
         }
     };
 
-    const TABS = [
+    const tabs = useMemo(() => [
         { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'Planner', label: 'Scenario Planner', icon: Brain },
         { id: 'HR', label: 'Personnel (HR)', icon: UserCircle2 },
         { id: 'Reports', label: 'Reporting', icon: BarChart3 },
         { id: 'Config', label: 'Configuration', icon: Settings },
-    ];
+    ], []);
 
     return (
         <div className="p-4 sm:p-8 space-y-6 animate-in max-w-full mx-auto h-full flex flex-col">
@@ -90,14 +96,14 @@ const WWPView: React.FC<{ onSelectProject: (id: string) => void }> = ({ onSelect
                     <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
                         <Users size={24} className="text-rose-700" /> Workload & Workforce
                     </h2>
-                    <p className="text-xs text-zinc-500 font-medium mt-1">Strategic Manpower and Labor Cost Forecasting (WWP/HR)</p>
+                    <p className="text-xs text-zinc-500 font-medium mt-1">Strategic Manpower Forecasting</p>
                 </div>
 
                 <div className="flex bg-zinc-100 p-1 rounded-lg overflow-x-auto custom-scrollbar">
-                    {TABS.map(tab => (
+                    {tabs.map(tab => (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
+                            onClick={() => handleTabChange(tab.id)}
                             className={`flex items-center gap-2 px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-all whitespace-nowrap ${
                                 activeTab === tab.id ? 'bg-white shadow-sm text-rose-700' : 'text-zinc-500 hover:text-zinc-700'
                             }`}
@@ -109,7 +115,7 @@ const WWPView: React.FC<{ onSelectProject: (id: string) => void }> = ({ onSelect
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0">
+            <div className={`flex-1 min-h-0 transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}>
                 {renderContent()}
             </div>
         </div>

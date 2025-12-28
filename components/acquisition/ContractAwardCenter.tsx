@@ -1,25 +1,24 @@
-
 import React, { useState, useMemo } from 'react';
 import { 
-    FileCheck, Search, Filter, ShieldCheck, 
-    Hammer, Landmark, Box, Binary, Clock, 
+    FileCheck, Search, ShieldCheck, 
+    Hammer, Box, Binary, Clock, 
     ArrowRight, CheckCircle2, AlertTriangle, ExternalLink, 
     Fingerprint, Building2, Gavel, Trash2, Edit3, X, Save, DollarSign,
-    Calendar, History, Shield, FileText, Activity
+    Calendar, History, Shield, FileText, Activity, BookOpen, Scale, Landmark
 } from 'lucide-react';
 import { Contract, ContractStatus, ContractMod } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
-import { AcquisitionOrchestrator } from '../../services/AcquisitionOrchestrator';
 import Modal from '../shared/Modal';
+import { acquisitionService } from '../../services/AcquisitionDataService';
 
 interface Props {
     contracts: Contract[];
-    setContracts: React.Dispatch<React.SetStateAction<Contract[]>>;
 }
 
-const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
+const ContractAwardCenter: React.FC<Props> = ({ contracts }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedId, setSelectedId] = useState<string | null>(contracts[0]?.id || null);
+    const [activeTab, setActiveTab] = useState<'History' | 'Clauses' | 'Damages'>('History');
     
     // Mod Modal State
     const [showModModal, setShowModModal] = useState(false);
@@ -34,17 +33,30 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
 
     const selected = useMemo(() => contracts.find(c => c.id === selectedId), [contracts, selectedId]);
 
+    // Opp 47: Logic to determine required clauses
+    const requiredClauses = useMemo(() => {
+        if (!selected) return [];
+        const clauses = [
+            { code: '52.204-27', name: 'Prohibition on ByteDance (TikTok)', required: true },
+            { code: '52.222-26', name: 'Equal Opportunity', required: true },
+            { code: '52.225-13', name: 'Restrictions on Foreign Purchases', required: true },
+            { code: '52.232-25', name: 'Prompt Payment', required: true },
+        ];
+        if (selected.value > 250000) clauses.push({ code: '52.219-9', name: 'Small Business Subcontracting Plan', required: true });
+        if (selected.type === 'Construction' || selected.value > 2000) clauses.push({ code: '52.222-6', name: 'Construction Wage Rate (Davis-Bacon)', required: true });
+        return clauses;
+    }, [selected]);
+
     const handleExecuteMod = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selected) return;
 
-        const result = AcquisitionOrchestrator.executeModification(selected, {
+        acquisitionService.executeContractMod(selected.id, {
             amountDelta: modAmountDelta,
             description: modDescription,
             authority: modAuthority
         }, 'KO_ADMIN');
 
-        setContracts(prev => prev.map(c => c.id === selected.id ? result.contract : c));
         setShowModModal(false);
         setModAmountDelta(0);
         setModDescription('');
@@ -55,8 +67,7 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
         if (!selected) return;
         if (!confirm("Are you sure you want to finalize and close this contract award? This action is permanent.")) return;
 
-        const updated = AcquisitionOrchestrator.closeoutContract(selected, 'KO_ADMIN');
-        setContracts(prev => prev.map(c => c.id === selected.id ? updated : c));
+        acquisitionService.closeoutContract(selected.id, 'KO_ADMIN');
         alert("Contract Closed Successfully.");
     };
 
@@ -95,6 +106,16 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
                             className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs focus:outline-none focus:border-rose-300 focus:ring-1 focus:ring-rose-300 transition-all"
                         />
                     </div>
+                    {/* Opp 12: Small Business Goaling */}
+                    <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                        <div className="flex justify-between text-[10px] font-bold text-blue-700 mb-1">
+                            <span>Small Business Goal (District)</span>
+                            <span>23% / 25%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-600 w-[92%]" />
+                        </div>
+                    </div>
                 </div>
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
                     {filteredContracts.map(c => (
@@ -119,12 +140,6 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
                             </div>
                         </button>
                     ))}
-                    {filteredContracts.length === 0 && (
-                        <div className="py-20 text-center text-zinc-400">
-                             <Box size={32} className="mx-auto mb-4 opacity-10" />
-                             <p className="text-xs font-medium px-4">No awards found for criteria.</p>
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -138,7 +153,6 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
                                 <h3 className="text-3xl font-bold text-zinc-900 leading-tight mb-1">{selected.vendor}</h3>
                                 <div className="flex items-center gap-6 mt-3 text-xs">
                                     <span className="text-zinc-500 flex items-center gap-1.5 font-medium"><Fingerprint size={14} className="text-zinc-300"/> UEI: <span className="font-mono font-bold text-zinc-800">{selected.uei}</span></span>
-                                    <span className="text-zinc-500 flex items-center gap-1.5 font-medium"><Building2 size={14} className="text-zinc-300"/> CAGE: <span className="font-mono font-bold text-zinc-800">{selected.cageCode}</span></span>
                                     <span className="text-zinc-500 flex items-center gap-1.5 font-medium"><Shield size={14} className="text-zinc-300"/> Type: <span className="font-bold text-zinc-800">{selected.type}</span></span>
                                 </div>
                             </div>
@@ -150,14 +164,6 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
                                     >
                                         <Hammer size={14}/> Execute Mod (SF 30)
                                     </button>
-                                    <button 
-                                        onClick={handleCloseout}
-                                        disabled={selected.status === 'Closed'}
-                                        className="p-2.5 border border-zinc-200 rounded-xl text-zinc-500 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                        title="Contract Closeout"
-                                    >
-                                        <X size={18}/>
-                                    </button>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Obligated Amount</p>
@@ -166,7 +172,7 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
                             </div>
                         </div>
 
-                        {/* Top Grid: Lifecycle & Compliance */}
+                        {/* Lifecycle/Compliance Panels */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="p-6 bg-zinc-50 rounded-2xl border border-zinc-100 flex flex-col justify-between">
                                 <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Performance Period</h4>
@@ -182,15 +188,8 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
                                         <p className="text-xs font-mono font-bold text-rose-700">{selected.periodOfPerformance.end}</p>
                                     </div>
                                 </div>
-                                <div className="mt-6 flex justify-between items-center text-[10px] text-zinc-500">
-                                    <span>Progress</span>
-                                    <span className="font-bold">72% Time Used</span>
-                                </div>
-                                <div className="mt-1 h-1 w-full bg-zinc-200 rounded-full overflow-hidden">
-                                    <div className="h-full bg-zinc-800" style={{width: '72%'}} />
-                                </div>
                             </div>
-
+                            
                             <div className="p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
                                 <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Treasury Integration</h4>
                                 <div className="space-y-3">
@@ -203,16 +202,6 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
                                             </div>
                                         </div>
                                         <CheckCircle2 size={16} className="text-emerald-500"/>
-                                    </div>
-                                    <div className="p-3 bg-white rounded-xl border border-zinc-200 shadow-sm flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-zinc-50 text-zinc-400 rounded-lg"><Binary size={14}/></div>
-                                            <div>
-                                                <p className="text-xs font-bold text-zinc-900">USSGL 480100</p>
-                                                <p className="text-[9px] text-zinc-400 uppercase">Current Obligation</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-xs font-mono font-bold text-zinc-600">{formatCurrency(selected.value)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -229,74 +218,104 @@ const ContractAwardCenter: React.FC<Props> = ({ contracts, setContracts }) => {
                                         <span className="text-xs text-zinc-400">PPA Risk</span>
                                         <CheckCircle2 size={14} className="text-emerald-400" />
                                     </div>
-                                    <button className="w-full mt-2 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all">
-                                        Run Compliance Scan
-                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Tabs / Logs Section */}
+                        {/* Tabs */}
                         <div className="space-y-6">
                             <div className="border-b border-zinc-100 flex gap-8">
-                                <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest pb-3 border-b-2 border-rose-700 flex items-center gap-2">
-                                    <History size={14} className="text-zinc-400"/> Modification History (SF 30)
-                                </h4>
-                                <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest pb-3 border-b-2 border-transparent hover:text-zinc-900 transition-colors flex items-center gap-2 cursor-pointer">
-                                    <FileText size={14}/> Award Clauses
-                                </h4>
+                                <button onClick={() => setActiveTab('History')} className={`text-xs font-bold uppercase tracking-widest pb-3 border-b-2 flex items-center gap-2 ${activeTab === 'History' ? 'text-zinc-900 border-rose-700' : 'text-zinc-400 border-transparent'}`}>
+                                    <History size={14}/> Modification History
+                                </button>
+                                <button onClick={() => setActiveTab('Clauses')} className={`text-xs font-bold uppercase tracking-widest pb-3 border-b-2 flex items-center gap-2 ${activeTab === 'Clauses' ? 'text-zinc-900 border-rose-700' : 'text-zinc-400 border-transparent'}`}>
+                                    <BookOpen size={14}/> Clause Logic
+                                </button>
+                                <button onClick={() => setActiveTab('Damages')} className={`text-xs font-bold uppercase tracking-widest pb-3 border-b-2 flex items-center gap-2 ${activeTab === 'Damages' ? 'text-zinc-900 border-rose-700' : 'text-zinc-400 border-transparent'}`}>
+                                    <Scale size={14}/> Liquidated Damages
+                                </button>
                             </div>
 
-                            <div className="bg-zinc-50 rounded-2xl border border-zinc-200 overflow-hidden shadow-inner">
-                                <table className="w-full text-left text-xs">
-                                    <thead className="bg-zinc-100/80 backdrop-blur-sm border-b border-zinc-200">
-                                        <tr>
-                                            <th className="p-4 font-bold text-zinc-500 uppercase">Mod #</th>
-                                            <th className="p-4 font-bold text-zinc-500 uppercase">Effective Date</th>
-                                            <th className="p-4 font-bold text-zinc-500 uppercase">Authority</th>
-                                            <th className="p-4 font-bold text-zinc-500 uppercase">Description</th>
-                                            <th className="p-4 font-bold text-zinc-500 uppercase text-right">Value Delta</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-zinc-200/50 bg-white/40">
-                                        {selected.modifications.length > 0 ? (
-                                            selected.modifications.map(mod => (
-                                                <tr key={mod.id} className="hover:bg-white/60 transition-colors">
-                                                    <td className="p-4 font-mono font-bold text-zinc-900">{mod.modNumber}</td>
-                                                    <td className="p-4 text-zinc-600">{mod.date}</td>
-                                                    <td className="p-4 text-zinc-600"><span className="px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200 font-mono text-[10px]">{mod.authority}</span></td>
-                                                    <td className="p-4 text-zinc-600 max-w-xs truncate">{mod.description}</td>
-                                                    <td className={`p-4 text-right font-mono font-bold ${mod.amountDelta > 0 ? 'text-emerald-600' : mod.amountDelta < 0 ? 'text-rose-600' : 'text-zinc-400'}`}>
-                                                        {mod.amountDelta > 0 ? '+' : ''}{formatCurrency(mod.amountDelta)}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
+                            {activeTab === 'History' && (
+                                <div className="bg-zinc-50 rounded-2xl border border-zinc-200 overflow-hidden shadow-inner">
+                                    <table className="w-full text-left text-xs">
+                                        <thead className="bg-zinc-100/80 backdrop-blur-sm border-b border-zinc-200">
                                             <tr>
-                                                <td colSpan={5} className="p-8 text-center text-zinc-400 italic">No modifications recorded for this award.</td>
+                                                <th className="p-4 font-bold text-zinc-500 uppercase">Mod #</th>
+                                                <th className="p-4 font-bold text-zinc-500 uppercase">Effective Date</th>
+                                                <th className="p-4 font-bold text-zinc-500 uppercase">Authority</th>
+                                                <th className="p-4 font-bold text-zinc-500 uppercase">Description</th>
+                                                <th className="p-4 font-bold text-zinc-500 uppercase text-right">Value Delta</th>
                                             </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-zinc-200/50 bg-white/40">
+                                            {selected.modifications.length > 0 ? (
+                                                selected.modifications.map(mod => (
+                                                    <tr key={mod.id} className="hover:bg-white/60 transition-colors">
+                                                        <td className="p-4 font-mono font-bold text-zinc-900">{mod.modNumber}</td>
+                                                        <td className="p-4 text-zinc-600">{mod.date}</td>
+                                                        <td className="p-4 text-zinc-600"><span className="px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200 font-mono text-[10px]">{mod.authority}</span></td>
+                                                        <td className="p-4 text-zinc-600 max-w-xs truncate">{mod.description}</td>
+                                                        <td className={`p-4 text-right font-mono font-bold ${mod.amountDelta > 0 ? 'text-emerald-600' : mod.amountDelta < 0 ? 'text-rose-600' : 'text-zinc-400'}`}>
+                                                            {mod.amountDelta > 0 ? '+' : ''}{formatCurrency(mod.amountDelta)}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr><td colSpan={5} className="p-8 text-center text-zinc-400 italic">No modifications recorded.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
 
-                        {/* System Log */}
-                        <div className="space-y-4">
-                            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
-                                <Activity size={14} className="text-zinc-400"/> Audit Trail
-                            </h4>
-                            <div className="space-y-2">
-                                {selected.auditLog.map((log, i) => (
-                                    <div key={i} className="flex gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-100 text-xs hover:bg-white hover:border-zinc-200 transition-all group">
-                                        <div className="font-mono text-zinc-400 shrink-0 border-r border-zinc-200 pr-4">{new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                                        <div className="flex-1">
-                                            <span className="font-bold text-zinc-800 uppercase text-[10px] group-hover:text-rose-700 transition-colors">{log.action}:</span> {log.details}
-                                        </div>
-                                        <div className="text-[10px] font-bold text-zinc-400 uppercase bg-white px-2 py-1 rounded border border-zinc-100">{log.user}</div>
+                            {activeTab === 'Clauses' && (
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 flex gap-2">
+                                        <BookOpen size={16} className="shrink-0"/>
+                                        <p>Clauses automatically determined based on contract type, value ({formatCurrency(selected.value)}), and commerciality status per FAR Matrix.</p>
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {requiredClauses.map((clause, idx) => (
+                                            <div key={idx} className="flex justify-between items-center p-3 bg-white border border-zinc-200 rounded-lg hover:border-zinc-300">
+                                                <div>
+                                                    <span className="text-[10px] font-mono font-bold bg-zinc-100 px-2 py-0.5 rounded text-zinc-600">{clause.code}</span>
+                                                    <p className="text-xs font-bold text-zinc-800 mt-1">{clause.name}</p>
+                                                </div>
+                                                <CheckCircle2 size={16} className="text-emerald-500" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'Damages' && (
+                                <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm flex gap-6">
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-bold text-zinc-900 mb-2">Liquidated Damages Calculator</h4>
+                                        <p className="text-xs text-zinc-500 mb-4">Estimate potential recovery for schedule slippage.</p>
+                                        <div className="grid grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-zinc-400 uppercase">Daily Rate</label>
+                                                <p className="text-lg font-mono font-bold text-zinc-900">$1,250.00</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-zinc-400 uppercase">Days Late</label>
+                                                <input type="number" className="w-full border rounded p-1 text-sm mt-1" defaultValue={0} />
+                                            </div>
+                                        </div>
+                                        <div className="p-3 bg-rose-50 border border-rose-100 rounded-lg text-xs font-bold text-rose-800 flex justify-between">
+                                            <span>Potential Recovery</span>
+                                            <span>$0.00</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-px bg-zinc-100"/>
+                                    <div className="w-1/3 text-xs text-zinc-500">
+                                        <p className="mb-2"><strong>Authority:</strong> FAR 11.501</p>
+                                        <p>Use only when time of delivery or performance is of the essence and the extent or amount of damage would be difficult or impossible to estimate accurately or prove.</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : (

@@ -74,7 +74,7 @@ const AppropriationLifecycleManager: React.FC<Props> = ({ appropriation, command
   };
   
   return (
-    <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto">
+    <div className="p-4 sm:p-8 space-y-6 animate-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <button onClick={onBack} className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 mb-3 transition-colors uppercase tracking-wide">

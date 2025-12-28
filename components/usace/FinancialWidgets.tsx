@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { DollarSign, PieChart, FileText, ArrowRight, Users, TrendingUp, Landmark, ArrowUpDown } from 'lucide-react';
+import { DollarSign, PieChart, FileText, ArrowRight, Users, TrendingUp, Landmark, ArrowUpDown, AlertCircle, Clock } from 'lucide-react';
 import { USACEProject } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
 import { ResponsiveContainer, PieChart as RePieChart, Pie, Cell, Tooltip } from 'recharts';
@@ -110,71 +110,106 @@ export const PRCList = ({ project }: { project: USACEProject }) => {
     );
 };
 
-export const FundingStreamVisualizer = ({ project }: { project: USACEProject }) => (
-    <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-        <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-6">Appropriation Flow</h4>
-        <div className="flex items-center justify-between relative">
-            {/* Connecting Line */}
-            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-100 -translate-y-1/2 -z-10" />
-            
-            <div className="flex flex-col items-center bg-white px-2">
-                <div className="p-3 rounded-full bg-purple-50 text-purple-600 border border-purple-100 mb-2"><Landmark size={16}/></div>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase">Approp</p>
-                <p className="text-xs font-mono font-bold text-zinc-900">{project.appropriation}</p>
+export const FundingStreamVisualizer = ({ project }: { project: USACEProject }) => {
+    // Opp 15: Funding Expiration Warning
+    const currentYear = new Date().getFullYear();
+    const expiryYear = currentYear + 1; // Mock
+    const isExpiring = expiryYear <= currentYear + 1;
+
+    return (
+        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm relative overflow-hidden">
+            <div className="flex justify-between items-start mb-6">
+                <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest">Appropriation Flow</h4>
+                {isExpiring && (
+                    <div className="flex items-center gap-1 text-[9px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-100 animate-in fade-in">
+                        <Clock size={10} /> Funds Expire Sept 30
+                    </div>
+                )}
             </div>
             
-            <ArrowRight size={16} className="text-zinc-300" />
+            <div className="flex items-center justify-between relative">
+                {/* Connecting Line */}
+                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-100 -translate-y-1/2 -z-10" />
+                
+                <div className="flex flex-col items-center bg-white px-2">
+                    <div className="p-3 rounded-full bg-purple-50 text-purple-600 border border-purple-100 mb-2"><Landmark size={16}/></div>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase">Approp</p>
+                    <p className="text-xs font-mono font-bold text-zinc-900">{project.appropriation}</p>
+                </div>
+                
+                <ArrowRight size={16} className="text-zinc-300" />
 
-            <div className="flex flex-col items-center bg-white px-2">
-                <div className="p-3 rounded-full bg-blue-50 text-blue-600 border border-blue-100 mb-2"><DollarSign size={16}/></div>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase">Programmed</p>
-                <p className="text-xs font-mono font-bold text-zinc-900">{formatCurrency(project.financials.programmed)}</p>
-            </div>
+                <div className="flex flex-col items-center bg-white px-2">
+                    <div className="p-3 rounded-full bg-blue-50 text-blue-600 border border-blue-100 mb-2"><DollarSign size={16}/></div>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase">Programmed</p>
+                    <p className="text-xs font-mono font-bold text-zinc-900">{formatCurrency(project.financials.programmed)}</p>
+                </div>
 
-            <ArrowRight size={16} className="text-zinc-300" />
+                <ArrowRight size={16} className="text-zinc-300" />
 
-            <div className="flex flex-col items-center bg-white px-2">
-                <div className="p-3 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 mb-2"><FileText size={16}/></div>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase">Obligated</p>
-                <p className="text-xs font-mono font-bold text-zinc-900">{formatCurrency(project.financials.obligated)}</p>
+                <div className="flex flex-col items-center bg-white px-2">
+                    <div className="p-3 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 mb-2"><FileText size={16}/></div>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase">Obligated</p>
+                    <p className="text-xs font-mono font-bold text-zinc-900">{formatCurrency(project.financials.obligated)}</p>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
-export const LaborAnalysis = () => (
-    <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-        <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Users size={14} className="text-zinc-400"/> Labor Analysis (FTE)
-        </h4>
-        <div className="space-y-4">
-            <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-600 font-medium">Direct Labor</span>
-                <div className="text-right">
-                    <span className="block font-bold text-zinc-900">$1.2M</span>
-                    <span className="text-[10px] text-zinc-400">12.5 FTE</span>
-                </div>
+export const LaborAnalysis = () => {
+    // Opp 14: Overrun Detection logic
+    const directLaborCost = 1200000;
+    const directLaborBudget = 1100000; // Mock budget lower than cost
+    const isOverrun = directLaborCost > directLaborBudget;
+
+    return (
+        <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+                <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
+                    <Users size={14} className="text-zinc-400"/> Labor Analysis (FTE)
+                </h4>
+                {isOverrun && (
+                    <span className="text-[9px] text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-bold border border-rose-100 flex items-center gap-1">
+                        <AlertCircle size={10}/> Over Budget
+                    </span>
+                )}
             </div>
-            <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-600 font-medium">District Overhead</span>
-                <div className="text-right">
-                    <span className="block font-bold text-zinc-900">$240K</span>
-                    <span className="text-[10px] text-zinc-400">20% Rate</span>
+            
+            <div className="space-y-4">
+                <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-600 font-medium">Direct Labor</span>
+                    <div className="text-right">
+                        <span className={`block font-bold ${isOverrun ? 'text-rose-700' : 'text-zinc-900'}`}>{formatCurrency(directLaborCost)}</span>
+                        <span className="text-[10px] text-zinc-400">12.5 FTE</span>
+                    </div>
                 </div>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-600 font-medium">S&amp;A (Supervision &amp; Admin)</span>
-                <div className="text-right">
-                    <span className="block font-bold text-zinc-900">$180K</span>
-                    <span className="text-[10px] text-zinc-400">5.5% Flat</span>
+                {/* Progress Bar for Labor */}
+                <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+                    <div className={`h-full ${isOverrun ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{width: `${Math.min((directLaborCost / directLaborBudget) * 100, 100)}%`}}/>
                 </div>
-            </div>
-            <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
-                <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-[9px] font-bold uppercase">
-                    <TrendingUp size={12}/> Within Budget
+                
+                <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-600 font-medium">District Overhead</span>
+                    <div className="text-right">
+                        <span className="block font-bold text-zinc-900">$240K</span>
+                        <span className="text-[10px] text-zinc-400">20% Rate</span>
+                    </div>
                 </div>
-                <span className="text-xs font-mono font-bold text-zinc-900">Total: $1.62M</span>
+                <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-600 font-medium">S&amp;A (Supervision &amp; Admin)</span>
+                    <div className="text-right">
+                        <span className="block font-bold text-zinc-900">$180K</span>
+                        <span className="text-[10px] text-zinc-400">5.5% Flat</span>
+                    </div>
+                </div>
+                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase ${isOverrun ? 'text-rose-600 bg-rose-50' : 'text-emerald-600 bg-emerald-50'}`}>
+                        <TrendingUp size={12}/> {isOverrun ? 'Cost Variance' : 'Within Budget'}
+                    </div>
+                    <span className="text-xs font-mono font-bold text-zinc-900">Total: $1.62M</span>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};

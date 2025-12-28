@@ -1,8 +1,7 @@
-
 import React, { useState, useMemo } from 'react';
 import { BudgetLineItem, POMEntry } from '../../types';
 /* Fix: Added RefreshCw and Landmark to the import list from lucide-react */
-import { FileText, Sparkles, Download, ChevronDown, ChevronUp, Database, AlertCircle, Bot, CheckCircle2, RefreshCw, Landmark } from 'lucide-react';
+import { FileText, Sparkles, Download, ChevronDown, ChevronUp, Database, AlertCircle, Bot, CheckCircle2, RefreshCw, Landmark, ShieldAlert, Award } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatting';
 import { generateJSheetNarrative } from '../../services/geminiService';
 
@@ -11,7 +10,7 @@ interface Props {
     pom: POMEntry[];
 }
 
-const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
+export const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
     const [selectedId, setSelectedId] = useState<string | null>(items[0]?.id || null);
     const [justification, setJustification] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -19,6 +18,16 @@ const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
 
     const selectedItem = useMemo(() => items.find(i => i.id === selectedId), [items, selectedId]);
     const pomDetail = useMemo(() => pom.find(p => p.projectId === selectedItem?.projectId), [pom, selectedItem]);
+
+    // Opp 63: Quality Score Calculation
+    const qualityScore = useMemo(() => {
+        if (!justification) return 0;
+        let score = 50; // Base
+        if (justification.length > 200) score += 20;
+        if (justification.toLowerCase().includes('critical') || justification.toLowerCase().includes('mission')) score += 15;
+        if (justification.toLowerCase().includes('safety')) score += 15;
+        return Math.min(100, score);
+    }, [justification]);
 
     const handleGenerate = async () => {
         if (!selectedItem) return;
@@ -85,6 +94,14 @@ const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
                         </div>
                     </div>
                     <div className="flex gap-2">
+                        {/* Opp 63: Quality Score Badge */}
+                        <div className={`px-3 py-1 rounded-xl border flex items-center gap-2 ${qualityScore > 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
+                            <Award size={14}/>
+                            <div className="flex flex-col">
+                                <span className="text-[8px] font-bold uppercase">Quality Score</span>
+                                <span className="text-xs font-mono font-bold">{qualityScore}/100</span>
+                            </div>
+                        </div>
                         <button className="px-4 py-2 border border-zinc-200 rounded-xl text-[10px] font-bold uppercase text-zinc-600 hover:bg-zinc-50 flex items-center gap-2 transition-all">
                             <Download size={14}/> PDF Export
                         </button>
@@ -92,7 +109,20 @@ const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-zinc-50/50">
-                    <div className="max-w-4xl mx-auto space-y-8 pb-20">
+                    <div className="space-y-8 pb-20">
+                        {/* Opp 64: Capability Risk Warning */}
+                        {selectedItem?.capabilityLevel !== 'Capability 1' && (
+                             <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-900 shadow-sm animate-in slide-in-from-top-2">
+                                <ShieldAlert size={20} className="shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-bold">Mission Risk Warning</p>
+                                    <p className="text-xs mt-1 leading-relaxed">
+                                        This item is programmed below Capability Level 1 (Sustainment). This introduces risk to critical infrastructure performance and requires enhanced justification for OMB review.
+                                    </p>
+                                </div>
+                             </div>
+                        )}
+
                         {/* AI Justification Workbench */}
                         <div className="bg-zinc-900 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden">
                              <div className="absolute top-0 right-0 p-8 opacity-10"><Bot size={120} /></div>
@@ -189,35 +219,14 @@ const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
                             </div>
 
                             <div className="mb-8">
-                                <h5 className="font-bold text-[10px] text-zinc-400 uppercase tracking-widest mb-4">5-Year Summary ($000)</h5>
-                                <table className="w-full text-xs border-collapse font-mono">
-                                    <thead>
-                                        <tr className="bg-zinc-900 text-white">
-                                            <th className="p-3 border border-zinc-800 text-left rounded-tl-xl">FY26 (BY)</th>
-                                            <th className="p-3 border border-zinc-800 text-right">FY27</th>
-                                            <th className="p-3 border border-zinc-800 text-right">FY28</th>
-                                            <th className="p-3 border border-zinc-800 text-right">FY29</th>
-                                            <th className="p-3 border border-zinc-800 text-right rounded-tr-xl">FY30</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-zinc-50/50">
-                                        <tr>
-                                            <td className="p-3 border border-zinc-200 font-bold">{(selectedItem?.amount ? selectedItem.amount/1000 : 0).toLocaleString()}</td>
-                                            <td className="p-3 border border-zinc-200 text-right">{(pomDetail?.fy2 ? pomDetail.fy2/1000 : 0).toLocaleString()}</td>
-                                            <td className="p-3 border border-zinc-200 text-right">{(pomDetail?.fy3 ? pomDetail.fy3/1000 : 0).toLocaleString()}</td>
-                                            <td className="p-3 border border-zinc-200 text-right">{(pomDetail?.fy4 ? pomDetail.fy4/1000 : 0).toLocaleString()}</td>
-                                            <td className="p-3 border border-zinc-200 text-right">{(pomDetail?.fy5 ? pomDetail.fy5/1000 : 0).toLocaleString()}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="pt-12 flex justify-between items-end border-t border-zinc-200">
-                                <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                                    <CheckCircle2 size={12} className="text-emerald-500" /> Digitally Signed via D-AFMP Sentinel
-                                </div>
-                                <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
-                                    Security Mark: FOR OFFICIAL USE ONLY
+                                <h5 className="font-bold text-[10px] text-zinc-400 uppercase tracking-widest mb-4">5-Year Program (POM)</h5>
+                                <div className="grid grid-cols-5 gap-4 text-center">
+                                    {['fy1', 'fy2', 'fy3', 'fy4', 'fy5'].map((fy, i) => (
+                                        <div key={fy} className={`p-4 rounded-xl ${i === 0 ? 'bg-zinc-900 text-white' : 'bg-zinc-100'}`}>
+                                            <p className="text-[9px] font-bold uppercase tracking-wider opacity-60">FY{26 + i}</p>
+                                            <p className="text-sm font-mono font-bold mt-1">{pomDetail ? formatCurrency(pomDetail[fy as keyof POMEntry] as number) : '$0'}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -227,5 +236,3 @@ const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
         </div>
     );
 };
-
-export default JSheetGenerator;

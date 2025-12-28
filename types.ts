@@ -1,3 +1,10 @@
+/**
+ * XI. The Principle of Opaque Types (Branding)
+ */
+export type Brand<K, T> = K & { __brand: T };
+
+export type UserId = Brand<string, 'UserId'>;
+export type TransactionId = Brand<string, 'TransactionId'>;
 
 export enum NavigationTab {
   DASHBOARD = 'Dashboard',
@@ -34,182 +41,92 @@ export enum NavigationTab {
   ASSET_LIFECYCLE = 'Asset Lifecycle',
   HAP_CASES = 'HAP Cases',
   LGH_PORTFOLIO = 'LGH Portfolio',
-  BRAC_DSS = 'BRAC Decision Support'
+  BRAC_DSS = 'BRAC Decision Support',
+  // REMIS Tabs
+  REMIS_REQUIREMENTS = 'Requirements',
+  REAL_PROPERTY_ASSETS = 'Real Property Assets',
+  OUTGRANTS_LEASES = 'Outgrants & Leases',
+  APPRAISALS = 'Appraisal Workspace',
+  DISPOSALS = 'Disposals',
+  REMIS_ADMIN = 'REMIS Admin',
+  ENCROACHMENT = 'Encroachment',
+  COST_SHARE = 'Cost Share Programs',
+  SOLICITATIONS = 'Solicitations',
+  RELOCATION = 'Relocation',
+  REPORTS = 'Reports',
+  GIS_MAP = 'GIS Map',
 }
 
-export type AgencyContext = 'ARMY_GFEBS' | 'USACE_CEFMS' | 'OSD_BRAC' | 'OSD_HAP' | 'OSD_LGH' | 'USACE_HAPMIS';
+export type AgencyContext = 'ARMY_GFEBS' | 'USACE_CEFMS' | 'USACE_REMIS' | 'OSD_BRAC' | 'OSD_HAP' | 'OSD_LGH' | 'USACE_HAPMIS';
 
-export type UserRole = string;
+export type UserRole = 'REMIS_APPRAISER' | 'REMIS_REVIEWER' | 'REMIS_APPROVER' | 'REMIS_VIEWER' | string;
 
 export interface AuditLogEntry {
     timestamp: string;
     user: string;
     action: string;
+    organization?: string;
+    transactionId?: string;
     details?: string;
+    reason?: string;
 }
 
-export type ObligationStatus = 'Open' | 'Closed' | 'Dormant';
-export type ObligationType = 'Contract' | 'Travel' | 'MIPR' | 'Misc' | 'Training' | 'Utilities' | 'GPC';
+export interface RetrievalLogEntry {
+    timestamp: string;
+    user: string;
+    entityId: string;
+    entityType: 'Asset' | 'Outgrant' | 'Solicitation' | 'Appraisal';
+    accessRole: string;
+    purpose: string;
+}
 
-export interface Obligation {
-    id: string;
-    vendor: string;
-    documentNumber: string;
-    description: string;
-    fiscalYear: number;
-    appropriation: string;
-    programElement: string;
-    objectClass: string;
-    amount: number;
-    disbursedAmount: number;
-    unliquidatedAmount: number;
-    status: ObligationStatus;
+// Appraisal Specific Types
+export type AppraisalStatus = 'Initiated' | 'In-Progress' | 'Under Review' | 'Approved' | 'Archived';
+export type AppraisalStandard = 'USPAP' | 'Yellow Book (UASFLA)' | 'Proprietary';
+
+export interface AppraisalReview {
+    reviewerId: string;
     date: string;
-    lastActivityDate: string;
-    obligationType: ObligationType;
+    findings: string;
+    isTechnicallySufficient: boolean;
+}
+
+export interface AppraisalRecord {
+    id: string;
+    assetId: string; 
+    status: AppraisalStatus;
+    standard: AppraisalStandard;
+    valuationDate: string;
+    appraiserName: string;
+    appraiserQualifications: string;
+    purpose: string; 
+    scope: string;
+    marketValue: number;
+    limitingConditions: string[];
+    extraordinaryAssumptions: string[];
+    linkedActionId?: string; 
+    revisions: VersionEntry<AppraisalRecord>[];
+    technicalReview?: AppraisalReview;
     auditLog: AuditLogEntry[];
 }
 
-export interface DigitalThread {
+export type A123Status = 'Pending' | 'In-Review' | 'Certified' | 'Flagged';
+
+export interface ReportMetadata {
     id: string;
-    vendorName: string;
-    appropriation: string;
-    unit: string;
-    programElement: string;
-    costCenter: string;
-    fadNumber: string;
-    vendorUEI: string;
-    contractVehicle: string;
-    miprReference: string;
-    socioEconomicStatus: string;
-    obligationAmt: number;
-    disbursementAmt: number;
-    unliquidatedAmt: number;
-    tasSymbol: string;
-    eftStatus: string;
-    supplyClass: string;
-    niinNsn: string;
-    serialNumber: string;
-    uicCode: string;
-    readinessImpact: string;
-    bonaFideValid: boolean;
-    berryCompliant: boolean;
-    ppaInterestRisk: boolean;
-    capId: string;
-    gl1010: string;
-    gaapStandard: string;
-    controlObjective: string;
-    blockchainHash: string;
-    contingencyOpId?: string;
-    unmatchedDisb: boolean;
-    fiarDomain: string;
-    invoiceDaysPending?: number;
-    auditFindingId?: string;
-    daysInactive?: number;
-    dssnNumber?: string;
-    betcCode?: string;
-}
-
-export interface BusinessRule {
-    id: string;
-    name: string;
-    code: string;
-    description: string;
-    severity: 'Critical' | 'Warning' | 'Info';
-    logicString: string;
-    domain: string;
-    isActive: boolean;
-    conditions: RuleCondition[];
-    citation: string;
-    linkedFmrVolumeId?: string;
-}
-
-export interface RuleCondition {
-    field: string;
-    operator: 'GREATER_THAN' | 'LESS_THAN' | 'EQUALS' | 'NOT_EQUALS' | 'IS_TRUE' | 'IS_FALSE' | 'CONTAINS' | 'NOT_CONTAINS';
-    value: any;
-}
-
-export interface RuleEvaluationResult {
-    ruleId: string;
-    ruleName: string;
-    passed: boolean;
-    severity: string;
-    message: string;
+    generatedBy: string;
     timestamp: string;
+    reportType: string;
+    parameters: string; 
+    hash: string;
 }
 
-export type ProjectOrderStatus = 'Draft (Advance Planning)' | 'Issued' | 'Accepted' | 'Work In Progress' | 'Completed' | 'Canceled';
-
-export interface ProjectOrder {
-    id: string;
-    orderNumber: string;
-    description: string;
-    providerId: string;
-    requestingAgency: string;
-    appropriation: string;
-    totalAmount: number;
-    obligatedAmount: number;
-    pricingMethod: 'Fixed Price' | 'Cost Reimbursement';
-    issueDate: string;
-    completionDate: string;
-    isSeverable: boolean;
-    percentInHouse: number;
-    isSpecificDefiniteCertain: boolean;
-    bonaFideNeedYear: number;
-    isDoDOwned: boolean;
-    isSameCommander: boolean;
-    status: ProjectOrderStatus;
-    documents: { fs7600a?: string };
-    linkedP2Number?: string;
-    acceptanceDate?: string;
-    commencementDate?: string;
-}
-
-export type TransferStage = 'Proposal' | 'SecDef Determination' | 'OMB Approval' | 'Reprogramming (DD 1415)' | 'Congressional Notification' | 'Treasury NET (SF 1151)' | 'Completed';
-export type TransferAuthorityType = 'General Transfer Authority (GTA)' | 'Congressionally Directed' | 'Working Capital Fund' | 'MilCon' | 'Functional (10 USC 125)' | 'Inter-Agency (31 USC 1531)';
-
-export interface TransferAction {
-    id: string;
-    fromAccount: string;
-    toAccount: string;
-    amount: number;
-    authorityType: TransferAuthorityType;
-    legalCitation: string;
-    justification: string;
-    isHigherPriority: boolean;
-    isUnforeseen: boolean;
-    isCongressionalDenial?: boolean;
-    currentStage: TransferStage;
-    dates: { initiated: string };
-    documents: { dd1415?: boolean; sf1151?: boolean };
-}
-
-export interface FMRVolume {
-    id: string;
-    volume: string;
-    title: string;
-    category: 'Policy' | 'Budget' | 'Accounting' | 'Pay' | 'Funds' | 'Debt';
-    sizeMB: number;
-    pages: number;
-}
-
-export interface ReimbursableAgreement {
-    id: string;
-    buyer: string;
-    seller: string;
-    gtcNumber: string;
-    status: string;
-    estimatedTotalValue: number;
-}
-
-export interface ReimbursableOrder {
-    id: string;
-    agreementId: string;
-    orderNumber: string;
-    authority: string;
-    amount: number;
-    billingFrequency: string;
+export interface VersionEntry<T> {
+    timestamp: string;
+    user: string;
+    snapshot: Partial<T>;
+    effectiveDate?: string;
+    reason?: string;
 }
 
 export interface USACEProject {
@@ -218,6 +135,7 @@ export interface USACEProject {
     district: string;
     p2Number: string;
     programType: 'Civil Works' | 'Military Programs';
+    appropriation: string;
     financials: {
         currentWorkingEstimate: number;
         obligated: number;
@@ -263,10 +181,337 @@ export interface USACEProject {
         lerrdCredit: boolean;
     }[];
     weatherDelayDays?: number;
-    appropriation?: string;
 }
 
-export type CDOFunction = 'Engineering' | 'Operations' | 'Construction' | 'Planning' | 'Contracting' | 'Resource Management';
+export type RealPropertyStatus = 'Active' | 'Excess' | 'Disposed' | 'Retired' | 'Archived';
+export type JurisdictionType = 'Exclusive' | 'Concurrent' | 'Partial' | 'Proprietary';
+
+export interface RealPropertyAsset {
+    rpuid: string;
+    rpaName: string;
+    installation: string;
+    catcode: string;
+    interestType: 'Fee' | 'Easement' | 'Lease In';
+    status: RealPropertyStatus;
+    acres: number;
+    sqFt: number;
+    hasGeo: boolean;
+    acquisitionDate: string;
+    operationalStatus: string;
+    currentValue: number;
+    deferredMaintenance: number;
+    utilizationRate: number;
+    missionDependency: 'Critical' | 'Dependent' | 'Not Dependent';
+    jurisdiction?: JurisdictionType;
+    accountableDistrict?: string;
+    custody?: string;
+    sourceSystem?: string;
+    originatingOrg?: string;
+    a123Status?: A123Status;
+    auditLog: AuditLogEntry[];
+    versionHistory: VersionEntry<RealPropertyAsset>[];
+}
+
+export type OutgrantStatus = 'Proposed' | 'Active' | 'Amended' | 'Suspended' | 'Expired' | 'Terminated' | 'Closed' | 'Archived';
+export type OutgrantType = 'Lease' | 'Easement' | 'License' | 'Permit';
+
+export interface Outgrant {
+    id: string;
+    grantee: string;
+    type: OutgrantType;
+    authority: string;
+    permittedUse: string;
+    location: string;
+    annualRent: number;
+    termStart?: string;
+    expirationDate: string;
+    status: OutgrantStatus;
+    paymentFrequency: 'Monthly' | 'Quarterly' | 'Annual';
+    nextPaymentDate: string;
+    assetId?: string;
+    sourceSystem?: string;
+    a123Status?: A123Status;
+    auditLog: AuditLogEntry[];
+    versionHistory: VersionEntry<Outgrant>[];
+}
+
+export interface DisposalAction {
+    id: string;
+    assetId: string;
+    type: 'Public Sale' | 'Federal Transfer' | 'PBC' | 'Exchange';
+    screeningStatus: 'Submitted' | 'DoD Screening' | 'Federal Screening' | 'Homeless Screening' | 'Final';
+    reportedExcessDate: string;
+    estimatedProceeds: number;
+    auditLog: AuditLogEntry[];
+    versionHistory: VersionEntry<DisposalAction>[];
+}
+
+export type SolicitationStatus = 'Requirement Refinement' | 'Market Research' | 'Active Solicitation' | 'Evaluating Quotes' | 'Ready for Award' | 'Awarded';
+
+export interface Solicitation {
+    id: string;
+    prId?: string;
+    assetId?: string;
+    status: SolicitationStatus;
+    title: string;
+    type: string;
+    bidItems?: BidItem[];
+    quotes: VendorQuote[];
+    marketResearch?: MarketResearchReport;
+    statementOfWork?: string;
+    auditLog: AuditLogEntry[];
+}
+
+export type GPCStatus = 'Pending Approval' | 'Approved' | 'Flagged';
+
+export interface GPCTransaction {
+    id: string;
+    merchant: string;
+    amount: number;
+    date: string;
+    cardholder: string;
+    status: GPCStatus;
+}
+
+export interface BidItem {
+    id: string;
+    description: string;
+    unit: string;
+    quantity: number;
+}
+
+export type RelocationCaseStatus = 'Initiated' | 'Eligibility Determined' | 'Assistance Approved' | 'Assistance Provided' | 'Closed';
+
+export interface RelocationCase {
+    id: string;
+    assetId: string;
+    displacedPersonName: string;
+    displacedEntityType: string;
+    eligibilityStatus: string;
+    status: RelocationCaseStatus;
+    initiationDate: string;
+    benefits: RelocationBenefit[];
+    auditLog: AuditLogEntry[];
+    linkedRecords?: {
+        acquisitionId?: string;
+    };
+}
+
+export type BenefitStatus = 'Pending' | 'Approved' | 'Paid' | 'Denied';
+
+export interface RelocationBenefit {
+    id: string;
+    type: 'Moving Expenses' | 'Replacement Housing Payment' | 'Advisory Services';
+    amount: number;
+    status: BenefitStatus;
+    approvalDate?: string;
+    approvingOfficial?: string;
+    paymentId?: string;
+}
+
+export type EncroachmentType = 'Structure' | 'Vegetation' | 'Unauthorized Use' | 'Boundary Dispute';
+export type EncroachmentStatus = 'Reported' | 'Investigated' | 'Action Pending' | 'Legal Action' | 'Resolved' | 'Closed' | 'Archived';
+export type TaskStatus = 'Assigned' | 'In-Progress' | 'Completed' | 'Blocked' | 'Verified' | 'Closed';
+
+export interface WorkActivity {
+    id: string;
+    date: string;
+    description: string;
+    performedBy: string;
+}
+
+export interface EncroachmentTask {
+    id: string;
+    description: string;
+    assignedTo: string;
+    status: TaskStatus;
+    dueDate: string;
+    activities: WorkActivity[];
+}
+
+export interface EncroachmentCase {
+    id: string;
+    assetId: string;
+    locationDescription: string;
+    type: EncroachmentType;
+    discoveryDate: string;
+    description: string;
+    status: EncroachmentStatus;
+    responsibleOfficial: string;
+    tasks: EncroachmentTask[];
+    auditLog: AuditLogEntry[];
+}
+
+// Financial & ERP Types
+export interface Obligation {
+    id: string;
+    vendor: string;
+    documentNumber: string;
+    description: string;
+    fiscalYear: number;
+    appropriation: string;
+    programElement: string;
+    objectClass: string;
+    amount: number;
+    disbursedAmount: number;
+    unliquidatedAmount: number;
+    status: 'Open' | 'Closed' | 'Dormant';
+    date: string;
+    lastActivityDate: string;
+    obligationType: 'Contract' | 'Travel' | 'MIPR' | 'Misc' | 'Training' | 'Utilities' | 'GPC';
+    auditLog: AuditLogEntry[];
+}
+
+export interface DigitalThread {
+    id: string;
+    vendorName: string;
+    appropriation: string;
+    unit: string;
+    programElement: string;
+    costCenter: string;
+    fadNumber: string;
+    vendorUEI: string;
+    contractVehicle: string;
+    miprReference: string;
+    socioEconomicStatus: string;
+    obligationAmt: number;
+    disbursementAmt: number;
+    unliquidatedAmt: number;
+    tasSymbol: string;
+    eftStatus: string;
+    supplyClass: string;
+    niinNsn: string;
+    serialNumber: string;
+    uicCode: string;
+    readinessImpact: string;
+    bonaFideValid: boolean;
+    berryCompliant: boolean;
+    ppaInterestRisk: boolean;
+    capId: string;
+    gl1010: string;
+    gaapStandard: string;
+    controlObjective: string;
+    blockchainHash: string;
+    contingencyOpId?: string;
+    unmatchedDisb: boolean;
+    fiarDomain: string;
+    invoiceDaysPending: number;
+    auditFindingId?: string;
+    dssnNumber?: string;
+    betcCode?: string;
+}
+
+export interface BusinessRule {
+    id: string;
+    name: string;
+    code: string;
+    description: string;
+    severity: 'Critical' | 'Warning' | 'Info';
+    logicString: string;
+    domain: string;
+    isActive: boolean;
+    conditions: RuleCondition[];
+    citation: string;
+    linkedFmrVolumeId?: string;
+}
+
+export interface RuleCondition {
+    field: string;
+    operator: 'EQUALS' | 'NOT_EQUALS' | 'GREATER_THAN' | 'LESS_THAN' | 'CONTAINS' | 'NOT_CONTAINS' | 'IS_TRUE' | 'IS_FALSE';
+    value: any;
+}
+
+export interface RuleEvaluationResult {
+    ruleId: string;
+    ruleName: string;
+    passed: boolean;
+    severity: string;
+    message: string;
+    timestamp: string;
+}
+
+export type ProjectOrderStatus = 'Draft (Advance Planning)' | 'Issued' | 'Accepted' | 'Work In Progress' | 'Completed' | 'Canceled';
+
+export interface ProjectOrder {
+    id: string;
+    orderNumber: string;
+    description: string;
+    providerId: string;
+    requestingAgency: string;
+    appropriation: string;
+    totalAmount: number;
+    obligatedAmount: number;
+    pricingMethod: 'Fixed Price' | 'Cost Reimbursement';
+    issueDate: string;
+    completionDate: string;
+    isSeverable: boolean;
+    percentInHouse: number;
+    isSpecificDefiniteCertain: boolean;
+    bonaFideNeedYear: number;
+    isDoDOwned: boolean;
+    isSameCommander: boolean;
+    status: ProjectOrderStatus;
+    documents: {
+        fs7600a?: string;
+    };
+    linkedP2Number?: string;
+    acceptanceDate?: string;
+    commencementDate?: string;
+}
+
+export type TransferStage = 'Proposal' | 'SecDef Determination' | 'OMB Approval' | 'Reprogramming (DD 1415)' | 'Congressional Notification' | 'Treasury NET (SF 1151)' | 'Completed';
+export type TransferAuthorityType = 'General Transfer Authority (GTA)' | 'Congressionally Directed' | 'Working Capital Fund' | 'MilCon' | 'Functional (10 USC 125)' | 'Inter-Agency (31 USC 1531)';
+
+export type TransferAction = {
+    id: string;
+    fromAccount: string;
+    toAccount: string;
+    amount: number;
+    authorityType: TransferAuthorityType;
+    legalCitation: string;
+    justification: string;
+    isHigherPriority?: boolean;
+    isUnforeseen?: boolean;
+    isCongressionalDenial?: boolean;
+    currentStage: TransferStage;
+    dates: {
+        initiated: string;
+    };
+    documents: {
+        dd1415?: boolean;
+        sf1151?: boolean;
+    };
+};
+
+export interface FMRVolume {
+    id: string;
+    volume: string;
+    title: string;
+    category: string;
+    sizeMB: number;
+    pages: number;
+}
+
+export interface ReimbursableAgreement {
+    id: string;
+    buyer: string;
+    sender: string; // Corrected sender/seller field for logic
+    seller: string;
+    gtcNumber: string;
+    status: string;
+    estimatedTotalValue: number;
+}
+
+export interface ReimbursableOrder {
+    id: string;
+    agreementId: string;
+    orderNumber: string;
+    authority: string;
+    amount: number;
+    billingFrequency: string;
+}
+
+export type CDOFunction = 'Engineering' | 'Operations' | string;
 
 export interface CDOCostPool {
     id: string;
@@ -291,23 +536,13 @@ export interface CDOTransaction {
     isIncidental?: boolean;
 }
 
-export type AssetLifecycleStatus = 'Planning' | 'Acquisition' | 'CIP' | 'In Service' | 'Modification' | 'Disposal';
+export type AssetLifecycleStatus = 'Planning' | 'Acquisition' | 'CIP' | 'In Service' | 'Modification' | 'Disposal' | 'Retired';
 
-export interface Asset {
-    id: string;
-    name: string;
-    type: 'PRIP' | 'Revolving Fund';
-    assetClass: 'Vessel' | 'Equipment' | 'Building' | 'Software' | 'Land';
-    status: AssetLifecycleStatus;
-    acquisitionCost: number;
-    residualValue: number;
-    usefulLife: number;
-    pripAuthorized: boolean;
-    plantIncrementWaiver: { active: boolean };
-    components: DepreciationComponent[];
-    accumulatedDepreciation: number;
-    auditLog: AssetHistoryEvent[];
-    placedInServiceDate?: string;
+export interface AssetHistoryEvent {
+    timestamp: string;
+    user: string;
+    event: string;
+    details: string;
 }
 
 export interface DepreciationComponent {
@@ -318,11 +553,21 @@ export interface DepreciationComponent {
     usefulLife: number;
 }
 
-export interface AssetHistoryEvent {
-    timestamp: string;
-    event: string;
-    details: string;
-    user: string;
+export interface Asset {
+    id: string;
+    name: string;
+    type: 'Revolving Fund' | 'PRIP';
+    assetClass: string;
+    status: AssetLifecycleStatus;
+    acquisitionCost: number;
+    residualValue: number;
+    usefulLife: number;
+    pripAuthorized: boolean;
+    plantIncrementWaiver: { active: boolean };
+    components: DepreciationComponent[];
+    accumulatedDepreciation: number;
+    auditLog: AssetHistoryEvent[];
+    placedInServiceDate?: string;
 }
 
 export interface JournalEntryLine {
@@ -342,7 +587,7 @@ export interface GLTransaction {
     sourceModule: string;
     referenceDoc: string;
     totalAmount: number;
-    status: 'Pending Approval' | 'Posted' | 'Draft' | 'Rejected';
+    status: 'Draft' | 'Pending Approval' | 'Posted' | 'Rejected';
     createdBy: string;
     approvedBy?: string;
     lines: JournalEntryLine[];
@@ -352,7 +597,7 @@ export interface GLTransaction {
 export interface USSGLAccount {
     accountNumber: string;
     description: string;
-    category: 'Asset' | 'Liability' | 'Net Position' | 'Budgetary' | 'Revenue' | 'Expense';
+    category: string;
     normalBalance: 'Debit' | 'Credit';
     financialStatement: string;
     isActive: boolean;
@@ -383,8 +628,6 @@ export interface FundControlNode {
     history?: AEAHistoryEvent[];
 }
 
-export type ExpenseUserRole = 'Clerk' | 'Approver' | 'Disbursing Officer';
-
 export interface Expense {
     id: string;
     obligationId: string;
@@ -398,8 +641,6 @@ export interface Expense {
     disbursedBy?: string;
     disbursementId?: string;
     auditLog: AuditLogEntry[];
-    hours?: number; // Added for CDO Transaction type compatibility if needed
-    employeeId?: string;
 }
 
 export interface Disbursement {
@@ -407,8 +648,32 @@ export interface Disbursement {
     expenseId: string;
     amount: number;
     date: string;
-    paymentMethod: 'EFT' | 'Check' | 'Inter-Agency';
+    paymentMethod: string;
     treasuryConfirmationId: string;
+}
+
+export interface WorkloadItem {
+    id: string;
+    projectId: string;
+    name: string;
+    workloadType: string;
+    unit: string;
+    quantity: number;
+}
+
+export type LaborCategory = 'Engineer' | 'Scientist' | 'Technician' | 'Admin' | 'Project Manager' | string;
+
+export interface WorkforceEntry {
+    laborCategory: LaborCategory;
+    fundedFTE: number;
+    unfundedFTE: number;
+}
+
+export interface WorkforcePlan {
+    id: string;
+    organization: string;
+    functionalArea: string;
+    entries: WorkforceEntry[];
 }
 
 export interface WorkforceScenario {
@@ -416,32 +681,10 @@ export interface WorkforceScenario {
     name: string;
     fiscalYear: number;
     isBaseline: boolean;
-    status: 'Active' | 'Draft' | 'Archived';
+    status: 'Draft' | 'Active' | 'Archived';
     auditLog: AuditLogEntry[];
     workloadItemIds: string[];
     workforcePlanIds: string[];
-}
-
-export interface WorkloadItem {
-    id: string;
-    projectId?: string;
-    name: string;
-    workloadType: string;
-    unit: string;
-    quantity: number;
-}
-
-export type LaborCategory = 'Engineer' | 'Scientist' | 'Technician' | 'Admin' | 'Project Manager';
-
-export interface WorkforcePlan {
-    id: string;
-    organization: string;
-    functionalArea: string;
-    entries: {
-        laborCategory: LaborCategory;
-        fundedFTE: number;
-        unfundedFTE: number;
-    }[];
 }
 
 export interface LaborRate {
@@ -483,7 +726,7 @@ export interface WorkAllowance {
     auditLog: AuditLogEntry[];
 }
 
-export type PRStatus = 'Draft' | 'Pending Certification' | 'Funds Certified' | 'Solicitation' | 'Awarded' | 'Pending Funds';
+export type PRStatus = 'Draft' | 'Pending Certification' | 'Funds Certified' | 'Solicitation' | 'Awarded';
 
 export interface PurchaseRequest {
     id: string;
@@ -492,17 +735,16 @@ export interface PurchaseRequest {
     requester: string;
     date: string;
     status: PRStatus;
-    appropriation?: string;
-    programElement?: string; // Add WBS/Cost Center
-    objectClass?: string;
     justification?: string;
+    appropriation?: string;
+    objectClass?: string;
     wbsCode?: string;
+    auditLog: AuditLogEntry[];
     certifiedBy?: string;
     certificationDate?: string;
-    auditLog: AuditLogEntry[];
 }
 
-export type ContractStatus = 'Active' | 'Completed' | 'Closed' | 'Terminated' | 'Canceled' | 'Under Mod';
+export type ContractStatus = 'Active' | 'Under Mod' | 'Closed' | 'Completed' | 'Terminated' | 'Canceled';
 
 export interface ContractMod {
     id: string;
@@ -511,7 +753,7 @@ export interface ContractMod {
     amountDelta: number;
     description: string;
     authority: string;
-    status: 'Executed' | 'Pending';
+    status: string;
 }
 
 export interface Contract {
@@ -524,8 +766,8 @@ export interface Contract {
     prReference: string;
     uei: string;
     cageCode: string;
-    periodOfPerformance: { start: string, end: string };
-    gInvoicingStatus: 'Draft' | 'Shared' | 'Accepted' | 'Not Applicable';
+    periodOfPerformance: { start: string; end: string };
+    gInvoicingStatus: string;
     isBerryCompliant: boolean;
     modifications: ContractMod[];
     auditLog: AuditLogEntry[];
@@ -549,7 +791,7 @@ export interface DWCFOrder {
     customer: string;
     description: string;
     totalAmount: number;
-    status: 'In Process' | 'Complete';
+    status: string;
     dwcfActivityId: string;
 }
 
@@ -562,8 +804,15 @@ export interface DWCFBilling {
     total: number;
     billingDate: string;
     isAdvanceBilling: boolean;
-    costs?: { labor: number; material: number; overhead: number; surcharge: number };
+    costs?: {
+        labor: number;
+        material: number;
+        overhead: number;
+        surcharge: number;
+    };
 }
+
+export type CashAuditOutcome = 'Passed' | 'Passed with Findings' | 'Failed';
 
 export interface CIHOAccount {
     id: string;
@@ -572,12 +821,40 @@ export interface CIHOAccount {
     balance: number;
     lastReconciliationDate: string;
     cashHoldingAuthorityMemo: string;
-    audits: { id: string; type: string; auditor: string; date: string; outcome: CashAuditOutcome; findingsSummary?: string }[];
+    audits: {
+        id: string;
+        type: string;
+        auditor: string;
+        date: string;
+        outcome: CashAuditOutcome;
+        findingsSummary?: string;
+    }[];
 }
 
-export type BusinessLine = 'Navigation' | 'Flood Control' | 'Environment' | 'Recreation' | 'Hydropower' | 'Water Supply';
+export type QuarterlyReviewStatus = 'Completed' | 'Action Required' | 'Pending' | 'N/A';
+
+export interface DepositFundAccount {
+    id: string;
+    accountName: string;
+    treasuryIndex: string;
+    responsibleComponent: string;
+    currentBalance: number;
+    statutoryAuthorization: string;
+    auditRequirement: string;
+    quarterlyReviews: Record<string, QuarterlyReviewStatus>;
+    audits: {
+        id: string;
+        type: string;
+        auditor: string;
+        date: string;
+        outcome: CashAuditOutcome;
+        findingsSummary?: string;
+    }[];
+}
+
+export type BusinessLine = 'Navigation' | 'Flood Risk Management' | 'Environment' | 'Recreation' | 'Hydropower';
 export type CapabilityLevel = 'Capability 1' | 'Capability 2' | 'Capability 3';
-export type REStatus = 'Draft' | 'Approved - District' | 'Approved - Division' | 'Approved - HQ' | 'Presidential Budget';
+export type REStatus = 'Draft' | 'Pending Review' | 'Approved - District' | 'Approved - MSC' | 'Approved - HQ' | 'Presidential Budget';
 
 export interface BudgetLineItem {
     id: string;
@@ -588,11 +865,10 @@ export interface BudgetLineItem {
     capabilityLevel: CapabilityLevel;
     objectClass: string;
     amount: number;
-    justification?: string;
+    justification: string;
     status: REStatus;
     isInflationAdjusted: boolean;
     lastModified: string;
-    justificationNotes?: string; // For O&M View
 }
 
 export interface POMEntry {
@@ -612,7 +888,7 @@ export interface HAPCase {
     id: string;
     applicantName: string;
     propertyAddress: string;
-    programType: 'Expanded HAP' | 'Conventional HAP';
+    programType: string;
     submissionDate: string;
     status: HAPCaseStatus;
     purchasePrice: number;
@@ -620,7 +896,7 @@ export interface HAPCase {
     mortgageBalance: number;
     currentFairMarketValue?: number;
     benefitAmount: number;
-    applicantType: 'Military - PCS' | 'Wounded' | 'Surviving Spouse' | 'BRAC';
+    applicantType: string;
     pcsOrderDate: string;
     assignedOfficer: string;
 }
@@ -651,7 +927,7 @@ export interface InventoryTransaction {
     type: 'Receipt' | 'Issue' | 'Adjustment';
     quantity: number;
     user: string;
-    notes: string;
+    notes?: string;
     workOrderId?: string;
 }
 
@@ -674,17 +950,20 @@ export interface Vendor {
     serviceType: string;
 }
 
+export type JustificationDocStatus = 'Draft' | 'Submitted' | 'Approved';
+export type OHDAReimbursementStatus = 'Pending Validation' | 'Validated' | 'Reimbursed';
+
 export interface ContingencyOperation {
     id: string;
     name: string;
-    status: 'Active' | 'Planning' | 'Completed';
-    type: 'Overseas Contingency Operation (OCO)' | 'Humanitarian Assistance' | 'Disaster Relief' | 'Peacekeeping';
+    status: 'Planning' | 'Active' | 'Completed';
+    type: string;
     location: string;
     personnelDeployed: number;
     executeOrderRef: string;
     sfisCode: string;
     cjcsProjectCode: string;
-    justificationMaterials: Record<string, string>;
+    justificationMaterials: Record<string, JustificationDocStatus>;
     incrementalCosts: {
         personnel: number;
         operatingSupport: number;
@@ -704,9 +983,9 @@ export interface ContingencyOperation {
     costOffsets: { name: string; amount: number }[];
     incrementalCostsBreakdown: { id: string; name: string; description: string; isApplicable: boolean; cost: number }[];
     estimates?: {
-        preDeployment?: { cost: number };
-        budget?: { cost: number };
-        working?: { cost: number };
+        preDeployment: { cost: number };
+        budget: { cost: number };
+        working: { cost: number };
     };
     endDate?: string;
     ohdacaDetails?: {
@@ -715,60 +994,6 @@ export interface ContingencyOperation {
         reimbursementRequests: { id: string; amount: number; status: OHDAReimbursementStatus }[];
     };
 }
-
-export type SubActivityGroup = {
-    id: string;
-    name: string;
-    budget: number;
-    priceChange: number;
-    programChange: number;
-    isModified?: boolean;
-    justificationNotes?: string;
-}
-
-export type ActivityGroup = {
-    id: string;
-    name: string;
-    subActivityGroups: SubActivityGroup[];
-}
-
-export type BudgetActivity = {
-    id: string;
-    name: string;
-    activityGroups: ActivityGroup[];
-}
-
-export interface OandMAppropriation {
-    id: string;
-    appropriationCode: string;
-    name: string;
-    budgetActivities: BudgetActivity[];
-}
-
-export interface Solicitation {
-    id: string;
-    prId: string;
-    status: SolicitationStatus;
-    title: string;
-    type: 'RFQ' | 'RFP' | 'IFB';
-    quotes: VendorQuote[];
-    auditLog: AuditLogEntry[];
-    marketResearch?: MarketResearchReport;
-    statementOfWork?: string;
-}
-
-export interface VendorQuote {
-    vendorId: string;
-    vendorName: string;
-    uei: string;
-    amount: number;
-    technicalScore: number;
-    pastPerformanceScore: number;
-    isResponsive: boolean;
-    isResponsible: boolean;
-}
-
-export type SolicitationStatus = 'Requirement Refinement' | 'Market Research' | 'Active Solicitation' | 'Evaluating Quotes' | 'Ready for Award' | 'Awarded' | 'Canceled';
 
 export interface RemoteData<T> {
     status: 'IDLE' | 'LOADING' | 'SUCCESS' | 'FAILURE';
@@ -779,88 +1004,53 @@ export interface RemoteData<T> {
 export interface CommandNode {
     id: string;
     name: string;
-    level: string;
-    totalAuthority: number;
     obligated: number;
-    children?: CommandNode[];
-}
-
-export interface Appropriation {
-    id: string;
-    commandId: string;
-    name: string;
     totalAuthority: number;
-    distributions: Distribution[];
-}
-
-export interface Distribution {
-    id: string;
-    toUnit: string;
-    amount: number;
-    purpose: string;
-    fadNumber: string;
-    status: 'Pending' | 'Approved' | 'Executed' | 'Rejected';
-    date: string;
-    linkedThreadId?: string;
 }
 
 export interface ERPModule {
-    code: string;
-    name: string;
-    category: string;
+    id: string;
+    label: string;
     icon: any;
     desc: string;
-    targetTab?: NavigationTab;
 }
 
 export interface IDOCInterface {
     id: string;
+    timestamp: string;
     status: 'Success' | 'Warning' | 'Error';
     direction: 'Inbound' | 'Outbound';
     partner: string;
     messageType: string;
-    timestamp: string;
 }
-
-export interface DepositFundAccount {
-    id: string;
-    accountName: string;
-    treasuryIndex: string;
-    responsibleComponent: string;
-    currentBalance: number;
-    statutoryAuthorization: string;
-    auditRequirement: string;
-    quarterlyReviews: { [key: string]: QuarterlyReviewStatus };
-    audits: { id: string; type: string; auditor: string; date: string; outcome: CashAuditOutcome; findingsSummary?: string }[];
-}
-
-export type DWCFTransaction = {
-    id: string;
-    date: string;
-    activityId: string;
-    type: 'Collection' | 'Disbursement';
-    amount: number;
-    description: string;
-};
 
 export type ScorecardStatus = 'Green' | 'Yellow' | 'Red';
-export type JustificationDocStatus = 'Draft' | 'Submitted' | 'Approved';
-export type OHDAReimbursementStatus = 'Pending Validation' | 'Validated' | 'Reimbursed';
+
+export interface ContingencyFinding {
+    finding: string;
+    risk_level: 'Low' | 'Medium' | 'High' | 'Critical';
+    fmr_reference: string;
+    recommendation: string;
+}
+
+export interface FiarInsight {
+    title: string;
+    severity: string;
+    message: string;
+    recommendation: string;
+    impactArea: string;
+}
 
 export interface UnfundedCustomerOrder {
     id: string;
     customer: string;
     amount: number;
     status: 'Requires Notification' | 'Pending OUSD(C)' | 'Cleared';
-    notificationTimestamp: number;
+    notificationTimestamp?: number;
 }
 
-export type CashAuditOutcome = 'Passed' | 'Passed with Findings' | 'Failed';
-export type QuarterlyReviewStatus = 'Completed' | 'Action Required' | 'Pending' | 'N/A';
 export type ReconciliationStatus = 'Open' | 'In-Research' | 'Resolved' | 'Escalated';
 export type ADAViolationStatus = 'Suspected' | 'Preliminary Review' | 'Formal Investigation' | 'Reported' | 'Closed - No Violation';
-
-export type ADAViolationType = string;
 
 export interface ADAViolation {
     id: string;
@@ -871,6 +1061,8 @@ export interface ADAViolation {
     organization: string;
     description: string;
 }
+
+export type ADAViolationType = '31 USC 1341(a)(1)(A) - Amount Limitation' | '31 USC 1341(a)(1)(B) - Advance of Appropriation' | '31 USC 1342 - Voluntary Services' | '31 USC 1517(a) - Admin Control Limitation' | '31 USC 1301 - Purpose Statute' | '31 USC 1502 - Time Limitation';
 
 export interface InvestigatingOfficer {
     id: string;
@@ -904,7 +1096,7 @@ export interface ADAInvestigation {
     id: string;
     violationId: string;
     stage: string;
-    investigatingOfficer: InvestigatingOfficer | undefined;
+    investigatingOfficer: InvestigatingOfficer;
     startDate: string;
     suspenseDate: string;
     evidence: EvidenceItem[];
@@ -917,6 +1109,54 @@ export interface ADAInvestigation {
 
 export type ReimbursableCustomerType = 'Intra-DoD' | 'Inter-Agency' | 'Private Party' | 'FMS';
 
+export interface Distribution {
+    id: string;
+    toUnit: string;
+    amount: number;
+    purpose: string;
+    fadNumber: string;
+    date: string;
+    status: 'Approved' | 'Pending' | 'Executed' | 'Rejected';
+    linkedThreadId?: string;
+}
+
+export interface Appropriation {
+    id: string;
+    commandId: string;
+    name: string;
+    totalAuthority: number;
+    distributions: Distribution[];
+}
+
+export interface SubActivityGroup {
+    id: string;
+    name: string;
+    budget: number;
+    priceChange?: number;
+    programChange?: number;
+    isModified?: boolean;
+    justificationNotes?: string;
+}
+
+export interface ActivityGroup {
+    id: string;
+    name: string;
+    subActivityGroups: SubActivityGroup[];
+}
+
+export interface BudgetActivity {
+    id: string;
+    name: string;
+    activityGroups: ActivityGroup[];
+}
+
+export interface OandMAppropriation {
+    id: string;
+    appropriationCode: string;
+    name: string;
+    budgetActivities: BudgetActivity[];
+}
+
 export interface MarketResearchReport {
     naicsCode: string;
     smallBusinessSetAside: boolean;
@@ -925,13 +1165,116 @@ export interface MarketResearchReport {
     aiNarrative: string;
 }
 
+export interface VendorQuote {
+    vendorId: string;
+    vendorName: string;
+    uei: string;
+    amount: number;
+    technicalScore: number;
+    pastPerformanceScore: number;
+    isResponsive: boolean;
+    isResponsible: boolean;
+}
+
+export interface DWCFRateProfile {
+    id: string;
+    activityId: string;
+    fiscalYear: number;
+    compositeRate: number;
+    overheadRate: number;
+    surchargeRate: number;
+    accumulatedOperatingResult: number;
+    netOperatingResult: number;
+    status: 'Active' | 'Draft' | 'Pending Approval';
+}
+
+export interface DWCFTransaction {
+    id: string;
+    date: string;
+    activityId: string;
+    type: 'Collection' | 'Disbursement' | 'Accrual';
+    amount: number;
+    description: string;
+}
+
+export interface BracInstallation {
+    id: string;
+    name: string;
+    service: 'Army' | 'Navy' | 'Air Force' | 'Marine Corps';
+    region: string;
+    currentTroopDensity: number;
+    totalForceCapacity: number;
+    availableAcreage: number;
+    conditionCode: number; // 0-100
+    isJointBase: boolean;
+    infrastructure: {
+        schoolCapacityPct: number;
+        hospitalBedsPer1000: number;
+        highwayLevelOfService: 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
+    };
+    economicData: {
+        regionalEmployment: number;
+        defenseDependencyIndex: number; // 0-1
+    };
+    environmental: {
+        hasSuperfundSite: boolean;
+        rmisCleanupEstimate: number;
+    };
+    projected20YearReq: number;
+}
+
+export interface BracScenario {
+    id: string;
+    name: string;
+    type: 'Closure' | 'Realignment';
+    losingInstallationId: string;
+    gainingInstallationId?: string;
+    personnelMoving: number;
+    milconCost: number;
+    oneTimeMovingCost: number;
+    annualSavings: number;
+    status: 'Candidate' | 'Final' | 'Legislatively Locked';
+    auditLog: AuditLogEntry[];
+}
+
+export interface BracAnalysisResult {
+    mviScore: number;
+    npv: number;
+    paybackPeriod: number;
+    breakEvenYear: number;
+    isSurgeCompliant: boolean;
+    jointnessScore: number;
+    economicImpactIndex: number;
+    infrastructureFlag: boolean;
+    environmentalLiability: number;
+    alerts: string[];
+}
+
+export interface CostTransfer {
+    id: string;
+    requestDate: string;
+    description: string;
+    amount: number;
+    sourceProjectId: string;
+    targetProjectId: string;
+    sourceWorkItem: string;
+    targetWorkItem: string;
+    justification: string;
+    status: 'Pending Approval' | 'Approved' | 'Posted' | 'Rejected';
+    requestedBy: string;
+    approvedBy?: string;
+    postedDate?: string;
+    glTransactionId?: string;
+    auditLog: AuditLogEntry[];
+}
+
 export interface TravelOrder {
     id: string;
     traveler: string;
     destination: string;
     purpose: string;
     startDate: string;
-    endDate: string;
+    endDate?: string;
     estCost: number;
     status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
     fiscalYear: number;
@@ -955,15 +1298,89 @@ export interface TravelVoucher {
     expenses: TravelExpense[];
 }
 
-export type GPCStatus = 'Pending Approval' | 'Approved' | 'Flagged';
+export type InspectionStatus = 'Scheduled' | 'Completed' | 'Reviewed' | 'Closed';
 
-export interface GPCTransaction {
+export interface OutgrantInspection {
+    id: string;
+    outgrantId: string;
+    type: 'Compliance' | 'Utilization' | 'Environmental';
+    scheduleDate: string;
+    completionDate?: string;
+    findings: string;
+    correctiveActions: string;
+    status: InspectionStatus;
+    inspector: string;
+}
+
+export interface UtilizationSummary {
+    id: string;
+    outgrantId: string;
+    dateObserved: string;
+    observedUse: string;
+    utilizationRate: number;
+    inspector: string;
+}
+
+export type CostShareStatus = 'Initiated' | 'Active' | 'Completed' | 'Archived';
+
+export interface CostShareAdjustment {
     id: string;
     date: string;
-    merchant: string;
-    amount: number;
-    cardholder: string;
-    status: GPCStatus;
+    type: 'Contribution' | 'Valuation Change';
+    amountDelta: number;
+    justification: string;
+    authorizedBy: string;
+}
+
+export interface CostShareRecord {
+    id: string;
+    projectOrAssetId: string;
+    authority: string;
+    sponsorName: string;
+    percentage: { federal: number; nonFederal: number };
+    contributionType: 'Cash' | 'In-Kind' | 'LERRD' | 'Work-in-Kind';
+    valuationMethod: 'Standard' | 'Appraisal' | 'Audit';
+    status: CostShareStatus;
+    agreementDate: string;
+    totalValue: number;
+    contributedValue: number;
+    auditLog: AuditLogEntry[];
+    adjustments: CostShareAdjustment[];
+}
+
+export type GeoLifecycleState = 'Draft' | 'Validated' | 'Published' | 'Retired';
+export type GeoLayer = 'Real Property' | 'Tasks' | 'Encumbrance' | 'Environment';
+
+export type GeospatialFeature = {
+    id: string;
+    assetName: string;
+    type: 'Point' | 'Polygon' | 'Line';
+    status: GeoLifecycleState;
+    layer: GeoLayer;
+    coordinates: { x: number; y: number };
+    metadata: {
+        source: string;
+        accuracy: string;
+        collectionMethod: string;
+        captureDate: string;
+        responsibleOfficial: string;
+    };
+    auditLog: AuditLogEntry[];
+};
+
+export type ExpenseUserRole = 'Clerk' | 'Approver' | 'Disbursing Officer';
+
+export interface EncroachmentDashboardProps {
+    onNavigateToGis: () => void;
+}
+
+export interface DisposalDashboardProps {
+    onNavigateToAsset: (id: string) => void;
+    onNavigateToSolicitation: (id: string) => void;
+}
+
+export interface RelocationDashboardProps {
+    onNavigateToAcquisition?: (id: string) => void;
 }
 
 export interface LaborEntry {
@@ -994,106 +1411,17 @@ export interface ServiceEntry {
     invoiceNumber?: string;
 }
 
-export type MaintenanceType = 'Corrective' | 'Preventive';
-export type WOStatus = 'Open' | 'Assigned' | 'In Progress' | 'Completed' | 'Closed';
-
 export interface WorkOrder {
     id: string;
     description: string;
-    type: MaintenanceType;
+    type: 'Corrective' | 'Preventive';
     assetId: string;
-    status: WOStatus;
+    status: 'Open' | 'Assigned' | 'In Progress' | 'Completed' | 'Closed';
     assignedTo?: string;
     dueDate: string;
-    totalCost?: number;
     jobPlanId?: string;
     laborEntries: LaborEntry[];
     materialEntries: MaterialEntry[];
     serviceEntries: ServiceEntry[];
-}
-
-// BRAC related
-export interface BracInstallation {
-    id: string;
-    name: string;
-    service: 'Army' | 'Navy' | 'Air Force' | 'Joint';
-    region: string;
-    currentTroopDensity: number;
-    totalForceCapacity: number;
-    availableAcreage: number;
-    conditionCode: number;
-    isJointBase: boolean;
-    infrastructure: {
-        schoolCapacityPct: number;
-        hospitalBedsPer1000: number;
-        highwayLevelOfService: 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
-    };
-    economicData: {
-        regionalEmployment: number;
-        defenseDependencyIndex: number;
-    };
-    environmental: {
-        hasSuperfundSite: boolean;
-        rmisCleanupEstimate: number;
-    };
-    projected20YearReq: number;
-}
-
-export interface BracScenario {
-    id: string;
-    name: string;
-    type: 'Closure' | 'Realignment';
-    losingInstallationId: string;
-    gainingInstallationId?: string;
-    personnelMoving: number;
-    milconCost: number;
-    oneTimeMovingCost: number;
-    annualSavings: number;
-    status: 'Scenario' | 'Candidate' | 'Final' | 'Legislatively Locked';
-    auditLog: AuditLogEntry[];
-}
-
-export interface BracAnalysisResult {
-    mviScore: number;
-    npv: number;
-    paybackPeriod: number;
-    breakEvenYear: number;
-    isSurgeCompliant: boolean;
-    jointnessScore: number;
-    economicImpactIndex: number;
-    infrastructureFlag: boolean;
-    environmentalLiability: number;
-    alerts: string[];
-}
-
-export interface DWCFRateProfile {
-    id: string;
-    activityId: string;
-    fiscalYear: number;
-    compositeRate: number;
-    overheadRate: number;
-    surchargeRate: number;
-    accumulatedOperatingResult: number;
-    netOperatingResult: number;
-    status: 'Active' | 'Pending';
-}
-
-export type CostTransferStatus = 'Draft' | 'Pending Approval' | 'Approved' | 'Posted' | 'Rejected';
-
-export interface CostTransfer {
-    id: string;
-    requestDate: string;
-    description: string;
-    amount: number;
-    sourceProjectId: string;
-    targetProjectId: string;
-    sourceWorkItem: string;
-    targetWorkItem: string;
-    justification: string;
-    status: CostTransferStatus;
-    requestedBy: string;
-    approvedBy?: string;
-    postedDate?: string;
-    glTransactionId?: string;
-    auditLog: AuditLogEntry[];
+    totalCost?: number;
 }

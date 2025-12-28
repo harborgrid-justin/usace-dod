@@ -1,36 +1,27 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { 
     Hammer, ArrowRight, ShieldCheck, Clock, Search, 
     Sparkles, FileText, Users, Landmark, AlertTriangle, 
     ChevronRight, CheckCircle2, Bot, Database, Briefcase
 } from 'lucide-react';
-import { Solicitation, SolicitationStatus, PurchaseRequest, VendorQuote, Contract } from '../../types';
+import { Solicitation, SolicitationStatus, PurchaseRequest, VendorQuote } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
-import { AcquisitionOrchestrator } from '../../services/AcquisitionOrchestrator';
 import { generateMarketResearch, generateStatementOfWork } from '../../services/geminiService';
-
-// Sub-Modules
+import { acquisitionService } from '../../services/AcquisitionDataService';
+import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
+import { useService } from '../../hooks/useService';
 import MarketResearchModule from './MarketResearchModule';
 import EvaluationModule from './EvaluationModule';
 
 interface Props {
+    solicitations: Solicitation[];
     prs: PurchaseRequest[];
-    setPrs: React.Dispatch<React.SetStateAction<PurchaseRequest[]>>;
-    contracts: Contract[];
-    setContracts: React.Dispatch<React.SetStateAction<Contract[]>>;
 }
 
-const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setContracts }) => {
-    // Pipeline State
-    const initialSols: Solicitation[] = prs
-        .filter(p => p.status === 'Funds Certified')
-        .map(pr => AcquisitionOrchestrator.initiateSolicitation(pr));
-
-    const [solicitations, setSolicitations] = useState<Solicitation[]>(initialSols);
+const SolicitationWorkbench: React.FC<Props> = ({ solicitations: initialSols, prs }) => {
+    // Explicit type for useService
+    const solicitations = useService<Solicitation[]>(acquisitionService, useCallback(() => acquisitionService.getSolicitations(), []));
     const [selectedSolId, setSelectedSolId] = useState<string | null>(solicitations[0]?.id || null);
-    
-    // UI Local State
     const [isGenerating, setIsGenerating] = useState(false);
 
     const selectedSol = useMemo(() => solicitations.find(s => s.id === selectedSolId), [solicitations, selectedSolId]);
@@ -38,8 +29,11 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
 
     const handleAdvance = (nextStatus: SolicitationStatus) => {
         if (!selectedSol) return;
-        const updated = AcquisitionOrchestrator.advanceSolicitation(selectedSol, nextStatus, 'KO_ADMIN');
-        setSolicitations(prev => prev.map(s => s.id === selectedSol.id ? updated : s));
+        if (nextStatus === 'Evaluating Quotes') {
+            acquisitionService.generateQuotes(selectedSol.id);
+        } else {
+            acquisitionService.advanceSolicitation(selectedSol.id, nextStatus, 'KO_ADMIN');
+        }
     };
 
     const handleAIRearch = async () => {
@@ -48,8 +42,8 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
         const report = await generateMarketResearch(selectedSol);
         const sow = await generateStatementOfWork(selectedSol);
         
-        setSolicitations(prev => prev.map(s => s.id === selectedSol.id ? {
-            ...s,
+        const updatedSol: Solicitation = {
+            ...selectedSol,
             marketResearch: {
                 naicsCode: '541330',
                 smallBusinessSetAside: true,
@@ -59,22 +53,26 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
             },
             statementOfWork: sow,
             status: 'Market Research'
-        } : s));
+        };
+        acquisitionService.updateSolicitation(updatedSol);
         setIsGenerating(false);
     };
 
     const handleAward = (quote: VendorQuote) => {
         if (!selectedSol || !linkedPR) return;
 
-        const result = AcquisitionOrchestrator.awardContract(linkedPR, quote);
+        const contract = IntegrationOrchestrator.awardContract(linkedPR.id, {
+            name: quote.vendorName,
+            uei: quote.uei,
+            cageCode: 'CAGE-GEN',
+            amount: quote.amount
+        }, 'KO_ADMIN');
         
-        // Update System Records
-        setContracts(prev => [result.contract, ...prev]);
-        setPrs(prev => prev.map(p => p.id === linkedPR.id ? { ...p, status: 'Awarded' } : p));
-        setSolicitations(prev => prev.filter(s => s.id !== selectedSol.id));
-        
-        alert(`CONTRACT AWARDED: PIID ${result.contract.id} to ${quote.vendorName}. Obligation posted.`);
-        setSelectedSolId(null);
+        if (contract) {
+            const awardedSol = { ...selectedSol, status: 'Awarded' as SolicitationStatus };
+            acquisitionService.updateSolicitation(awardedSol);
+            setSelectedSolId(null);
+        }
     };
 
     const STAGES: SolicitationStatus[] = [
@@ -87,7 +85,6 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
 
     return (
         <div className="flex-1 flex flex-col md:flex-row h-full min-h-0">
-            {/* Sidebar: Pipeline Queue */}
             <div className="w-full md:w-[400px] border-r border-zinc-100 flex flex-col bg-zinc-50/30 shrink-0">
                 <div className="p-4 border-b border-zinc-100 flex justify-between items-center bg-white shadow-sm">
                     <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
@@ -121,20 +118,12 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
                             </div>
                         </button>
                     ))}
-                    {solicitations.length === 0 && (
-                        <div className="py-20 text-center text-zinc-400">
-                             <Database size={32} className="mx-auto mb-4 opacity-10" />
-                             <p className="text-xs font-medium px-4">No certified requirements pending solicitation.</p>
-                        </div>
-                    )}
                 </div>
             </div>
 
-            {/* Main Workbench Area */}
             <div className="flex-1 overflow-hidden flex flex-col bg-white">
                 {selectedSol ? (
                     <>
-                        {/* Header & Progress */}
                         <div className="p-6 border-b border-zinc-100 shrink-0">
                             <div className="flex justify-between items-start mb-6">
                                 <div>
@@ -167,7 +156,6 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
                                 </div>
                             </div>
 
-                            {/* Workflow Stepper */}
                             <div className="relative flex justify-between items-center px-4">
                                 <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-100 -translate-y-1/2 -z-10" />
                                 {STAGES.map((stage, i) => {
@@ -192,11 +180,8 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
                             </div>
                         </div>
 
-                        {/* Content Scroll Area */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
                             <div className="max-w-5xl mx-auto space-y-10">
-                                
-                                {/* Stage 1: Market Research Data */}
                                 {selectedSol.marketResearch && (
                                     <MarketResearchModule 
                                         report={selectedSol.marketResearch} 
@@ -204,59 +189,29 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
                                         status={selectedSol.status}
                                     />
                                 )}
-
-                                {/* Stage 2: SOW & Solicitation Package */}
                                 {selectedSol.status !== 'Requirement Refinement' && (
                                     <div className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">
                                         <div className="flex justify-between items-center mb-6">
                                             <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
                                                 <FileText size={14} className="text-zinc-400" /> Acquisition Package (FAR Part 15)
                                             </h4>
-                                            <div className="flex gap-2">
-                                                <span className="text-[10px] font-bold bg-zinc-900 text-white px-2 py-1 rounded">RFP-D-24-001</span>
-                                            </div>
                                         </div>
                                         <div className="space-y-6">
                                             <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-100 font-serif text-sm leading-relaxed text-zinc-700">
                                                 <h5 className="font-bold text-zinc-900 mb-3 border-b pb-2">Statement of Work (SOW) - Draft</h5>
                                                 {selectedSol.statementOfWork || "Drafting in progress..."}
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50">
-                                                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase mb-3">Evaluation Criteria</h5>
-                                                    <ul className="space-y-2 text-xs">
-                                                        <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-emerald-500"/> Technical Excellence</li>
-                                                        <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-emerald-500"/> Past Performance</li>
-                                                        <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-emerald-500"/> Cost/Price Fair & Reasonable</li>
-                                                    </ul>
-                                                </div>
-                                                <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50">
-                                                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase mb-3">Submission Controls</h5>
-                                                    <div className="space-y-3">
-                                                        <div className="flex justify-between items-center text-xs">
-                                                            <span className="text-zinc-500">Method</span>
-                                                            <span className="font-bold">LPTA</span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center text-xs">
-                                                            <span className="text-zinc-500">SAM Status</span>
-                                                            <span className="text-emerald-600 font-bold">Validated</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
                                             {selectedSol.status === 'Active Solicitation' && (
                                                 <button 
                                                     onClick={() => handleAdvance('Evaluating Quotes')}
                                                     className="w-full py-3 border-2 border-dashed border-zinc-200 rounded-xl text-xs font-bold text-zinc-400 hover:text-rose-600 hover:border-rose-300 transition-all flex items-center justify-center gap-2"
                                                 >
-                                                    <Users size={16}/> Record Quote Submissions
+                                                    <Users size={16}/> Close Solicitation & Import PIEE Quotes
                                                 </button>
                                             )}
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Stage 3: Evaluation & Award */}
                                 {(selectedSol.status === 'Evaluating Quotes' || selectedSol.status === 'Ready for Award') && (
                                     <EvaluationModule 
                                         sol={selectedSol} 
@@ -264,33 +219,17 @@ const SolicitationWorkbench: React.FC<Props> = ({ prs, setPrs, contracts, setCon
                                         status={selectedSol.status}
                                     />
                                 )}
-
-                            </div>
-                        </div>
-
-                        {/* Footer Controls */}
-                        <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex justify-between items-center shrink-0">
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase">
-                                    <CheckCircle2 size={14} className="text-emerald-500" /> Legal Sufficiency Check
-                                </div>
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase">
-                                    <CheckCircle2 size={14} className="text-emerald-500" /> Small Business Coord (DD 2579)
-                                </div>
-                            </div>
-                            <div className="text-[10px] text-zinc-400 font-mono italic">
-                                SEC: UNCLASSIFIED // FOUO
                             </div>
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 gap-4">
+                    <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 gap-4 h-full">
                         <div className="p-8 bg-zinc-50 rounded-full border border-zinc-200 border-dashed">
                              <Hammer size={48} className="opacity-10" />
                         </div>
                         <div className="text-center space-y-1">
                             <p className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Workbench Idle</p>
-                            <p className="text-xs max-w-xs leading-relaxed">Select a requirement from the queue to begin the solicitation and market intelligence process.</p>
+                            <p className="text-xs max-w-xs leading-relaxed mt-1">Select a requirement from the queue to begin.</p>
                         </div>
                     </div>
                 )}

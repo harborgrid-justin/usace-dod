@@ -1,36 +1,33 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
     Briefcase, ShoppingCart, FileCheck, Search, Plus, 
     Filter, LayoutGrid, List, Landmark, ShieldCheck, 
     TrendingUp, AlertCircle, FileText, Database, GitMerge, Hammer 
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatting';
-import { PurchaseRequest, Contract, PRStatus } from '../../types';
+import { PurchaseRequest, Contract, Solicitation } from '../../types';
 import PRCenter from '../acquisition/PRCenter';
 import ContractAwardCenter from '../acquisition/ContractAwardCenter';
 import SolicitationWorkbench from '../acquisition/SolicitationWorkbench';
-import { MOCK_PURCHASE_REQUESTS, MOCK_CONTRACTS_LIST, MOCK_FUND_HIERARCHY } from '../../constants';
+import { acquisitionService } from '../../services/AcquisitionDataService';
 
 const AcquisitionView: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'PR' | 'Solicitations' | 'Contracts'>('PR');
     
-    // Module Level State
-    const [prs, setPrs] = useState<PurchaseRequest[]>(MOCK_PURCHASE_REQUESTS.map(pr => ({
-        ...pr,
-        auditLog: [],
-        status: pr.status as PRStatus
-    })));
-    const [contracts, setContracts] = useState<Contract[]>(MOCK_CONTRACTS_LIST.map(c => ({
-        ...c,
-        prReference: 'PR-24-001',
-        uei: 'UEI-8822',
-        cageCode: 'C-99',
-        periodOfPerformance: { start: '2023-11-15', end: '2024-11-15' },
-        isBerryCompliant: true,
-        modifications: [],
-        auditLog: []
-    })));
+    // Live State from Service
+    const [prs, setPrs] = useState<PurchaseRequest[]>(acquisitionService.getPRs());
+    const [contracts, setContracts] = useState<Contract[]>(acquisitionService.getContracts());
+    const [solicitations, setSolicitations] = useState<Solicitation[]>(acquisitionService.getSolicitations());
+
+    useEffect(() => {
+        const unsubscribe = acquisitionService.subscribe(() => {
+            setPrs([...acquisitionService.getPRs()]);
+            setContracts([...acquisitionService.getContracts()]);
+            setSolicitations([...acquisitionService.getSolicitations()]);
+        });
+        return unsubscribe;
+    }, []);
 
     // Derived Statistics
     const stats = useMemo(() => ({
@@ -106,9 +103,9 @@ const AcquisitionView: React.FC = () => {
 
             {/* Main Center */}
             <div className="flex-1 min-h-0 bg-white border border-zinc-200 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] flex flex-col overflow-hidden">
-                {activeTab === 'PR' && <PRCenter prs={prs} setPrs={setPrs} />}
-                {activeTab === 'Solicitations' && <SolicitationWorkbench prs={prs} setPrs={setPrs} contracts={contracts} setContracts={setContracts} />}
-                {activeTab === 'Contracts' && <ContractAwardCenter contracts={contracts} setContracts={setContracts} />}
+                {activeTab === 'PR' && <PRCenter prs={prs} />}
+                {activeTab === 'Solicitations' && <SolicitationWorkbench solicitations={solicitations} prs={prs} />}
+                {activeTab === 'Contracts' && <ContractAwardCenter contracts={contracts} />}
             </div>
         </div>
     );

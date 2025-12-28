@@ -49,7 +49,7 @@ const TransferDetail: React.FC<Props> = ({ transfer, onBack, onApprove, onReject
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-                <div className="max-w-4xl mx-auto space-y-8">
+                <div className="space-y-8">
                     
                     {/* T-Account Visualization */}
                     <div className="bg-zinc-50 rounded-2xl border border-zinc-200 p-8 flex flex-col md:flex-row items-center justify-center gap-12 relative">

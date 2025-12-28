@@ -6,7 +6,7 @@ import { evaluateRules } from '../../utils/rulesEngine';
 
 const DisbursementView: React.FC = () => {
   return (
-    <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto h-full overflow-y-auto custom-scrollbar pb-8">
+    <div className="p-4 sm:p-8 space-y-6 animate-in h-full overflow-y-auto custom-scrollbar pb-8">
       <div className="bg-white border border-zinc-200 rounded-xl p-6 sm:p-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)]">
          <div className="flex items-center gap-4 mb-8 pb-4 border-b border-zinc-100">
             <div className="p-3 bg-zinc-50 text-zinc-600 rounded-lg border border-zinc-100"><ArrowRightLeft size={20}/></div>

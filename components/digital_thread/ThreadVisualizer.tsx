@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Target, Briefcase, Zap, Truck, ShieldAlert, Scale, Banknote, Users, Hash, Landmark, FileText, User, Fingerprint, FileKey, ArrowRightLeft, Lock, Activity, Timer, Box, Binary, ShieldHalf, TrendingUp, CheckCircle2, Factory, AlertOctagon, FileWarning, Database, BookOpen, GitMerge, AlertTriangle } from 'lucide-react';
 import { DigitalThread, NavigationTab, RuleEvaluationResult } from '../../types';
@@ -13,7 +12,7 @@ interface Props {
 
 const ThreadVisualizer: React.FC<Props> = ({ thread, ruleResults, setActiveTab }) => {
   return (
-    <div className="min-w-[1500px] h-full grid grid-cols-6 relative bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
+    <div className="min-w-[1500px] h-full grid grid-cols-6 relative bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
         <div className="absolute inset-0 pointer-events-none opacity-[0.4]" style={{ backgroundImage: 'linear-gradient(#f4f4f5 1px, transparent 1px)', backgroundSize: '100% 40px' }} />
         
         <OrbitSector title="1. Planning" icon={Target} colorClass="text-zinc-600" bgClass="bg-zinc-100">
@@ -25,7 +24,7 @@ const ThreadVisualizer: React.FC<Props> = ({ thread, ruleResults, setActiveTab }
         </OrbitSector>
         
         <OrbitSector title="2. Sourcing" icon={Briefcase} colorClass="text-zinc-600" bgClass="bg-zinc-100">
-            <EntityNode label="Vendor Name" value={thread.vendorName} icon={User} fieldKey="vendor" onClick={() => setActiveTab(NavigationTab.ERP_CORE)} />
+            <EntityNode label="Vendor Name" value={thread.vendorName} icon={User} fieldKey="vendor" onClick={() => setActiveTab(NavigationTab.ACQUISITION)} />
             <EntityNode label="UEI" value={thread.vendorUEI} icon={Fingerprint} fieldKey="uei" />
             <EntityNode label="Contract Vehicle" value={thread.contractVehicle} icon={FileKey} fieldKey="vehicle" />
             <EntityNode label="MIPR Ref" value={thread.miprReference} icon={ArrowRightLeft} fieldKey="mipr" />
@@ -33,7 +32,7 @@ const ThreadVisualizer: React.FC<Props> = ({ thread, ruleResults, setActiveTab }
         </OrbitSector>
 
         <OrbitSector title="3. Execution" icon={Zap} colorClass="text-zinc-600" bgClass="bg-zinc-100">
-            <EntityNode label="Obligation" value={`$${(thread.obligationAmt/1e6).toFixed(2)}M`} icon={Lock} fieldKey="oblig" highlight onClick={() => setActiveTab(NavigationTab.ERP_CORE)} />
+            <EntityNode label="Obligation" value={`$${(thread.obligationAmt/1e6).toFixed(2)}M`} icon={Lock} fieldKey="oblig" highlight onClick={() => setActiveTab(NavigationTab.OBLIGATIONS)} />
             <EntityNode label="Disbursement" value={`$${(thread.disbursementAmt/1e6).toFixed(2)}M`} icon={Banknote} fieldKey="disb" onClick={() => setActiveTab(NavigationTab.DISBURSEMENT)} />
             <EntityNode label="TAS Symbol" value={thread.tasSymbol} icon={Landmark} fieldKey="tas" onClick={() => setActiveTab(NavigationTab.FBWT_RECONCILIATION)} />
             <EntityNode label="EFT Status" value={thread.eftStatus} icon={Activity} fieldKey="eft" />
@@ -51,12 +50,15 @@ const ThreadVisualizer: React.FC<Props> = ({ thread, ruleResults, setActiveTab }
         <OrbitSector title="5. Compliance" icon={ShieldAlert} colorClass="text-zinc-600" bgClass="bg-zinc-100">
             <div className="space-y-2 mb-2">
                 {ruleResults.map((r, i) => (
-                    <div key={i} className="flex items-start gap-2 p-2 bg-rose-50 border border-rose-100 rounded text-[10px] animate-in fade-in">
+                    <div key={i} className="flex items-start gap-2 p-2 bg-rose-50 border border-rose-100 rounded-xl text-[10px] animate-in fade-in group cursor-help">
                         <AlertTriangle size={12} className="text-rose-600 shrink-0 mt-0.5" />
-                        <div><p className="font-bold text-rose-700">{r.ruleName}</p><p className="text-rose-600">{r.severity} Violation</p></div>
+                        <div>
+                            <p className="font-bold text-rose-700 uppercase tracking-tighter leading-none">{r.ruleName}</p>
+                            <p className="text-rose-500 mt-1 opacity-80">{r.severity} Violation</p>
+                        </div>
                     </div>
                 ))}
-                {ruleResults.length === 0 && <div className="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-100 rounded text-[10px]"><CheckCircle2 size={12} className="text-emerald-600" /><span className="font-bold text-emerald-700">No Active Violations</span></div>}
+                {ruleResults.length === 0 && <div className="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-100 rounded-xl text-[10px]"><CheckCircle2 size={12} className="text-emerald-600" /><span className="font-bold text-emerald-700">Audit Ready</span></div>}
             </div>
             <EntityNode label="Bona Fide Need" value={thread.bonaFideValid} icon={CheckCircle2} fieldKey="bonafide" onClick={() => setActiveTab(NavigationTab.GOVERNANCE)} />
             <EntityNode label="Berry Compliant" value={thread.berryCompliant} icon={Factory} fieldKey="berry" isAlert={!thread.berryCompliant} onClick={() => setActiveTab(NavigationTab.GOVERNANCE)} />

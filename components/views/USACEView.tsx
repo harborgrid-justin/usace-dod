@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import { 
     Construction, Ruler, FileText, Activity, AlertTriangle, 
     PieChart, RefreshCcw, Search
@@ -8,11 +7,6 @@ import { MOCK_USACE_PROJECTS } from '../../constants';
 import { USACEProject } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
 import USACEProjectDashboard from '../usace/USACEProjectDashboard';
-
-interface USACEViewProps {
-    selectedProjectId: string | null;
-    onSelectProject: (id: string) => void;
-}
 
 const ProjectCard: React.FC<{ project: USACEProject, onClick: () => void }> = ({ project, onClick }) => {
     const isCivil = project.programType === 'Civil Works';
@@ -59,104 +53,65 @@ const ProjectCard: React.FC<{ project: USACEProject, onClick: () => void }> = ({
                         <p className="text-xs font-mono font-bold text-zinc-900">{formatCurrency(project.financials.obligated - project.financials.disbursed)}</p>
                     </div>
                 </div>
-
-                {project.costShare && (
-                    <div className="bg-zinc-50 p-2 rounded border border-zinc-100 flex justify-between items-center text-[10px]">
-                        <span className="font-medium text-zinc-600">Cost Share ({project.costShare.sponsorName})</span>
-                        <span className="font-mono font-bold text-zinc-800">{project.costShare.nonFederalShare}%</span>
-                    </div>
-                )}
             </div>
         </div>
     );
 };
 
-const USACEView: React.FC<USACEViewProps> = ({ selectedProjectId, onSelectProject }) => {
+const USACEView: React.FC<{ selectedProjectId: string | null; onSelectProject: (id: string | null) => void }> = ({ selectedProjectId, onSelectProject }) => {
     const [filter, setFilter] = useState<'All' | 'Civil Works' | 'Military Programs'>('All');
-    const [inputValue, setInputValue] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     
-    // Opportunity 10: Debounced Search
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setSearchTerm(inputValue);
-        }, 300);
-        return () => clearTimeout(handler);
-    }, [inputValue]);
+    // React 18/19 Concurrent Pattern: useDeferredValue for filtering large lists
+    const deferredSearch = useDeferredValue(searchTerm);
 
-    const filteredProjects = MOCK_USACE_PROJECTS.filter(p => {
+    const filteredProjects = useMemo(() => MOCK_USACE_PROJECTS.filter(p => {
         const matchesFilter = filter === 'All' || p.programType === filter;
-        const matchesSearch = searchTerm === '' || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.p2Number.includes(searchTerm);
+        const matchesSearch = deferredSearch === '' || p.name.toLowerCase().includes(deferredSearch.toLowerCase()) || p.p2Number.includes(deferredSearch);
         return matchesFilter && matchesSearch;
-    });
+    }), [filter, deferredSearch]);
 
-    const totalCWE = filteredProjects.reduce((sum, p) => sum + p.financials.currentWorkingEstimate, 0);
-    const totalObligated = filteredProjects.reduce((sum, p) => sum + p.financials.obligated, 0);
-
-    const handleSelectProject = (project: USACEProject) => {
-        onSelectProject(project.id); 
-    }
-    
-    const handleBack = () => {
-        onSelectProject('');
-    }
-    
     const currentProject = MOCK_USACE_PROJECTS.find(p => p.id === selectedProjectId);
 
     if (currentProject) {
-        return <USACEProjectDashboard project={currentProject} onBack={handleBack} />;
+        return <USACEProjectDashboard project={currentProject} onBack={() => onSelectProject(null)} />;
     }
 
     return (
         <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto h-full flex flex-col">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
-                        <Construction size={24} className="text-rose-700" /> P2 Project Lifecycle
+                        <Construction size={24} className="text-rose-700" /> P2 Lifecycle
                     </h2>
-                    <p className="text-xs text-zinc-500 font-medium mt-1">CEFMS II • Project Management Business Process (PMBP)</p>
+                    <p className="text-xs text-zinc-500 font-medium mt-1">Authoritative Project Management Workbench</p>
                 </div>
-                 <div className="relative group w-full sm:w-auto">
+                <div className="relative group w-full sm:w-auto">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"/>
                     <input 
                         type="text"
-                        value={inputValue}
-                        onChange={e => setInputValue(e.target.value)}
-                        placeholder="Search name or P2 number..."
-                        className="w-full sm:w-64 pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs"
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        placeholder="Filter by name or P2 ID..."
+                        className="w-full sm:w-64 pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-xl text-xs focus:outline-none focus:border-rose-300 transition-all"
                     />
                 </div>
             </div>
 
-            {/* Metrics Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-rose-50 text-rose-700 rounded-lg"><Ruler size={16}/></div>
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Projects (P2)</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 shrink-0">
+                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-3">
+                    <div className="p-2 bg-rose-50 text-rose-700 rounded-lg"><Ruler size={16}/></div>
+                    <div>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active P2 Entries</p>
+                        <p className="text-xl font-mono font-bold text-zinc-900">{filteredProjects.length}</p>
                     </div>
-                    <p className="text-2xl font-mono font-bold text-zinc-900">{filteredProjects.length}</p>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-50 text-blue-700 rounded-lg"><PieChart size={16}/></div>
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Execution Rate</span>
+                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-3">
+                    <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg"><Activity size={16}/></div>
+                    <div>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">System Linkage</p>
+                        <p className="text-xl font-mono font-bold text-emerald-700">100%</p>
                     </div>
-                    <p className="text-2xl font-mono font-bold text-zinc-900">{totalCWE > 0 ? ((totalObligated/totalCWE)*100).toFixed(1) : 0}%</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg"><RefreshCcw size={16}/></div>
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Revolving Fund (96X4902)</span>
-                    </div>
-                    <p className="text-2xl font-mono font-bold text-zinc-900">$850.2M</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-amber-50 text-amber-700 rounded-lg"><FileText size={16}/></div>
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Open PR&Cs (ENG 93)</span>
-                    </div>
-                    <p className="text-2xl font-mono font-bold text-zinc-900">142</p>
                 </div>
             </div>
 
@@ -173,10 +128,10 @@ const USACEView: React.FC<USACEViewProps> = ({ selectedProjectId, onSelectProjec
                     ))}
                 </div>
 
-                <div className="overflow-y-auto custom-scrollbar pr-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                <div className="overflow-y-auto custom-scrollbar pr-2 flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-12">
                         {filteredProjects.map(project => (
-                            <ProjectCard key={project.id} project={project} onClick={() => handleSelectProject(project)} />
+                            <ProjectCard key={project.id} project={project} onClick={() => onSelectProject(project.id)} />
                         ))}
                     </div>
                 </div>

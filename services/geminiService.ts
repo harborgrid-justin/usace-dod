@@ -1,6 +1,16 @@
-
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { ContingencyOperation, SubActivityGroup, BudgetLineItem, PurchaseRequest, Contract, Solicitation } from "../types";
+import { 
+    ContingencyOperation, 
+    SubActivityGroup, 
+    BudgetLineItem, 
+    PurchaseRequest, 
+    Contract, 
+    Solicitation,
+    ContingencyFinding,
+    FiarInsight,
+    BracInstallation,
+    BracScenario
+} from "../types";
 
 // Type Guard helper for safer error handling
 function isError(error: unknown): error is Error {
@@ -39,6 +49,28 @@ export const getFinancialAdvice = async (query: string, context: GenAIContext): 
     }
     return "An unknown error occurred while retrieving financial guidance.";
   }
+};
+
+export const optimizeBracScenario = async (scenario: BracScenario, installations: BracInstallation[]): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const model = 'gemini-3-pro-preview';
+    const prompt = `
+        As a BRAC Analysis Expert for OSD, optimize this realignment scenario:
+        Scenario: ${JSON.stringify(scenario)}
+        Installations: ${JSON.stringify(installations)}
+        
+        Requirements:
+        1. Evaluate MILCON cost vs long-term savings.
+        2. Identify community infrastructure risks (Schools, Hospitals).
+        3. Suggest alternative gaining installations based on excess capacity and mission synergy.
+        4. Provide a 20-year NPV summary.
+    `;
+    try {
+        const response = await ai.models.generateContent({ model, contents: prompt });
+        return response.text || "Strategic optimization analysis pending.";
+    } catch (error: unknown) {
+        return "BRAC Optimization engine currently unavailable.";
+    }
 };
 
 export const generateMarketResearch = async (solicitation: Solicitation): Promise<string> => {
@@ -175,7 +207,7 @@ export const generateOandMJustification = async (item: SubActivityGroup, context
   }
 };
 
-export const analyzeContingencyReport = async (operation: ContingencyOperation): Promise<any[]> => {
+export const analyzeContingencyReport = async (operation: ContingencyOperation): Promise<ContingencyFinding[]> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-3-pro-preview';
     try {
@@ -232,7 +264,7 @@ export const analyzeBudgetTrends = async (data: any): Promise<string> => {
   }
 };
 
-export const getStructuredInsights = async (data: any): Promise<any[]> => {
+export const getStructuredInsights = async (data: any): Promise<FiarInsight[]> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const model = 'gemini-3-pro-preview';
   try {

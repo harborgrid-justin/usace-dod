@@ -1,4 +1,3 @@
-
 import { ReimbursableAgreement, ReimbursableOrder, ProjectOrder } from '../types';
 import { MOCK_REIMBURSABLE_AGREEMENTS, MOCK_REIMBURSABLE_ORDERS, MOCK_PROJECT_ORDERS } from '../constants';
 
@@ -6,7 +5,7 @@ class ReimbursableDataService {
     private agreements: ReimbursableAgreement[];
     private orders: ReimbursableOrder[];
     private projectOrders: ProjectOrder[];
-    private listeners: Function[] = [];
+    private listeners: Set<Function> = new Set();
 
     constructor() {
         this.agreements = JSON.parse(JSON.stringify(MOCK_REIMBURSABLE_AGREEMENTS));
@@ -14,25 +13,22 @@ class ReimbursableDataService {
         this.projectOrders = JSON.parse(JSON.stringify(MOCK_PROJECT_ORDERS));
     }
 
-    // --- Accessors ---
     getAgreements() { return this.agreements; }
     getOrders() { return this.orders; }
     getProjectOrders() { return this.projectOrders; }
-
-    // --- Mutations ---
     
     addAgreement(agreement: ReimbursableAgreement) {
-        this.agreements.unshift(agreement);
+        this.agreements = [agreement, ...this.agreements];
         this.notifyListeners();
     }
 
     addOrder(order: ReimbursableOrder) {
-        this.orders.unshift(order);
+        this.orders = [order, ...this.orders];
         this.notifyListeners();
     }
 
     addProjectOrder(po: ProjectOrder) {
-        this.projectOrders.unshift(po);
+        this.projectOrders = [po, ...this.projectOrders];
         this.notifyListeners();
     }
 
@@ -41,10 +37,9 @@ class ReimbursableDataService {
         this.notifyListeners();
     }
 
-    // --- Pub/Sub ---
-    subscribe(listener: Function) {
-        this.listeners.push(listener);
-        return () => { this.listeners = this.listeners.filter(l => l !== listener); };
+    subscribe = (listener: Function) => {
+        this.listeners.add(listener);
+        return () => { this.listeners.delete(listener); };
     }
 
     private notifyListeners() {

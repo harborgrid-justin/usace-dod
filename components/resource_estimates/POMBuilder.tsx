@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { POMEntry } from '../../types';
 import { formatCurrency } from '../../utils/formatting';

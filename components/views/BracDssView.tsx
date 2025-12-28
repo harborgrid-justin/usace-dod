@@ -1,58 +1,30 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useTransition } from 'react';
 import { 
     Activity, TrendingUp, AlertTriangle, Building2, Gavel, 
-    MapPin, Calculator, FileCheck, Lock, Clock, ShieldAlert 
+    MapPin, Calculator, FileCheck, Lock, Clock, ShieldAlert, Sparkles, Bot
 } from 'lucide-react';
 import { BracInstallation, BracScenario } from '../../types';
 import { BracDssEngine } from '../../services/BracDssEngine';
 import { formatCurrency } from '../../utils/formatting';
+import { optimizeBracScenario } from '../../services/geminiService';
+import { MOCK_BRAC_INSTALLATIONS, MOCK_BRAC_SCENARIOS } from '../../constants';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, LineChart, Line } from 'recharts';
-
-// --- MOCK DATA ---
-const MOCK_INSTALLATIONS: BracInstallation[] = [
-    {
-        id: 'INST-001', name: 'Fort Liberty', service: 'Army', region: 'Southeast',
-        currentTroopDensity: 45000, totalForceCapacity: 60000, availableAcreage: 15000,
-        conditionCode: 88, isJointBase: true,
-        infrastructure: { schoolCapacityPct: 85, hospitalBedsPer1000: 3.1, highwayLevelOfService: 'B' },
-        economicData: { regionalEmployment: 150000, defenseDependencyIndex: 0.45 },
-        environmental: { hasSuperfundSite: false, rmisCleanupEstimate: 1200000 },
-        projected20YearReq: 12000
-    },
-    {
-        id: 'INST-002', name: 'Naval Station Norfolk', service: 'Navy', region: 'Mid-Atlantic',
-        currentTroopDensity: 32000, totalForceCapacity: 35000, availableAcreage: 4000,
-        conditionCode: 72, isJointBase: false,
-        infrastructure: { schoolCapacityPct: 98, hospitalBedsPer1000: 2.2, highwayLevelOfService: 'F' },
-        economicData: { regionalEmployment: 400000, defenseDependencyIndex: 0.60 },
-        environmental: { hasSuperfundSite: true, rmisCleanupEstimate: 45000000 },
-        projected20YearReq: 3800
-    }
-];
-
-const MOCK_SCENARIOS: BracScenario[] = [
-    {
-        id: 'SCN-25-001', name: 'Realign Engineering to Liberty', type: 'Realignment',
-        losingInstallationId: 'INST-002', gainingInstallationId: 'INST-001',
-        personnelMoving: 2500, milconCost: 150000000, oneTimeMovingCost: 45000000, annualSavings: 35000000,
-        status: 'Candidate', auditLog: []
-    }
-];
+import InstallationComparison from '../brac/InstallationComparison';
 
 const BracDssView: React.FC = () => {
-    const [selectedScenario, setSelectedScenario] = useState<BracScenario>(MOCK_SCENARIOS[0]);
-    const [activeTab, setActiveTab] = useState<'Analysis' | 'Timeline' | 'Report'>('Analysis');
+    const [selectedScenario, setSelectedScenario] = useState<BracScenario>(MOCK_BRAC_SCENARIOS[0]);
+    const [activeTab, setActiveTab] = useState<'Analysis' | 'Comparison' | 'Timeline' | 'Report'>('Analysis');
+    const [optimizationResult, setOptimizationResult] = useState('');
+    const [isOptimizing, setIsOptimizing] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
-    const losing = MOCK_INSTALLATIONS.find(i => i.id === selectedScenario.losingInstallationId)!;
-    const gaining = MOCK_INSTALLATIONS.find(i => i.id === selectedScenario.gainingInstallationId);
+    const losing = MOCK_BRAC_INSTALLATIONS.find(i => i.id === selectedScenario.losingInstallationId)!;
+    const gaining = MOCK_BRAC_INSTALLATIONS.find(i => i.id === selectedScenario.gainingInstallationId);
 
-    // --- RUN ENGINE ---
     const analysis = useMemo(() => 
         BracDssEngine.analyzeScenario(selectedScenario, losing, gaining), 
     [selectedScenario, losing, gaining]);
 
-    // Chart Data for COBRA
     const cobraData = useMemo(() => {
         const data = [];
         let cumCashFlow = -selectedScenario.oneTimeMovingCost - selectedScenario.milconCost;
@@ -63,15 +35,15 @@ const BracDssView: React.FC = () => {
         return data;
     }, [selectedScenario]);
 
-    const handleLock = () => {
-        if(confirm("CONFIRM LEGISLATIVE LOCK: This will freeze all data and generate the Congressional Notification Package per 10 U.S.C. 2687.")) {
-            // In a real app this would save to state, here we just alert
-            alert("Scenario Locked. Notification Package Generated.");
-        }
+    const handleOptimize = async () => {
+        setIsOptimizing(true);
+        const result = await optimizeBracScenario(selectedScenario, MOCK_BRAC_INSTALLATIONS);
+        setOptimizationResult(result);
+        setIsOptimizing(false);
     };
 
     return (
-        <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto h-full flex flex-col">
+        <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col bg-zinc-50/50 overflow-hidden">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
@@ -79,99 +51,102 @@ const BracDssView: React.FC = () => {
                     </h2>
                     <p className="text-xs text-zinc-500 font-medium mt-1">10 U.S.C. § 2687 Analysis Engine • Round 2025</p>
                 </div>
-                <div className="flex bg-zinc-100 p-1 rounded-lg">
-                    {['Analysis', 'Timeline', 'Report'].map(t => (
-                        <button key={t} onClick={() => setActiveTab(t as any)} className={`px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-all ${activeTab === t ? 'bg-white shadow-sm text-indigo-700' : 'text-zinc-500'}`}>{t}</button>
+                <div className="flex bg-zinc-100 p-1 rounded-lg shadow-inner">
+                    {['Analysis', 'Comparison', 'Timeline', 'Report'].map(t => (
+                        <button 
+                            key={t} 
+                            onClick={() => setActiveTab(t as any)} 
+                            className={`px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-all whitespace-nowrap ${
+                                activeTab === t ? 'bg-white shadow-sm text-indigo-700' : 'text-zinc-500 hover:text-zinc-800'
+                            }`}
+                        >
+                            {t}
+                        </button>
                     ))}
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
                 {activeTab === 'Analysis' && (
                     <div className="space-y-6">
-                        {/* Scorecards */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm">
-                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Military Value (MVI)</p>
+                            <div className="bg-white p-5 rounded-3xl border border-zinc-200 shadow-sm transition-all hover:border-indigo-300">
+                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Military Value Index</p>
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Activity size={20}/></div>
+                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl"><Activity size={20}/></div>
                                     <p className="text-2xl font-mono font-bold text-zinc-900">{analysis.mviScore.toFixed(1)}</p>
                                 </div>
                             </div>
-                            <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm">
+                            <div className="bg-white p-5 rounded-3xl border border-zinc-200 shadow-sm transition-all hover:border-indigo-300">
                                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Payback Period</p>
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${analysis.paybackPeriod > 20 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}><Calculator size={20}/></div>
+                                    <div className={`p-2 rounded-xl ${analysis.paybackPeriod > 20 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}><Calculator size={20}/></div>
                                     <p className={`text-2xl font-mono font-bold ${analysis.paybackPeriod > 20 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                         {analysis.paybackPeriod > 20 ? '>20' : analysis.paybackPeriod} Yrs
                                     </p>
                                 </div>
                             </div>
-                            <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm">
-                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Economic Impact</p>
+                            <div className="bg-white p-5 rounded-3xl border border-zinc-200 shadow-sm transition-all hover:border-indigo-300">
+                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Econ impact index</p>
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${analysis.economicImpactIndex > 5 ? 'bg-rose-50 text-rose-600' : 'bg-blue-50 text-blue-600'}`}><TrendingUp size={20}/></div>
+                                    <div className={`p-2 rounded-xl ${analysis.economicImpactIndex > 5 ? 'bg-rose-50 text-rose-600' : 'bg-blue-50 text-blue-600'}`}><TrendingUp size={20}/></div>
                                     <p className="text-2xl font-mono font-bold text-zinc-900">{analysis.economicImpactIndex.toFixed(2)}%</p>
                                 </div>
                             </div>
-                            <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm">
-                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Env. Liability</p>
+                            <div className="bg-white p-5 rounded-3xl border border-zinc-200 shadow-sm transition-all hover:border-indigo-300">
+                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Env. Liability (Est)</p>
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-zinc-100 text-zinc-600 rounded-lg"><ShieldAlert size={20}/></div>
+                                    <div className="p-2 bg-zinc-100 text-zinc-600 rounded-xl"><ShieldAlert size={20}/></div>
                                     <p className="text-lg font-mono font-bold text-zinc-900">{formatCurrency(analysis.environmentalLiability)}</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* COBRA Chart & Alerts */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-zinc-200 shadow-sm h-[400px] flex flex-col">
-                                <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-6">COBRA Analysis: Net Present Value (NPV)</h3>
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <div className="lg:col-span-8 bg-white p-8 rounded-[40px] border border-zinc-200 shadow-sm h-[450px] flex flex-col">
+                                <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-6">COBRA Analysis: Net Present Value (NPV)</h3>
                                 <div className="flex-1 w-full min-h-0">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={cobraData}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5"/>
                                             <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fontSize: 10}}/>
                                             <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={(val) => `$${val/1e6}M`}/>
-                                            <Tooltip formatter={(val:number) => formatCurrency(val)} />
+                                            <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} formatter={(val:number) => formatCurrency(val)} />
                                             <ReferenceLine y={0} stroke="#a1a1aa" />
-                                            <Line type="monotone" dataKey="npv" stroke="#4f46e5" strokeWidth={2} dot={false} />
+                                            <Line type="monotone" dataKey="npv" stroke="#4f46e5" strokeWidth={3} dot={false} />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
                             
-                            <div className="space-y-6">
-                                <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-6">
-                                    <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                        <AlertTriangle size={14} className="text-amber-500"/> System Alerts
-                                    </h3>
-                                    <div className="space-y-2">
-                                        {analysis.alerts.map((alert, i) => (
-                                            <div key={i} className="p-3 bg-white border border-zinc-100 rounded-lg text-xs text-rose-700 font-medium shadow-sm flex gap-2">
-                                                <AlertTriangle size={14} className="shrink-0 mt-0.5"/>
-                                                {alert}
-                                            </div>
-                                        ))}
-                                        {analysis.alerts.length === 0 && <p className="text-xs text-zinc-400 italic">No critical alerts detected.</p>}
-                                    </div>
-                                </div>
-                                <div className="bg-white border border-zinc-200 rounded-xl p-6">
-                                     <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                        <MapPin size={14} className="text-zinc-400"/> Jointness Assessment
-                                    </h3>
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between text-xs">
-                                            <span className="text-zinc-500">Service Mix</span>
-                                            <span className="font-bold text-zinc-900">Army / Navy</span>
+                            <div className="lg:col-span-4 flex flex-col gap-6">
+                                <div className="bg-zinc-900 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden flex-1 border border-zinc-800">
+                                    <div className="absolute top-0 right-0 p-8 opacity-10"><Bot size={100}/></div>
+                                    <div className="relative z-10 flex flex-col h-full">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h4 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                                                <Sparkles size={18} className="text-emerald-400" /> Sentinel Strategist
+                                            </h4>
+                                            <button 
+                                                onClick={handleOptimize} 
+                                                disabled={isOptimizing}
+                                                className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all disabled:opacity-30"
+                                            >
+                                                {isOptimizing ? <Clock size={16} className="animate-spin"/> : <Activity size={16}/>}
+                                            </button>
                                         </div>
-                                        <div className="flex justify-between text-xs">
-                                            <span className="text-zinc-500">Synergy Score</span>
-                                            <span className={`font-bold ${analysis.jointnessScore > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{analysis.jointnessScore.toFixed(1)}</span>
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 mb-6">
+                                            {optimizationResult ? (
+                                                <div className="text-xs leading-relaxed text-zinc-300 font-mono whitespace-pre-wrap animate-in fade-in">
+                                                    {optimizationResult}
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-zinc-500 italic text-center py-12">Click the engine icon to run optimization for this realignment.</p>
+                                            )}
                                         </div>
-                                        <div className="p-2 bg-zinc-50 rounded text-[10px] text-zinc-600 leading-tight">
-                                            {analysis.jointnessScore > 0 ? "Positive synergy detected through shared infrastructure." : "Potential operational interference detected."}
-                                        </div>
+                                        <button className="w-full py-3 bg-white text-zinc-900 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] shadow-xl hover:bg-zinc-100 transition-all active:scale-95">
+                                            Optimize Logic
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -179,16 +154,28 @@ const BracDssView: React.FC = () => {
                     </div>
                 )}
                 
+                {activeTab === 'Comparison' && (
+                    <InstallationComparison installations={MOCK_BRAC_INSTALLATIONS} />
+                )}
+
                 {activeTab === 'Timeline' && (
-                    <div className="bg-white p-8 rounded-xl border border-zinc-200 shadow-sm">
-                        <h3 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2"><Clock size={20} /> Implementation Lifecycle (PMO)</h3>
-                        <div className="relative pl-8 border-l-2 border-indigo-100 space-y-12">
+                    <div className="bg-white p-8 rounded-[40px] border border-zinc-200 shadow-sm animate-in fade-in">
+                        <h3 className="text-lg font-bold text-zinc-900 mb-8 flex items-center gap-3">
+                            <Clock size={24} className="text-zinc-400" /> Statutory Implementation Roadmap
+                        </h3>
+                        <div className="relative pl-12 border-l-2 border-indigo-100 space-y-16">
                             {BracDssEngine.getLifecycleMilestones(new Date()).map((ms, i) => (
-                                <div key={i} className="relative">
-                                    <div className="absolute -left-[41px] top-0 w-5 h-5 rounded-full bg-white border-4 border-indigo-600 shadow-sm" />
-                                    <h4 className="text-sm font-bold text-zinc-900">{ms.stage}</h4>
-                                    <p className="text-xs font-mono text-zinc-400 mt-1">{new Date(ms.deadline).toLocaleDateString()}</p>
-                                    <p className="text-xs text-zinc-600 mt-2">{ms.desc}</p>
+                                <div key={i} className="relative group">
+                                    <div className="absolute -left-[53px] top-0 w-8 h-8 rounded-full bg-white border-4 border-indigo-600 shadow-xl group-hover:scale-110 transition-transform flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                                    </div>
+                                    <div className="bg-zinc-50 p-6 rounded-3xl border border-zinc-100 group-hover:bg-white group-hover:border-indigo-200 transition-all shadow-sm max-w-2xl">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h4 className="text-base font-bold text-zinc-900 uppercase tracking-tight">{ms.stage}</h4>
+                                            <p className="text-[10px] font-mono font-bold text-zinc-400 bg-zinc-100 px-2 py-1 rounded border">TARGET: {new Date(ms.deadline).toLocaleDateString()}</p>
+                                        </div>
+                                        <p className="text-sm text-zinc-500 leading-relaxed font-medium">{ms.desc}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -196,17 +183,20 @@ const BracDssView: React.FC = () => {
                 )}
 
                 {activeTab === 'Report' && (
-                     <div className="flex flex-col items-center justify-center h-full gap-6">
-                        <div className="bg-zinc-50 p-8 rounded-2xl border-2 border-dashed border-zinc-200 text-center max-w-lg">
-                            <Lock size={48} className="mx-auto text-zinc-300 mb-4" />
-                            <h3 className="text-lg font-bold text-zinc-900">Legislative Lock Control</h3>
-                            <p className="text-sm text-zinc-500 mt-2 mb-6">
-                                Finalizing this recommendation will freeze all data points and generate the 
-                                statutory 10 U.S.C. § 2687 Congressional Notification Package. 
-                                This action cannot be undone.
+                     <div className="flex flex-col items-center justify-center h-full gap-8 animate-in zoom-in duration-500">
+                        <div className="bg-zinc-900 p-12 rounded-[50px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] text-center max-w-2xl border border-white/10 relative overflow-hidden">
+                            <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                            <div className="w-20 h-20 bg-rose-600/10 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-rose-500/20">
+                                <Lock size={40} className="text-rose-500" />
+                            </div>
+                            <h3 className="text-3xl font-bold text-white tracking-tight">Legislative Lock Control</h3>
+                            <p className="text-sm text-zinc-400 mt-4 mb-10 leading-relaxed font-medium px-8">
+                                Affirming this recommendation will freeze all analytic data points and generate the 
+                                statutory <span className="text-rose-400 font-bold">10 U.S.C. § 2687 Congressional Notification Package</span>. 
+                                This operation creates a permanent audit record.
                             </p>
-                            <button onClick={handleLock} className="px-6 py-3 bg-zinc-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-xl flex items-center gap-2 mx-auto">
-                                <FileCheck size={16}/> Finalize & Generate Package
+                            <button className="w-full py-4 bg-white text-zinc-900 rounded-3xl text-xs font-bold uppercase tracking-[0.3em] hover:bg-zinc-100 shadow-2xl flex items-center justify-center gap-3 transition-all active:scale-95">
+                                <FileCheck size={20}/> Execute Fiduciary Lock
                             </button>
                         </div>
                      </div>

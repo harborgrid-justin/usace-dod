@@ -13,8 +13,8 @@ interface EntityNodeProps {
 const EntityNode: React.FC<EntityNodeProps> = ({ label, value, icon: Icon, fieldKey, isAlert, highlight, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Flat, technical design
-  const baseClasses = `group relative p-3 rounded-lg border transition-all duration-200 overflow-hidden`;
+  // Flat, technical design. Resetting button styles for custom appearance.
+  const baseClasses = `group relative p-3 rounded-lg border transition-all duration-200 overflow-hidden w-full text-left`;
   
   // Ghost effects for state
   const stateClasses = isHovered 
@@ -28,11 +28,13 @@ const EntityNode: React.FC<EntityNodeProps> = ({ label, value, icon: Icon, field
   const clickableClasses = onClick ? 'cursor-pointer' : 'cursor-help';
 
   return (
-    <div 
+    <button 
+      type="button"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
       className={`${baseClasses} ${stateClasses} ${clickableClasses}`}
+      disabled={!onClick}
     >
       <div className="flex items-center justify-between mb-1">
          <span className={`text-[9px] font-medium uppercase tracking-wider ${isAlert ? 'text-rose-500' : 'text-zinc-400'}`}>
@@ -47,7 +49,7 @@ const EntityNode: React.FC<EntityNodeProps> = ({ label, value, icon: Icon, field
       {/* Ghost highlight line on left */}
       {highlight && <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-emerald-500/50 rounded-r-full" />}
       {isAlert && <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-rose-500/50 rounded-r-full" />}
-    </div>
+    </button>
   );
 };
 

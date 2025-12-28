@@ -1,135 +1,149 @@
-
-import React, { useState } from 'react';
-import { Building, Search, Plus, MapPin, DollarSign, Calendar, AlertCircle } from 'lucide-react';
+import React, { useState, useMemo, useDeferredValue, useTransition } from 'react';
+import { Building, Search, Plus, DollarSign, AlertCircle, ArrowRight, ShieldCheck, MapPin, Key, Landmark, LayoutGrid, List } from 'lucide-react';
 import { LGHLease, LeaseStatus } from '../../types';
 import { MOCK_LGH_LEASES } from '../../constants';
 import { formatCurrency } from '../../utils/formatting';
 import LeaseDetailModal from './LeaseDetailModal';
+import Badge from '../shared/Badge';
 
 const LGHPortfolioView: React.FC = () => {
     const [leases, setLeases] = useState<LGHLease[]>(MOCK_LGH_LEASES);
-    const [selectedLease, setSelectedLease] = useState<LGHLease | null>(null);
+    const [selectedLeaseId, setSelectedLeaseId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const deferredSearch = useDeferredValue(searchTerm);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
-    const filteredLeases = leases.filter(l => 
-        l.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        l.leaseNumber.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredLeases = useMemo(() => leases.filter(l => 
+        l.propertyName.toLowerCase().includes(deferredSearch.toLowerCase()) || 
+        l.leaseNumber.toLowerCase().includes(deferredSearch.toLowerCase())
+    ), [leases, deferredSearch]);
+
+    const selectedLease = useMemo(() => 
+        leases.find(l => l.id === selectedLeaseId),
+    [leases, selectedLeaseId]);
 
     const handleSaveLease = (updatedLease: LGHLease) => {
-        setLeases(prev => {
-            const exists = prev.some(l => l.id === updatedLease.id);
-            if (exists) return prev.map(l => l.id === updatedLease.id ? updatedLease : l);
-            return [updatedLease, ...prev];
+        startTransition(() => {
+            setLeases(prev => {
+                const exists = prev.some(l => l.id === updatedLease.id);
+                if (exists) return prev.map(l => l.id === updatedLease.id ? updatedLease : l);
+                return [updatedLease, ...prev];
+            });
+            setIsDetailOpen(false);
         });
-        setIsDetailOpen(false);
     };
 
     const StatusBadge = ({ status }: { status: LeaseStatus }) => {
         const styles = {
-            'Active': 'bg-emerald-50 text-emerald-700 border-emerald-100',
-            'Expiring': 'bg-amber-50 text-amber-700 border-amber-100',
-            'Holdover': 'bg-rose-50 text-rose-700 border-rose-100',
-            'Terminated': 'bg-zinc-100 text-zinc-500 border-zinc-200',
-            'Pending Renewal': 'bg-blue-50 text-blue-700 border-blue-100',
+            'Active': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            'Expiring': 'bg-amber-100 text-amber-800 border-amber-200',
+            'Holdover': 'bg-rose-100 text-rose-800 border-rose-200',
+            'Terminated': 'bg-zinc-100 text-zinc-600 border-zinc-200',
+            'Pending Renewal': 'bg-blue-100 text-blue-800 border-blue-200',
         };
+        // @ts-ignore
         return <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border whitespace-nowrap ${styles[status]}`}>{status}</span>;
     };
-
-    const handleCreate = () => {
-        setSelectedLease(null);
-        setIsDetailOpen(true);
-    };
-
+    
     return (
-        <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto h-full flex flex-col">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
+        <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col bg-zinc-50/30 overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 shrink-0">
                 <div>
-                    <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
-                        <Building size={24} className="text-cyan-700" /> Lease Portfolio Management
+                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
+                        <Key size={28} className="text-cyan-700" /> LGH Portfolio Monitor
                     </h2>
-                    <p className="text-xs text-zinc-500 font-medium mt-1">
-                        Leased Government Housing (Section 801/802)
+                    <p className="text-xs text-zinc-500 font-medium mt-1 uppercase tracking-widest">
+                        Leased Government Housing (10 U.S.C. 2835) • Section 801/802 Programs
                     </p>
                 </div>
                 
-                <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:flex-none">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"/>
+                <div className="flex items-center gap-3 w-full lg:w-auto">
+                    <div className="relative flex-1 lg:w-64 group">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-hover:text-zinc-600 transition-colors"/>
                         <input 
-                            type="text" 
-                            placeholder="Search leases..." 
-                            value={searchTerm}
+                            type="text" placeholder="Search portfolio..." value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full sm:w-64 pl-9 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:border-zinc-400 transition-all"
+                            className="w-full pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-xl text-xs focus:outline-none focus:border-cyan-400 transition-all shadow-sm"
                         />
                     </div>
-                    <button onClick={handleCreate} className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg text-xs font-bold uppercase hover:bg-zinc-800 transition-colors shadow-sm whitespace-nowrap">
-                        <Plus size={14}/> Add Lease
+                    <button onClick={() => {setSelectedLeaseId(null); setIsDetailOpen(true);}} className="flex items-center justify-center gap-2 px-6 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg active:scale-95 whitespace-nowrap">
+                        <Plus size={14}/> Register Asset
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 pb-10">
+                <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 transition-opacity duration-300 ${isPending ? 'opacity-70' : 'opacity-100'}`}>
                     {filteredLeases.map(lease => (
-                        <div 
+                         <div 
                             key={lease.id} 
-                            onClick={() => { setSelectedLease(lease); setIsDetailOpen(true); }}
-                            className="bg-white border border-zinc-200 rounded-xl p-5 hover:border-cyan-300 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full"
+                            onClick={() => { startTransition(() => { setSelectedLeaseId(lease.id); setIsDetailOpen(true); }); }}
+                            className="bg-white border border-zinc-200 rounded-[32px] p-6 hover:shadow-2xl hover:border-cyan-300 transition-all cursor-pointer group flex flex-col min-h-[320px]"
                         >
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-zinc-50 rounded-lg border border-zinc-100 text-zinc-500">
-                                        <Building size={20} />
-                                    </div>
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-cyan-50 text-cyan-700 rounded-2xl group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-inner border border-cyan-100"><Building size={24} /></div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-zinc-900 line-clamp-1">{lease.propertyName}</h4>
-                                        <p className="text-[10px] text-zinc-500 font-mono">{lease.leaseNumber}</p>
+                                        <h4 className="text-base font-bold text-zinc-900 line-clamp-1 group-hover:text-cyan-800 transition-colors">{lease.propertyName}</h4>
+                                        <p className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase mt-0.5">{lease.leaseNumber}</p>
                                     </div>
                                 </div>
                                 <StatusBadge status={lease.status} />
                             </div>
 
-                            <div className="space-y-3 flex-1">
-                                <div className="flex items-start gap-2 text-xs text-zinc-600">
-                                    <MapPin size={14} className="text-zinc-400 shrink-0 mt-0.5"/>
-                                    <span className="line-clamp-2">{lease.address}</span>
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                <div className="p-4 bg-zinc-50 rounded-[20px] border border-zinc-100 group-hover:bg-white group-hover:border-cyan-100 transition-all shadow-inner">
+                                    <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1">FY Annual Outlay</p>
+                                    <p className="text-lg font-mono font-bold text-zinc-900 tracking-tight">{formatCurrency(lease.annualRent)}</p>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-zinc-600">
-                                    <Calendar size={14} className="text-zinc-400 shrink-0"/>
-                                    <span>Exp: {lease.expirationDate}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-zinc-600">
-                                    <DollarSign size={14} className="text-zinc-400 shrink-0"/>
-                                    <span>Annual: {formatCurrency(lease.annualRent)}</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 pt-4 border-t border-zinc-100 flex justify-between items-center">
-                                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Occupancy</div>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-1.5 w-16 bg-zinc-100 rounded-full overflow-hidden">
-                                        <div className={`h-full ${lease.occupancyRate > 90 ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{width: `${lease.occupancyRate}%`}} />
-                                    </div>
-                                    <span className="text-xs font-mono font-bold text-zinc-900">{lease.occupancyRate}%</span>
+                                <div className="p-4 bg-zinc-50 rounded-[20px] border border-zinc-100 group-hover:bg-white group-hover:border-cyan-100 transition-all shadow-inner">
+                                    <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Auth Units</p>
+                                    <p className="text-lg font-mono font-bold text-zinc-900 tracking-tight">{lease.units}</p>
                                 </div>
                             </div>
                             
-                            {lease.scoring === 'Capital' && (
-                                <div className="mt-3 bg-rose-50 border border-rose-100 p-2 rounded text-[10px] text-rose-800 flex items-center gap-2 font-medium">
-                                    <AlertCircle size={12}/> OMB A-11: Capital Lease
+                            <div className="space-y-4 flex-1">
+                                <div className="flex justify-between items-center text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em] px-1">
+                                    <span>Lifecycle Expiry</span>
+                                    <span className={new Date(lease.expirationDate) < new Date() ? 'text-rose-600' : 'text-cyan-600'}>{lease.expirationDate}</span>
                                 </div>
-                            )}
+                                <div className="space-y-2 px-1">
+                                     <div className="flex justify-between items-center text-[10px] font-bold">
+                                        <span className="text-zinc-400 uppercase tracking-wider">Occupancy Performance</span>
+                                        <span className="text-zinc-900">{lease.occupancyRate}%</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden shadow-inner border border-zinc-100">
+                                        <div 
+                                            className={`h-full transition-all duration-1000 ${lease.occupancyRate > 90 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                                            style={{width: `${lease.occupancyRate}%`}} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="mt-8 pt-6 border-t border-zinc-50 flex justify-between items-center">
+                                <div className={`flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest ${lease.scoring === 'Capital' ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                    {lease.scoring === 'Capital' ? <AlertCircle size={14}/> : <ShieldCheck size={14}/>}
+                                    <span>{lease.scoring} Classification</span>
+                                </div>
+                                <div className="p-2 bg-zinc-50 rounded-full text-zinc-300 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all border border-zinc-100">
+                                    <ArrowRight size={20} />
+                                </div>
+                            </div>
                         </div>
                     ))}
+                    {filteredLeases.length === 0 && (
+                        <div className="col-span-full py-24 text-center border-2 border-dashed border-zinc-200 rounded-[32px] bg-white">
+                             <p className="text-sm font-bold uppercase tracking-widest text-zinc-400">No Portfolio Records Found</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {isDetailOpen && (
                 <LeaseDetailModal 
-                    lease={selectedLease} 
+                    lease={selectedLease || null} 
                     onClose={() => setIsDetailOpen(false)} 
                     onSave={handleSaveLease} 
                 />
@@ -137,5 +151,4 @@ const LGHPortfolioView: React.FC = () => {
         </div>
     );
 };
-
 export default LGHPortfolioView;

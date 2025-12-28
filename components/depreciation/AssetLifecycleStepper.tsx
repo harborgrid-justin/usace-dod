@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AssetLifecycleStatus } from '../../types';
 import { Check } from 'lucide-react';

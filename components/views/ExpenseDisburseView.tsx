@@ -1,23 +1,36 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingDown, LayoutDashboard, Workflow, BarChart3, Users } from 'lucide-react';
-import { MOCK_OBLIGATIONS, MOCK_EXPENSES, MOCK_DISBURSEMENTS, MOCK_GL_TRANSACTIONS } from '../../constants';
 import { Obligation, Expense, Disbursement, ExpenseUserRole, GLTransaction } from '../../types';
 import ExpenseDashboard from '../expense/ExpenseDashboard';
 import ExpenseManager from '../expense/ExpenseManager';
 import ExpenseReports from '../expense/ExpenseReports';
 import UserRoleSwitcher from '../expense/UserRoleSwitcher';
 import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
+import { expenseDisburseService } from '../../services/ExpenseDisburseDataService';
+import { obligationsService } from '../../services/ObligationsDataService';
+import { glService } from '../../services/GLDataService';
 
 const ExpenseDisburseView: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'workflow' | 'reports'>('workflow');
     const [activeUser, setActiveUser] = useState<ExpenseUserRole>('Clerk');
     
-    // State Management for the entire module
-    const [obligations, setObligations] = useState<Obligation[]>(MOCK_OBLIGATIONS);
-    const [expenses, setExpenses] = useState<Expense[]>(MOCK_EXPENSES);
-    const [disbursements, setDisbursements] = useState<Disbursement[]>(MOCK_DISBURSEMENTS);
-    const [glTransactions, setGlTransactions] = useState<GLTransaction[]>(MOCK_GL_TRANSACTIONS);
+    // State Management for the entire module from services
+    const [obligations, setObligations] = useState<Obligation[]>(obligationsService.getObligations());
+    const [expenses, setExpenses] = useState<Expense[]>(expenseDisburseService.getExpenses());
+    const [disbursements, setDisbursements] = useState<Disbursement[]>(expenseDisburseService.getDisbursements());
+
+    useEffect(() => {
+        const unsubObl = obligationsService.subscribe(() => setObligations([...obligationsService.getObligations()]));
+        const unsubExp = expenseDisburseService.subscribe(() => {
+            setExpenses([...expenseDisburseService.getExpenses()]);
+            setDisbursements([...expenseDisburseService.getDisbursements()]);
+        });
+        return () => {
+            unsubObl();
+            unsubExp();
+        };
+    }, []);
+
 
     // --- Business Logic Handlers ---
 
@@ -34,91 +47,81 @@ const ExpenseDisburseView: React.FC = () => {
                 details: `Created expense for ${newExpenseData.description}`
             }]
         };
-        setExpenses(prev => [newExpense, ...prev]);
+        expenseDisburseService.addExpense(newExpense);
     };
 
     const handleApproveExpense = (expenseId: string) => {
-        setExpenses(prev => prev.map(exp => {
-            if (exp.id === expenseId) {
-                // Update expense status and audit log
-                const updatedExpense = {
-                    ...exp,
-                    status: 'Accrued' as 'Accrued',
-                    approvedBy: 'Approver' as 'Approver',
-                    auditLog: [...exp.auditLog, {
-                        timestamp: new Date().toISOString(),
-                        user: 'Approver' as 'Approver',
-                        action: 'Expense Approved',
-                        details: 'Approved for payment. Accrual entry posted.'
-                    }]
-                };
+        const exp = expenses.find(e => e.id === expenseId);
+        if (!exp) return;
 
-                // Liquidate obligation
-                setObligations(obls => obls.map(obl => {
-                    if (obl.id === exp.obligationId) {
-                        return { ...obl, unliquidatedAmount: obl.unliquidatedAmount - exp.amount };
-                    }
-                    return obl;
-                }));
+        // Update expense status and audit log
+        const updatedExpense: Expense = {
+            ...exp,
+            status: 'Accrued',
+            approvedBy: 'Approver',
+            auditLog: [...exp.auditLog, {
+                timestamp: new Date().toISOString(),
+                user: 'Approver',
+                action: 'Expense Approved',
+                details: 'Approved for payment. Accrual entry posted.'
+            }]
+        };
+        expenseDisburseService.updateExpense(updatedExpense);
+        
+        // Liquidate obligation
+        const obl = obligationsService.getObligations().find(o => o.id === exp.obligationId);
+        if (obl) {
+            obligationsService.updateObligation({ ...obl, unliquidatedAmount: obl.unliquidatedAmount - exp.amount });
+        }
 
-                // Integration #4: Create GL Transaction for Accrual via Orchestrator
-                const newGlTx = IntegrationOrchestrator.generateAccrualFromExpense(updatedExpense);
-                setGlTransactions(gls => [newGlTx, ...gls]);
-                console.log("Integration: Generated Accrual", newGlTx);
-
-                return updatedExpense;
-            }
-            return exp;
-        }));
+        // Integration #4: Create GL Transaction for Accrual via Orchestrator
+        const newGlTx = IntegrationOrchestrator.generateAccrualFromExpense(updatedExpense);
+        glService.addTransaction(newGlTx);
+        console.log("Integration: Generated Accrual", newGlTx);
     };
 
     const handleDisburseExpense = (expenseId: string) => {
-        setExpenses(prev => prev.map(exp => {
-            if (exp.id === expenseId) {
-                const newDisbursementId = `DISB-${Date.now().toString().slice(-5)}`;
-                
-                // Create Disbursement Record
-                const newDisbursement: Disbursement = {
-                    id: newDisbursementId,
-                    expenseId: exp.id,
-                    amount: exp.amount,
-                    date: new Date().toISOString().split('T')[0],
-                    paymentMethod: 'EFT',
-                    treasuryConfirmationId: `T${new Date().getFullYear()}${Date.now().toString().slice(-8)}`
-                };
-                setDisbursements(d => [newDisbursement, ...d]);
+        const exp = expenses.find(e => e.id === expenseId);
+        if (!exp) return;
 
-                // Update expense status and audit log
-                const updatedExpense = {
-                    ...exp,
-                    status: 'Paid' as 'Paid',
-                    disbursedBy: 'Disbursing Officer' as 'Disbursing Officer',
-                    disbursementId: newDisbursementId,
-                    auditLog: [...exp.auditLog, {
-                        timestamp: new Date().toISOString(),
-                        user: 'Disbursing Officer' as 'Disbursing Officer',
-                        action: 'Disbursed',
-                        details: `Payment sent via EFT. Treasury ID: ${newDisbursement.treasuryConfirmationId}`
-                    }]
-                };
+        const newDisbursementId = `DISB-${Date.now().toString().slice(-5)}`;
+        
+        // Create Disbursement Record
+        const newDisbursement: Disbursement = {
+            id: newDisbursementId,
+            expenseId: exp.id,
+            amount: exp.amount,
+            date: new Date().toISOString().split('T')[0],
+            paymentMethod: 'EFT',
+            treasuryConfirmationId: `T${new Date().getFullYear()}${Date.now().toString().slice(-8)}`
+        };
+        expenseDisburseService.addDisbursement(newDisbursement);
 
-                // Update obligation
-                setObligations(obls => obls.map(obl => {
-                    if (obl.id === exp.obligationId) {
-                        return { ...obl, disbursedAmount: obl.disbursedAmount + exp.amount };
-                    }
-                    return obl;
-                }));
+        // Update expense status
+        const updatedExpense: Expense = {
+            ...exp,
+            status: 'Paid',
+            disbursedBy: 'Disbursing Officer',
+            disbursementId: newDisbursementId,
+            auditLog: [...exp.auditLog, {
+                timestamp: new Date().toISOString(),
+                user: 'Disbursing Officer',
+                action: 'Disbursed',
+                details: `Payment sent via EFT. Treasury ID: ${newDisbursement.treasuryConfirmationId}`
+            }]
+        };
+        expenseDisburseService.updateExpense(updatedExpense);
+        
+        // Update obligation
+        const obl = obligationsService.getObligations().find(o => o.id === exp.obligationId);
+        if (obl) {
+            obligationsService.updateObligation({ ...obl, disbursedAmount: obl.disbursedAmount + exp.amount });
+        }
 
-                // Integration #5: Create GL Transaction for Disbursement via Orchestrator
-                const newGlTx = IntegrationOrchestrator.generateDisbursementFromExpense(updatedExpense, newDisbursementId);
-                setGlTransactions(gls => [newGlTx, ...gls]);
-                console.log("Integration: Generated Outlay", newGlTx);
-                
-                return updatedExpense;
-            }
-            return exp;
-        }));
+        // Integration #5: Create GL Transaction for Disbursement via Orchestrator
+        const newGlTx = IntegrationOrchestrator.generateDisbursementFromExpense(updatedExpense, newDisbursementId);
+        glService.addTransaction(newGlTx);
+        console.log("Integration: Generated Outlay", newGlTx);
     };
     
     const renderContent = () => {

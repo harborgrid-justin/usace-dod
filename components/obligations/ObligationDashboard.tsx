@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Obligation } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
@@ -25,9 +24,9 @@ const KPICard = ({ title, value, subtext, icon: Icon, colorClass, bgClass }: any
 );
 
 const ObligationDashboard: React.FC<Props> = ({ obligations }) => {
-    const totalObligated = obligations.reduce((s, o) => s + o.amount, 0);
-    const totalULO = obligations.reduce((s, o) => s + o.unliquidatedAmount, 0);
-    const totalDormant = obligations.filter(o => o.status === 'Dormant').reduce((s, o) => s + o.unliquidatedAmount, 0);
+    const totalObligated = obligations.reduce((sum, o) => sum + o.amount, 0);
+    const totalULO = obligations.reduce((sum, o) => sum + o.unliquidatedAmount, 0);
+    const totalDormant = obligations.filter(o => o.status === 'Dormant').reduce((sum, o) => sum + o.unliquidatedAmount, 0);
     const disbursementRate = totalObligated > 0 ? ((totalObligated - totalULO) / totalObligated) * 100 : 0;
 
     const burnData = [
@@ -36,6 +35,11 @@ const ObligationDashboard: React.FC<Props> = ({ obligations }) => {
         { name: 'Q3', obligated: totalObligated * 0.80, disbursed: (totalObligated - totalULO) * 0.7 },
         { name: 'Q4', obligated: totalObligated, disbursed: (totalObligated - totalULO) }
     ];
+
+    // Fix: Create a copy before sorting to avoid mutating the read-only prop
+    const topVendors = [...obligations]
+        .sort((a, b) => b.unliquidatedAmount - a.unliquidatedAmount)
+        .slice(0, 4);
 
     return (
         <div className="space-y-6">
@@ -91,19 +95,15 @@ const ObligationDashboard: React.FC<Props> = ({ obligations }) => {
                 <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm flex flex-col">
                     <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-4">Top Vendors by ULO</h3>
                     <div className="flex-1 space-y-4">
-                        {obligations
-                            .sort((a, b) => b.unliquidatedAmount - a.unliquidatedAmount)
-                            .slice(0, 4)
-                            .map(o => (
-                                <div key={o.id} className="flex justify-between items-center p-2 hover:bg-zinc-50 rounded transition-colors cursor-default">
-                                    <div>
-                                        <p className="text-xs font-bold text-zinc-800 line-clamp-1">{o.vendor}</p>
-                                        <p className="text-[10px] text-zinc-500 font-mono">{o.documentNumber}</p>
-                                    </div>
-                                    <span className="text-xs font-mono font-bold text-rose-600">{formatCurrency(o.unliquidatedAmount)}</span>
+                        {topVendors.map(o => (
+                            <div key={o.id} className="flex justify-between items-center p-2 hover:bg-zinc-50 rounded transition-colors cursor-default">
+                                <div>
+                                    <p className="text-xs font-bold text-zinc-800 line-clamp-1">{o.vendor}</p>
+                                    <p className="text-[10px] text-zinc-500 font-mono">{o.documentNumber}</p>
                                 </div>
-                            ))
-                        }
+                                <span className="text-xs font-mono font-bold text-rose-600">{formatCurrency(o.unliquidatedAmount)}</span>
+                            </div>
+                        ))}
                     </div>
                     <button className="w-full mt-4 py-2 border border-zinc-200 rounded-lg text-[10px] font-bold uppercase text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-colors">
                         View Full Aging Report
