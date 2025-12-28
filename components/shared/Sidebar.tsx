@@ -1,3 +1,4 @@
+
 import React, { useMemo, useTransition } from 'react';
 import { 
   ShieldCheck, LayoutDashboard, BrainCircuit, Clock, ArrowRightLeft, Target, ShieldAlert,
@@ -207,7 +208,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div className="flex flex-col gap-1">
                   {[
                     { id: 'ARMY_GFEBS', label: 'Army (GFEBS)', color: 'bg-emerald-400' },
-                    { id: 'USACE_CEFMS', label: 'USACE (CEFMS)', color: 'bg-rose-500' },
+                    { id: 'USACE_CEFMS', label: 'USACE (CEFMS)', color: 'bg-rose-50' },
                     { id: 'USACE_REMIS', label: 'USACE (REMIS)', color: 'bg-emerald-600' },
                     { id: 'OSD_BRAC', label: 'OSD (BRAC)', color: 'bg-indigo-500' },
                     { id: 'OSD_HAP', label: 'OSD (HAP)', color: 'bg-teal-500' },

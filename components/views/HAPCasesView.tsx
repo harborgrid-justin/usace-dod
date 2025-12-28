@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Users, Search, Plus, Home, FileCheck, DollarSign, Calendar } from 'lucide-react';
 import { HAPCase, HAPCaseStatus } from '../../types';
 import { MOCK_HAP_CASES } from '../../constants';
 import { formatCurrency } from '../../utils/formatting';
-import HAPCaseDetail from './HAPCaseDetail';
+import HAPCaseDetail from '../hap/HAPCaseDetail';
 
 const HAPCasesView: React.FC = () => {
     const [cases, setCases] = useState<HAPCase[]>(MOCK_HAP_CASES);

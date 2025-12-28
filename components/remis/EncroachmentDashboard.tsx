@@ -1,37 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { ShieldAlert, Plus, Search, AlertOctagon, Activity, Clock, Building } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ShieldAlert, Plus, Search, AlertOctagon, Activity, Clock, Building, Map as MapIcon, BookOpen, ChevronRight } from 'lucide-react';
 import { EncroachmentCase, EncroachmentDashboardProps, EncroachmentStatus } from '../../types';
 import EncroachmentDetail from './EncroachmentDetail';
 import EncroachmentCaseForm from './EncroachmentCaseForm';
 import { remisService } from '../../services/RemisDataService';
 import { REMIS_THEME } from '../../constants';
 import { formatCurrency } from '../../utils/formatting';
+import { useService } from '../../hooks/useService';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-const KPICard = React.memo(({ title, value, icon: Icon }: any) => (
-    <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm flex items-start justify-between gap-4">
-        <div>
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{title}</p>
-            <p className="text-3xl font-mono font-bold text-zinc-900 mt-2">{value}</p>
-        </div>
-        <div className={`p-2 rounded-lg ${REMIS_THEME.classes.iconContainer} ${REMIS_THEME.classes.iconColor}`}>
-            <Icon size={18} />
-        </div>
-    </div>
-));
-
 const EncroachmentDashboard: React.FC<EncroachmentDashboardProps> = ({ onNavigateToGis }) => {
-    const [cases, setCases] = useState<EncroachmentCase[]>(remisService.getEncroachments());
+    const cases = useService<EncroachmentCase[]>(remisService, useCallback(() => remisService.getEncroachments(), []));
     const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'Active' | 'GIS' | 'Policy'>('Active');
 
-    useEffect(() => {
-        const unsubscribe = remisService.subscribe(() => {
-            setCases([...remisService.getEncroachments()]);
-        });
-        return unsubscribe;
-    }, []);
-    
     const selectedCase = useMemo(() => cases.find(c => c.id === selectedCaseId), [cases, selectedCaseId]);
 
     const stats = useMemo(() => {
@@ -40,68 +23,94 @@ const EncroachmentDashboard: React.FC<EncroachmentDashboardProps> = ({ onNavigat
         return { total: cases.length, active, structural };
     }, [cases]);
 
-    const chartData = useMemo(() => {
-        const statusCounts = cases.reduce((acc, c) => {
-            acc[c.status] = (acc[c.status] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
-        return Object.entries(statusCounts).map(([name, value]) => ({ name, cases: value }));
-    }, [cases]);
-
     if (selectedCase) {
-        return <EncroachmentDetail encroachment={selectedCase} onBack={() => setSelectedCaseId(null)} onUpdate={remisService.updateEncroachment} onNavigateToGis={onNavigateToGis} />;
+        return <EncroachmentDetail encroachment={selectedCase} onBack={() => setSelectedCaseId(null)} onUpdate={remisService.updateEncroachment} />;
     }
 
     return (
-        <div className="flex flex-col h-full overflow-y-auto custom-scrollbar bg-zinc-50/50 p-6 animate-in fade-in">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-                <div>
-                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
-                        <ShieldAlert size={28} className="text-rose-600"/> Encroachment Control
-                    </h2>
-                    <p className="text-xs text-zinc-500 font-medium mt-1">Authorized Boundary & Land Use Protection</p>
+        <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in overflow-hidden">
+            {/* Contextual Tabs */}
+            <div className="px-6 bg-white border-b border-zinc-200 flex justify-between items-end shrink-0">
+                <div className="flex gap-8">
+                    {(['Active', 'GIS', 'Policy'] as const).map(tab => (
+                        <button 
+                            key={tab} 
+                            onClick={() => setActiveTab(tab)}
+                            className={`py-4 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${
+                                activeTab === tab ? 'border-emerald-600 text-emerald-800' : 'border-transparent text-zinc-400 hover:text-zinc-600'
+                            }`}
+                        >
+                            {tab === 'Active' ? 'Active Cases' : tab === 'GIS' ? 'Spatial View' : 'Regulatory'}
+                        </button>
+                    ))}
                 </div>
-                <button onClick={() => setIsFormOpen(true)} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold uppercase transition-all shadow-lg ${REMIS_THEME.classes.buttonPrimary}`}>
-                    <Plus size={16}/> Report Incident
-                </button>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KPICard title="Total Cases" value={stats.total} icon={ShieldAlert} />
-                <KPICard title="Active Investigations" value={stats.active} icon={Activity} />
-                <KPICard title="Structural Breaches" value={stats.structural} icon={Building} />
-                <KPICard title="Avg Resolve" value="42d" icon={Clock} />
+                <div className="pb-3">
+                    <button onClick={() => setIsFormOpen(true)} className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-md ${REMIS_THEME.classes.buttonPrimary}`}>
+                        <Plus size={14}/> Declare Incident
+                    </button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-12 gap-6 mt-8">
-                <div className="col-span-12 lg:col-span-8 bg-white border border-zinc-200 rounded-2xl shadow-sm p-6">
-                    <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-6">Encroachment Status Pipeline</h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
-                                <XAxis dataKey="name" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                <YAxis tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                <Tooltip contentStyle={{fontSize: 12, borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'}} />
-                                <Bar dataKey="cases" fill={REMIS_THEME.colors.primary} radius={[4, 4, 0, 0]} barSize={40} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-                <div className="col-span-12 lg:col-span-4 bg-white border border-zinc-200 rounded-2xl shadow-sm p-6 flex flex-col">
-                    <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-6">Recent Reports</h3>
-                    <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                        {cases.slice(0, 5).map(c => (
-                            <button key={c.id} onClick={() => setSelectedCaseId(c.id)} className="w-full text-left p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:border-emerald-300 transition-all group">
-                                <div className="flex justify-between mb-1">
-                                    <span className="text-[10px] font-mono font-bold text-zinc-400">{c.id}</span>
-                                    <span className="text-[9px] font-bold uppercase text-rose-600">{c.type}</span>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                {activeTab === 'Active' && (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-4">
+                                <div className="p-3 bg-rose-50 text-rose-600 rounded-xl"><ShieldAlert size={20}/></div>
+                                <div><p className="text-[10px] font-bold text-zinc-400 uppercase">Active Population</p><p className="text-xl font-mono font-bold text-zinc-900">{stats.active}</p></div>
+                            </div>
+                            <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-4">
+                                <div className="p-3 bg-amber-50 text-amber-600 rounded-xl"><Building size={20}/></div>
+                                <div><p className="text-[10px] font-bold text-zinc-400 uppercase">Structural Breaches</p><p className="text-xl font-mono font-bold text-zinc-900">{stats.structural}</p></div>
+                            </div>
+                            <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-4">
+                                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Activity size={20}/></div>
+                                <div><p className="text-[10px] font-bold text-zinc-400 uppercase">Mean Resolution</p><p className="text-xl font-mono font-bold text-zinc-900">42d</p></div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                            {cases.map(c => (
+                                <div key={c.id} onClick={() => setSelectedCaseId(c.id)} className="bg-white border border-zinc-200 rounded-2xl p-5 hover:shadow-lg hover:border-emerald-300 transition-all cursor-pointer group flex justify-between items-center">
+                                    <div className="flex items-center gap-5">
+                                        <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors"><ShieldAlert size={20}/></div>
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <h4 className="text-sm font-bold text-zinc-900">{c.id}</h4>
+                                                <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded border bg-zinc-50 text-zinc-500">{c.status}</span>
+                                            </div>
+                                            <p className="text-xs text-zinc-500 max-w-md line-clamp-1">{c.description}</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={18} className="text-zinc-200 group-hover:text-emerald-600 transition-all" />
                                 </div>
-                                <p className="text-xs font-bold text-zinc-800 line-clamp-1">{c.description}</p>
-                            </button>
-                        ))}
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {activeTab === 'GIS' && (
+                    <div className="bg-white border border-zinc-200 rounded-[32px] p-10 shadow-sm flex flex-col items-center justify-center h-[500px] text-center gap-6">
+                        <div className="p-6 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shadow-inner animate-pulse"><MapIcon size={48}/></div>
+                        <div>
+                            <h3 className="text-xl font-bold text-zinc-900">Spatial Intelligence View</h3>
+                            <p className="text-sm text-zinc-500 max-w-sm mx-auto mt-2">Visualizing encroachment points against authoritative boundary layers (SDSVIE Compliant).</p>
+                        </div>
+                        <button onClick={onNavigateToGis} className="px-8 py-3 bg-zinc-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-xl transition-all active:scale-95">Open Global GIS Viewer</button>
                     </div>
-                </div>
+                )}
+
+                {activeTab === 'Policy' && (
+                    <div className="max-w-4xl mx-auto space-y-6">
+                        <div className="bg-white p-8 rounded-3xl border border-zinc-200 shadow-sm">
+                            <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-6 flex items-center gap-3"><BookOpen size={18} className="text-rose-600"/> ER 405-1-12 Enforcement</h4>
+                            <div className="space-y-4 text-sm text-zinc-600 leading-relaxed">
+                                <p><strong>Purpose:</strong> To establish uniform procedures for detecting, reporting, and resolving encroachments upon Army-controlled real property.</p>
+                                <p><strong>Administrative Action:</strong> All identified encroachments must be investigated within 30 days. Formal legal action via the US Attorney Office requires OGC certification.</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
             {isFormOpen && <EncroachmentCaseForm onClose={() => setIsFormOpen(false)} onSubmit={(c) => {remisService.addEncroachment(c); setIsFormOpen(false);}} />}
         </div>

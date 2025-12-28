@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useTransition } from 'react';
+import React, { useState, useMemo, useTransition, useCallback } from 'react';
 import { 
     Activity, TrendingUp, AlertTriangle, Building2, Gavel, 
     MapPin, Calculator, FileCheck, Lock, Clock, ShieldAlert, Sparkles, Bot
@@ -7,19 +7,24 @@ import { BracInstallation, BracScenario } from '../../types';
 import { BracDssEngine } from '../../services/BracDssEngine';
 import { formatCurrency } from '../../utils/formatting';
 import { optimizeBracScenario } from '../../services/geminiService';
-import { MOCK_BRAC_INSTALLATIONS, MOCK_BRAC_SCENARIOS } from '../../constants';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, LineChart, Line } from 'recharts';
+import { remisService } from '../../services/RemisDataService';
+import { useService } from '../../hooks/useService';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, LineChart, Line } from 'recharts';
 import InstallationComparison from '../brac/InstallationComparison';
 
 const BracDssView: React.FC = () => {
-    const [selectedScenario, setSelectedScenario] = useState<BracScenario>(MOCK_BRAC_SCENARIOS[0]);
+    const installations = useService<BracInstallation[]>(remisService, useCallback(() => remisService.getBracInstallations(), []));
+    const scenarios = useService<BracScenario[]>(remisService, useCallback(() => remisService.getBracScenarios(), []));
+    
+    const [selectedScenarioId, setSelectedScenarioId] = useState<string>(scenarios[0].id);
     const [activeTab, setActiveTab] = useState<'Analysis' | 'Comparison' | 'Timeline' | 'Report'>('Analysis');
     const [optimizationResult, setOptimizationResult] = useState('');
     const [isOptimizing, setIsOptimizing] = useState(false);
     const [isPending, startTransition] = useTransition();
 
-    const losing = MOCK_BRAC_INSTALLATIONS.find(i => i.id === selectedScenario.losingInstallationId)!;
-    const gaining = MOCK_BRAC_INSTALLATIONS.find(i => i.id === selectedScenario.gainingInstallationId);
+    const selectedScenario = useMemo(() => scenarios.find(s => s.id === selectedScenarioId)!, [scenarios, selectedScenarioId]);
+    const losing = useMemo(() => installations.find(i => i.id === selectedScenario.losingInstallationId)!, [installations, selectedScenario]);
+    const gaining = useMemo(() => installations.find(i => i.id === selectedScenario.gainingInstallationId), [installations, selectedScenario]);
 
     const analysis = useMemo(() => 
         BracDssEngine.analyzeScenario(selectedScenario, losing, gaining), 
@@ -37,7 +42,7 @@ const BracDssView: React.FC = () => {
 
     const handleOptimize = async () => {
         setIsOptimizing(true);
-        const result = await optimizeBracScenario(selectedScenario, MOCK_BRAC_INSTALLATIONS);
+        const result = await optimizeBracScenario(selectedScenario, installations);
         setOptimizationResult(result);
         setIsOptimizing(false);
     };
@@ -49,7 +54,7 @@ const BracDssView: React.FC = () => {
                     <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
                         <Gavel size={24} className="text-indigo-700" /> OSD BRAC Decision Support
                     </h2>
-                    <p className="text-xs text-zinc-500 font-medium mt-1">10 U.S.C. § 2687 Analysis Engine • Round 2025</p>
+                    <p className="text-xs text-zinc-500 font-medium mt-1">10 U.S.C. § 2687 Analysis Engine • GFEBS Integration</p>
                 </div>
                 <div className="flex bg-zinc-100 p-1 rounded-lg shadow-inner">
                     {['Analysis', 'Comparison', 'Timeline', 'Report'].map(t => (
@@ -155,7 +160,7 @@ const BracDssView: React.FC = () => {
                 )}
                 
                 {activeTab === 'Comparison' && (
-                    <InstallationComparison installations={MOCK_BRAC_INSTALLATIONS} />
+                    <InstallationComparison installations={installations} />
                 )}
 
                 {activeTab === 'Timeline' && (

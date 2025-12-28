@@ -1,19 +1,17 @@
-import React, { useState, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
+import React, { useState, useMemo, useDeferredValue, useTransition } from 'react';
 import { Building, Search, Plus, DollarSign, AlertCircle, ArrowRight, ShieldCheck, MapPin, Key, Landmark, LayoutGrid, List } from 'lucide-react';
 import { LGHLease, LeaseStatus } from '../../types';
-import { remisService } from '../../services/RemisDataService';
+import { MOCK_LGH_LEASES } from '../../constants';
 import { formatCurrency } from '../../utils/formatting';
-import { useService } from '../../hooks/useService';
-import LeaseDetailModal from './LeaseDetailModal';
+import LeaseDetailModal from '../lgh/LeaseDetailModal';
 import Badge from '../shared/Badge';
-import LeaseForm from './LeaseForm';
 
 const LGHPortfolioView: React.FC = () => {
-    const leases = useService<LGHLease[]>(remisService, useCallback(() => remisService.getLGHLeases(), []));
+    const [leases, setLeases] = useState<LGHLease[]>(MOCK_LGH_LEASES);
     const [selectedLeaseId, setSelectedLeaseId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const deferredSearch = useDeferredValue(searchTerm);
-    const [view, setView] = useState<'list' | 'detail' | 'form'>('list');
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 
     const filteredLeases = useMemo(() => leases.filter(l => 
@@ -27,10 +25,12 @@ const LGHPortfolioView: React.FC = () => {
 
     const handleSaveLease = (updatedLease: LGHLease) => {
         startTransition(() => {
-            const exists = leases.some(l => l.id === updatedLease.id);
-            if (exists) remisService.updateLGHLease(updatedLease);
-            else remisService.addLGHLease(updatedLease);
-            setView('list');
+            setLeases(prev => {
+                const exists = prev.some(l => l.id === updatedLease.id);
+                if (exists) return prev.map(l => l.id === updatedLease.id ? updatedLease : l);
+                return [updatedLease, ...prev];
+            });
+            setIsDetailOpen(false);
         });
     };
 
@@ -46,10 +46,6 @@ const LGHPortfolioView: React.FC = () => {
         return <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border whitespace-nowrap ${styles[status]}`}>{status}</span>;
     };
     
-    if (view === 'form') {
-        return <LeaseForm onClose={() => setView('list')} onSubmit={handleSaveLease} />;
-    }
-
     return (
         <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col bg-zinc-50/30 overflow-hidden">
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 shrink-0">
@@ -58,7 +54,7 @@ const LGHPortfolioView: React.FC = () => {
                         <Key size={28} className="text-cyan-700" /> LGH Portfolio Monitor
                     </h2>
                     <p className="text-xs text-zinc-500 font-medium mt-1 uppercase tracking-widest">
-                        Leased Government Housing (10 U.S.C. 2835) • OSD Central Registry
+                        Leased Government Housing (10 U.S.C. 2835) • Section 801/802 Programs
                     </p>
                 </div>
                 
@@ -71,7 +67,7 @@ const LGHPortfolioView: React.FC = () => {
                             className="w-full pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-xl text-xs focus:outline-none focus:border-cyan-400 transition-all shadow-sm"
                         />
                     </div>
-                    <button onClick={() => {setSelectedLeaseId(null); setView('form');}} className="flex items-center justify-center gap-2 px-6 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg active:scale-95 whitespace-nowrap">
+                    <button onClick={() => {setSelectedLeaseId(null); setIsDetailOpen(true);}} className="flex items-center justify-center gap-2 px-6 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg active:scale-95 whitespace-nowrap">
                         <Plus size={14}/> Register Asset
                     </button>
                 </div>
@@ -82,7 +78,7 @@ const LGHPortfolioView: React.FC = () => {
                     {filteredLeases.map(lease => (
                          <div 
                             key={lease.id} 
-                            onClick={() => { startTransition(() => { setSelectedLeaseId(lease.id); setView('detail'); }); }}
+                            onClick={() => { startTransition(() => { setSelectedLeaseId(lease.id); setIsDetailOpen(true); }); }}
                             className="bg-white border border-zinc-200 rounded-[32px] p-6 hover:shadow-2xl hover:border-cyan-300 transition-all cursor-pointer group flex flex-col min-h-[320px]"
                         >
                             <div className="flex justify-between items-start mb-6">
@@ -137,13 +133,18 @@ const LGHPortfolioView: React.FC = () => {
                             </div>
                         </div>
                     ))}
+                    {filteredLeases.length === 0 && (
+                        <div className="col-span-full py-24 text-center border-2 border-dashed border-zinc-200 rounded-[32px] bg-white">
+                             <p className="text-sm font-bold uppercase tracking-widest text-zinc-400">No Portfolio Records Found</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {view === 'detail' && (
+            {isDetailOpen && (
                 <LeaseDetailModal 
                     lease={selectedLease || null} 
-                    onClose={() => setView('list')} 
+                    onClose={() => setIsDetailOpen(false)} 
                     onSave={handleSaveLease} 
                 />
             )}

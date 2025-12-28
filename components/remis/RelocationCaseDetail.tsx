@@ -1,9 +1,12 @@
 import React, { useState, useTransition, useMemo } from 'react';
-// Fix: Added missing Landmark icon to the imports
-import { ArrowLeft, CheckCircle, Trash2, Link as LinkIcon, FileText, User, History, Landmark } from 'lucide-react';
-import { RelocationCase, RelocationCaseStatus } from '../../types';
+import { 
+    ArrowLeft, CheckCircle, Trash2, Link as LinkIcon, FileText, User, 
+    History, Landmark, DollarSign, Plus, CheckCircle2, ShieldCheck 
+} from 'lucide-react';
+import { RelocationCase, RelocationCaseStatus, RelocationBenefit, BenefitStatus } from '../../types';
 import BenefitManager from './BenefitManager';
 import { formatRelativeTime } from '../../utils/formatting';
+import RemisAuditTrail from './RemisAuditTrail';
 
 interface Props {
     caseData: RelocationCase;
@@ -124,19 +127,16 @@ const RelocationCaseDetail: React.FC<Props> = ({ caseData, onBack, onUpdate, onD
                 )}
 
                 {activeTab === 'History' && (
-                    <div className="bg-white p-8 rounded-2xl border border-zinc-200 shadow-sm h-fit">
-                        <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-6">Fiduciary Audit Trail</h4>
-                        <div className="space-y-4">
-                            {caseData.auditLog.map((log, i) => (
-                                <div key={i} className="flex gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-100 text-xs">
-                                    <div className="font-mono text-zinc-400 w-24 shrink-0">{formatRelativeTime(log.timestamp)}</div>
-                                    <div className="flex-1">
-                                        <span className="font-bold text-zinc-900 uppercase text-[10px] mr-2">{log.action}:</span> {log.details || 'System event recorded.'}
-                                    </div>
-                                    <div className="text-[10px] font-bold text-zinc-400 uppercase">{log.user}</div>
-                                </div>
-                            ))}
+                    <div className="bg-white border border-zinc-200 rounded-[40px] p-10 shadow-sm h-fit">
+                        <div className="flex justify-between items-center mb-10 border-b border-zinc-50 pb-6">
+                            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3">
+                                <History size={20} className="text-zinc-400"/> Fiduciary Audit Trail
+                            </h4>
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600">
+                                <ShieldCheck size={14}/> CASE VERIFIED
+                            </div>
                         </div>
+                        <RemisAuditTrail log={caseData.auditLog} />
                     </div>
                 )}
             </div>

@@ -1,6 +1,6 @@
+
 import React, { useState, useMemo } from 'react';
 import { BudgetLineItem, POMEntry } from '../../types';
-/* Fix: Added RefreshCw and Landmark to the import list from lucide-react */
 import { FileText, Sparkles, Download, ChevronDown, ChevronUp, Database, AlertCircle, Bot, CheckCircle2, RefreshCw, Landmark, ShieldAlert, Award } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatting';
 import { generateJSheetNarrative } from '../../services/geminiService';
@@ -19,7 +19,7 @@ export const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
     const selectedItem = useMemo(() => items.find(i => i.id === selectedId), [items, selectedId]);
     const pomDetail = useMemo(() => pom.find(p => p.projectId === selectedItem?.projectId), [pom, selectedItem]);
 
-    // Opp 63: Quality Score Calculation
+    // Quality Score Calculation
     const qualityScore = useMemo(() => {
         if (!justification) return 0;
         let score = 50; // Base
@@ -94,7 +94,7 @@ export const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        {/* Opp 63: Quality Score Badge */}
+                        {/* Quality Score Badge */}
                         <div className={`px-3 py-1 rounded-xl border flex items-center gap-2 ${qualityScore > 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`}>
                             <Award size={14}/>
                             <div className="flex flex-col">
@@ -110,7 +110,7 @@ export const JSheetGenerator: React.FC<Props> = ({ items, pom }) => {
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-zinc-50/50">
                     <div className="space-y-8 pb-20">
-                        {/* Opp 64: Capability Risk Warning */}
+                        {/* Capability Risk Warning */}
                         {selectedItem?.capabilityLevel !== 'Capability 1' && (
                              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-900 shadow-sm animate-in slide-in-from-top-2">
                                 <ShieldAlert size={20} className="shrink-0 mt-0.5" />

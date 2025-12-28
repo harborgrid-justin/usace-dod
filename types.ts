@@ -1,3 +1,4 @@
+
 /**
  * XI. The Principle of Opaque Types (Branding)
  */
@@ -78,6 +79,34 @@ export interface RetrievalLogEntry {
     entityType: 'Asset' | 'Outgrant' | 'Solicitation' | 'Appraisal';
     accessRole: string;
     purpose: string;
+}
+
+export interface UMDRecord {
+    id: string;
+    tas: string;
+    amount: number;
+    ageDays: number;
+    sourceModule: string;
+    researchStatus: 'Pending' | 'Researching' | 'Resolved' | 'Escalated';
+    assignedTo?: string;
+}
+
+export interface NULORecord {
+    id: string;
+    documentNumber: string;
+    amount: number;
+    varianceReason: string;
+    status: 'Open' | 'Correction Pending' | 'Closed';
+}
+
+export interface DredgeMetric {
+    id: string;
+    projectId: string;
+    volumeCY: number;
+    totalCost: number;
+    costPerCY: number;
+    dredgeType: 'Cutterhead' | 'Hopper' | 'Clamshell';
+    fiscalPeriod: string;
 }
 
 // Appraisal Specific Types
@@ -1072,6 +1101,14 @@ export interface InvestigatingOfficer {
     fiscalLawTrainingDate: string;
     hasConflict: boolean;
     dateAppointed?: string;
+}
+
+export interface EvidenceItem {
+    id: string;
+    description: string;
+    source: string;
+    supportsConclusion: boolean;
+    dateCollected: string;
 }
 
 export interface EvidenceItem {

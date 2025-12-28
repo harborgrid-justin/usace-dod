@@ -2,16 +2,10 @@ import { Appropriation, FundControlNode, Distribution, TransferAction } from '..
 import { MOCK_APPROPRIATIONS, COMMAND_HIERARCHY, MOCK_TRANSFERS } from '../constants';
 
 class FundsDataService {
-    private appropriations: Appropriation[];
-    private fundHierarchy: FundControlNode[];
-    private transfers: TransferAction[];
+    private appropriations: Appropriation[] = JSON.parse(JSON.stringify(MOCK_APPROPRIATIONS));
+    private fundHierarchy: FundControlNode[] = [JSON.parse(JSON.stringify(COMMAND_HIERARCHY))];
+    private transfers: TransferAction[] = JSON.parse(JSON.stringify(MOCK_TRANSFERS));
     private listeners: Set<Function> = new Set();
-
-    constructor() {
-        this.appropriations = JSON.parse(JSON.stringify(MOCK_APPROPRIATIONS));
-        this.fundHierarchy = [JSON.parse(JSON.stringify(COMMAND_HIERARCHY))];
-        this.transfers = JSON.parse(JSON.stringify(MOCK_TRANSFERS));
-    }
 
     getAppropriations(): Appropriation[] { return this.appropriations; }
     getHierarchy(): FundControlNode[] { return this.fundHierarchy; }

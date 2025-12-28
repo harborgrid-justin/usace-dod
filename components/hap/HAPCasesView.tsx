@@ -1,14 +1,16 @@
-import React, { useState, useMemo, useDeferredValue, useTransition } from 'react';
+import React, { useState, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
 import { Users, Search, Plus, Home, FileCheck, DollarSign, Calendar, ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
 import { HAPCase, HAPCaseStatus } from '../../types';
-import { MOCK_HAP_CASES } from '../../constants';
+import { remisService } from '../../services/RemisDataService';
 import { formatCurrency } from '../../utils/formatting';
+import { useService } from '../../hooks/useService';
 import HAPCaseDetail from './HAPCaseDetail';
 import Badge from '../shared/Badge';
+import HAPCaseForm from './HAPCaseForm';
 
 const HAPCasesView: React.FC = () => {
-    const [view, setView] = useState<'list' | 'detail'>('list');
-    const [cases, setCases] = useState<HAPCase[]>(MOCK_HAP_CASES);
+    const cases = useService<HAPCase[]>(remisService, useCallback(() => remisService.getHAPCases(), []));
+    const [view, setView] = useState<'list' | 'detail' | 'form'>('list');
     const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const deferredSearch = useDeferredValue(searchTerm);
@@ -30,6 +32,15 @@ const HAPCasesView: React.FC = () => {
         });
     };
 
+    const handleCreate = (newCase: HAPCase) => {
+        remisService.addHAPCase(newCase);
+        setView('list');
+    };
+
+    const handleUpdate = (updated: HAPCase) => {
+        remisService.updateHAPCase(updated);
+    };
+
     const StatusBadge = ({ status }: { status: HAPCaseStatus }) => {
         const styles = {
             'New': 'bg-blue-50 text-blue-700 border-blue-100',
@@ -48,11 +59,12 @@ const HAPCasesView: React.FC = () => {
         return <HAPCaseDetail 
             hapCase={selectedCase} 
             onBack={() => setView('list')} 
-            onUpdate={(updated) => {
-                setCases(prev => prev.map(c => c.id === updated.id ? updated : c));
-                setSelectedCaseId(updated.id);
-            }} 
+            onUpdate={handleUpdate} 
         />;
+    }
+
+    if (view === 'form') {
+        return <HAPCaseForm onClose={() => setView('list')} onSubmit={handleCreate} />;
     }
 
     return (
@@ -63,7 +75,7 @@ const HAPCasesView: React.FC = () => {
                         <Home size={28} className="text-teal-700" /> HAP Intake Management
                     </h2>
                     <p className="text-xs text-zinc-500 font-medium mt-1 uppercase tracking-widest">
-                        Homeowners Assistance Program (32 CFR Part 239) • Relocation Center
+                        Homeowners Assistance Program (32 CFR Part 239) • OSD Authoritative Ledger
                     </p>
                 </div>
                 
@@ -76,7 +88,7 @@ const HAPCasesView: React.FC = () => {
                             className="w-full pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-xl text-xs focus:outline-none focus:border-teal-400 transition-all shadow-sm"
                         />
                     </div>
-                    <button className="flex items-center justify-center gap-2 px-6 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg active:scale-95">
+                    <button onClick={() => setView('form')} className="flex items-center justify-center gap-2 px-6 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg active:scale-95">
                         <Plus size={14}/> New Intake Case
                     </button>
                 </div>

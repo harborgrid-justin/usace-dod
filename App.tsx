@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, Suspense, useTransition, useMemo } from 'react';
 import { NavigationTab, AgencyContext } from './types';
 import Sidebar from './components/shared/Sidebar';
@@ -37,8 +38,9 @@ const CivilWorksAllowanceView = React.lazy(() => import('./components/views/Civi
 const CDOModuleView = React.lazy(() => import('./components/views/CDOModuleView.tsx'));
 const AssetLifecycleView = React.lazy(() => import('./components/views/AssetLifecycleView.tsx'));
 const BracDssView = React.lazy(() => import('./components/views/BracDssView.tsx'));
-const HAPCasesView = React.lazy(() => import('./components/views/HAPCasesView.tsx'));
-const LGHPortfolioView = React.lazy(() => import('./components/views/LGHPortfolioView.tsx'));
+// Point directly to the domain-specific entry points to resolve relative path issues
+const HAPCasesView = React.lazy(() => import('./components/hap/HAPCasesView.tsx'));
+const LGHPortfolioView = React.lazy(() => import('./components/lgh/LGHPortfolioView.tsx'));
 const RealPropertyDashboard = React.lazy(() => import('./components/remis/RealPropertyDashboard.tsx'));
 const REMISAssetManager = React.lazy(() => import('./components/remis/REMISAssetManager.tsx'));
 const GISMapViewer = React.lazy(() => import('./components/remis/GISMapViewer.tsx'));
@@ -161,18 +163,46 @@ const App: React.FC = () => {
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [selectedContingencyOpId, setSelectedContingencyOpId] = useState<string | null>(null);
 
+  const [isPending, startTransition] = useTransition();
+
   const navigateToTab = useCallback((tab: NavigationTab) => {
-    setActiveTab(tab);
+    startTransition(() => {
+      setActiveTab(tab);
+    });
+  }, []);
+
+  const handleSetAgency = useCallback((newAgency: AgencyContext) => {
+    startTransition(() => {
+      setAgency(newAgency);
+    });
+  }, []);
+
+  const handleSetSelectedProjectId = useCallback((id: string | null) => {
+    startTransition(() => {
+      setSelectedProjectId(id);
+    });
+  }, []);
+
+  const handleSetSelectedThreadId = useCallback((id: string | null) => {
+    startTransition(() => {
+      setSelectedThreadId(id);
+    });
+  }, []);
+
+  const handleSetSelectedContingencyOpId = useCallback((id: string | null) => {
+    startTransition(() => {
+      setSelectedContingencyOpId(id);
+    });
   }, []);
 
   return (
     <ToastProvider>
-      <div className="flex h-screen bg-zinc-50 font-sans text-zinc-900 overflow-hidden">
+      <div className={`flex h-screen bg-zinc-50 font-sans text-zinc-900 overflow-hidden ${isPending ? 'opacity-80 grayscale-[0.2]' : ''}`}>
         <Sidebar 
           activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
+          setActiveTab={navigateToTab} 
           agency={agency} 
-          setAgency={setAgency}
+          setAgency={handleSetAgency}
           isSidebarOpen={isSidebarOpen}
           isMobileMenuOpen={isMobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
@@ -194,11 +224,11 @@ const App: React.FC = () => {
                   tab={activeTab}
                   agency={agency}
                   selectedProjectId={selectedProjectId}
-                  setSelectedProjectId={setSelectedProjectId}
+                  setSelectedProjectId={handleSetSelectedProjectId}
                   selectedThreadId={selectedThreadId}
-                  setSelectedThreadId={setSelectedThreadId}
+                  setSelectedThreadId={handleSetSelectedThreadId}
                   selectedContingencyOpId={selectedContingencyOpId}
-                  setSelectedContingencyOpId={setSelectedContingencyOpId}
+                  setSelectedContingencyOpId={handleSetSelectedContingencyOpId}
                   navigateToTab={navigateToTab}
                 />
               </Suspense>

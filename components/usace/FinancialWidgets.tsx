@@ -8,7 +8,6 @@ import { ResponsiveContainer, PieChart as RePieChart, Pie, Cell, Tooltip } from 
 export const CostShareWidget = ({ project }: { project: USACEProject }) => {
     if (!project.costShare) return null;
 
-    // --- Opportunity 9: Memoized Chart Data ---
     const data = useMemo(() => [
         { name: 'Federal', value: project.costShare!.federalShare, color: '#e11d48' },
         { name: 'Non-Federal', value: project.costShare!.nonFederalShare, color: '#2563eb' }
@@ -111,7 +110,6 @@ export const PRCList = ({ project }: { project: USACEProject }) => {
 };
 
 export const FundingStreamVisualizer = ({ project }: { project: USACEProject }) => {
-    // Opp 15: Funding Expiration Warning
     const currentYear = new Date().getFullYear();
     const expiryYear = currentYear + 1; // Mock
     const isExpiring = expiryYear <= currentYear + 1;
@@ -148,7 +146,7 @@ export const FundingStreamVisualizer = ({ project }: { project: USACEProject }) 
                 <ArrowRight size={16} className="text-zinc-300" />
 
                 <div className="flex flex-col items-center bg-white px-2">
-                    <div className="p-3 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 mb-2"><FileText size={16}/></div>
+                    <div className="p-3 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 mb-2"><FileText size={16}/></div>
                     <p className="text-[10px] font-bold text-zinc-500 uppercase">Obligated</p>
                     <p className="text-xs font-mono font-bold text-zinc-900">{formatCurrency(project.financials.obligated)}</p>
                 </div>
@@ -158,7 +156,6 @@ export const FundingStreamVisualizer = ({ project }: { project: USACEProject }) 
 };
 
 export const LaborAnalysis = () => {
-    // Opp 14: Overrun Detection logic
     const directLaborCost = 1200000;
     const directLaborBudget = 1100000; // Mock budget lower than cost
     const isOverrun = directLaborCost > directLaborBudget;

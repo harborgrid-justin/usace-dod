@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { 
-    Construction, ArrowLeft, Ruler, Hammer, 
+    ArrowLeft, Construction, Ruler, Hammer, 
     FileText, DollarSign, Box, List, Landmark, Share2
 } from 'lucide-react';
 import { USACEProject } from '../../types';

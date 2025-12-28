@@ -1,3 +1,4 @@
+
 import { 
     GLTransaction, FundControlNode, ProjectOrder, USACEProject, Asset, 
     Obligation, Expense, Disbursement, TravelOrder, InventoryItem, 
@@ -358,8 +359,7 @@ export class IntegrationOrchestrator {
         const pr = acquisitionService.getPRs().find(p => p.id === prId);
         if (!pr) return { success: false, message: 'PR not found' };
 
-        // Fix: Added missing auditLog property to the mock transaction literal
-        const mockTx = { totalAmount: pr.amount, lines: [{ fund: '0100' }], auditLog: [] } as any;
+        const mockTx = { totalAmount: pr.amount, lines: [{ fund: '0100' }] } as any;
         const validation = this.validateGlAgainstAda(mockTx, fundNodes);
         if (!validation.valid) return { success: false, message: validation.message };
 
@@ -375,7 +375,7 @@ export class IntegrationOrchestrator {
     }
 
     /**
-     * Awards a contract and posts the formal obligation to the GL.
+     * Award a contract and post the formal obligation to the GL.
      */
     static awardContract(prId: string, vendorData: any, user: string): Contract {
         const contract: Contract = {

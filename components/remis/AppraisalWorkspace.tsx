@@ -1,28 +1,21 @@
-import React, { useState, useEffect, useMemo, useDeferredValue, useTransition } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
 import { Scale, Search, Plus, Eye, EyeOff, FileText, Lock, CheckCircle2, History, ArrowRight } from 'lucide-react';
 import { AppraisalRecord } from '../../types';
-import { appraisalService } from '../../services/AppraisalDataService';
-import { remisService, AUTHORITATIVE_SOURCE_ID } from '../../services/RemisDataService';
+import { remisService } from '../../services/RemisDataService';
 import { formatCurrency } from '../../utils/formatting';
 import { REMIS_THEME } from '../../constants';
+import { useService } from '../../hooks/useService';
 import AppraisalForm from './AppraisalForm';
 import AppraisalDetail from './AppraisalDetail';
 
 const AppraisalWorkspace: React.FC = () => {
-    const [records, setRecords] = useState<AppraisalRecord[]>(appraisalService.getAppraisals());
+    const records = useService<AppraisalRecord[]>(remisService, useCallback(() => remisService.getAppraisals(), []));
     const [searchTerm, setSearchTerm] = useState('');
     const deferredSearch = useDeferredValue(searchTerm);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [view, setView] = useState<'list' | 'detail' | 'form'>('list');
     const [unmaskedIds, setUnmaskedIds] = useState<Set<string>>(new Set());
     const [isPending, startTransition] = useTransition();
-
-    useEffect(() => {
-        const unsubscribe = appraisalService.subscribe(() => {
-            setRecords([...appraisalService.getAppraisals()]);
-        });
-        return unsubscribe;
-    }, []);
 
     const toggleMask = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
@@ -44,8 +37,17 @@ const AppraisalWorkspace: React.FC = () => {
         records.find(r => r.id === selectedId),
     [records, selectedId]);
 
-    if (view === 'form') return <AppraisalForm onClose={() => setView('list')} onSubmit={(r) => {appraisalService.addAppraisal(r); setView('list');}} />;
-    if (view === 'detail' && selectedRecord) return <AppraisalDetail record={selectedRecord} onBack={() => {setSelectedId(null); setView('list');}} />;
+    const handleCreate = (record: AppraisalRecord) => {
+        remisService.addAppraisal(record);
+        setView('list');
+    };
+
+    const handleUpdate = (updated: AppraisalRecord) => {
+        remisService.updateAppraisal(updated);
+    };
+
+    if (view === 'form') return <AppraisalForm onClose={() => setView('list')} onSubmit={handleCreate} />;
+    if (view === 'detail' && selectedRecord) return <AppraisalDetail record={selectedRecord} onBack={() => {setSelectedId(null); setView('list');}} onUpdate={handleUpdate} />;
 
     return (
         <div className={`flex flex-col h-full bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden animate-in fade-in transition-opacity ${isPending ? 'opacity-70' : 'opacity-100'}`}>
