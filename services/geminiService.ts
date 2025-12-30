@@ -1,8 +1,9 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { BudgetLineItem, Solicitation, BracScenario, BracInstallation, ContingencyOperation } from "../types";
 
 // Re-export specific logic from domain-specific AI modules
-export { getFinancialAdvice, performDeepAudit } from './gemini/SentinelAI';
+export { getFinancialAdvice, performDeepAudit, generateStrategicBriefing } from './gemini/SentinelAI';
 export { generateMarketResearch, generateStatementOfWork } from './gemini/AcquisitionAI';
 export { generateJSheetNarrative } from './gemini/BudgetAI';
 export { analyzeContingencyReport } from './gemini/ComplianceAI';

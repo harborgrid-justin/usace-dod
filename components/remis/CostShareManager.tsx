@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
     PieChart, Plus, Search, Scale, TrendingUp, 
@@ -90,7 +91,7 @@ const CostShareManager: React.FC = () => {
                     ))}
                 </div>
                 <div className="pb-3">
-                    <button onClick={() => setIsFormOpen(true)} className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-md ${REMIS_THEME.classes.buttonPrimary}`}>
+                    <button onClick={() => setIsFormOpen(true)} className={`flex items-center gap-2 px-5 py-2 rounded-sm text-[10px] font-bold uppercase transition-all shadow-md ${REMIS_THEME.classes.buttonPrimary}`}>
                         <Plus size={14}/> Establish Agreement
                     </button>
                 </div>
@@ -99,14 +100,14 @@ const CostShareManager: React.FC = () => {
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
                 {activeTab === 'Registry' && (
                     <div className="space-y-6">
-                        <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden animate-in fade-in">
+                        <div className="bg-white border border-zinc-200 rounded-md shadow-sm flex flex-col overflow-hidden animate-in fade-in">
                             <div className="p-4 border-b border-zinc-100 bg-zinc-50/30 flex justify-between items-center">
                                 <div className="relative max-w-md w-full">
                                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"/>
                                     <input 
                                         type="text" placeholder="Search Sponsor, Project, or ID..." value={searchTerm}
                                         onChange={e => setSearchTerm(e.target.value)}
-                                        className={`w-full pl-9 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none transition-all ${REMIS_THEME.classes.inputFocus}`}
+                                        className={`w-full pl-9 pr-3 py-1.5 bg-white border border-zinc-200 rounded-sm text-xs focus:outline-none transition-all ${REMIS_THEME.classes.inputFocus}`}
                                     />
                                 </div>
                                 <div className="flex gap-2">
@@ -137,7 +138,7 @@ const CostShareManager: React.FC = () => {
                                                 <td className="p-4 text-xs text-zinc-600 font-mono font-bold uppercase">{r.projectOrAssetId}</td>
                                                 <td className="p-4 text-right text-xs font-mono font-bold text-zinc-900">{formatCurrency(nonFedTarget)}</td>
                                                 <td className="p-4 text-center">
-                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${r.status === 'Active' ? REMIS_THEME.classes.statusActive : REMIS_THEME.classes.badge.info}`}>
+                                                    <span className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase border ${r.status === 'Active' ? REMIS_THEME.classes.statusActive : REMIS_THEME.classes.badge.info}`}>
                                                         {r.status}
                                                     </span>
                                                 </td>
@@ -154,26 +155,26 @@ const CostShareManager: React.FC = () => {
                 {activeTab === 'Analytics' && (
                     <div className="space-y-8 animate-in slide-in-from-bottom-4">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                            <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
                                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Total Program Value</p>
                                 <p className="text-2xl font-mono font-bold text-zinc-900">{formatCurrency(stats.totalVal)}</p>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                            <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
                                 <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Non-Fed Contributions</p>
                                 <p className="text-2xl font-mono font-bold text-emerald-700">{formatCurrency(stats.totalContributed)}</p>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                            <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
                                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Pending Balance</p>
                                 <p className="text-2xl font-mono font-bold text-rose-600">{formatCurrency(stats.nonFedShare - stats.totalContributed)}</p>
                             </div>
-                            <div className="bg-zinc-900 p-6 rounded-2xl shadow-xl">
+                            <div className="bg-zinc-900 p-6 rounded-md shadow-xl">
                                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Sponsor Yield</p>
                                 <p className="text-2xl font-mono font-bold text-white">{((stats.totalContributed / stats.nonFedShare) * 100).toFixed(1)}%</p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                            <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-[40px] p-10 shadow-sm h-[450px] flex flex-col">
+                            <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-md p-10 shadow-sm h-[450px] flex flex-col">
                                 <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-10 flex items-center gap-3">
                                     <PieChart size={18} className="text-emerald-600"/> District Cost Share Profile (Federal vs Non-Federal)
                                 </h3>
@@ -183,24 +184,24 @@ const CostShareManager: React.FC = () => {
                                             <Pie data={splitData} cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={8} dataKey="value" stroke="none">
                                                 {splitData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
                                             </Pie>
-                                            <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
+                                            <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
                                             <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{fontSize: '11px', fontWeight: 'bold', paddingTop: '20px'}} />
                                         </RePieChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
                             
-                            <div className="lg:col-span-4 bg-zinc-50 border border-zinc-200 rounded-[40px] p-8 space-y-6">
+                            <div className="lg:col-span-4 bg-zinc-50 border border-zinc-200 rounded-md p-8 space-y-6">
                                 <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
                                     <ShieldCheck size={16} className="text-emerald-600"/> Compliance Highlights
                                 </h4>
                                 <div className="space-y-4">
-                                    <div className="p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm">
+                                    <div className="p-4 bg-white rounded-sm border border-zinc-100 shadow-sm">
                                         <p className="text-[10px] font-bold text-zinc-400 uppercase">Valuation Protocol</p>
                                         <p className="text-sm font-bold text-zinc-800 mt-1">100% Audit Verified</p>
                                         <p className="text-[10px] text-zinc-500 mt-1">LERRD credits reconciled against GFEBS sub-ledger.</p>
                                     </div>
-                                    <div className="p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm">
+                                    <div className="p-4 bg-white rounded-sm border border-zinc-100 shadow-sm">
                                         <p className="text-[10px] font-bold text-zinc-400 uppercase">Aging In-Kind</p>
                                         <p className="text-sm font-bold text-rose-600 mt-1">2 Work-in-Kind Blocks Pending</p>
                                         <p className="text-[10px] text-zinc-500 mt-1">Acceptance documentation overdue for MVR Project office.</p>
@@ -212,42 +213,42 @@ const CostShareManager: React.FC = () => {
                 )}
 
                 {activeTab === 'Sponsors' && (
-                    <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-sm animate-in fade-in">
+                    <div className="bg-white border border-zinc-200 rounded-md overflow-hidden shadow-sm animate-in fade-in">
                         <div className="p-12 text-center flex flex-col items-center justify-center gap-4">
                             <div className="p-6 bg-zinc-50 rounded-full border border-zinc-100 text-zinc-300">
                                 <Users size={48} />
                             </div>
                             <h3 className="text-lg font-bold text-zinc-900">Sponsor Exposure Monitor</h3>
                             <p className="text-xs text-zinc-400 max-w-sm">Aggregating multiple cost-share agreements by unique sponsor entity to track total non-federal exposure levels.</p>
-                            <button className="mt-4 px-8 py-3 bg-zinc-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-lg">Refresh Aggregate Report</button>
+                            <button className="mt-4 px-8 py-3 bg-zinc-900 text-white rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-lg">Refresh Aggregate Report</button>
                         </div>
                     </div>
                 )}
 
                 {activeTab === 'Policy' && (
                     <div className="max-w-4xl mx-auto space-y-10 animate-in slide-in-from-right-4">
-                        <div className="bg-white border border-zinc-200 rounded-[40px] p-12 shadow-sm relative overflow-hidden">
+                        <div className="bg-white border border-zinc-200 rounded-md p-12 shadow-sm relative overflow-hidden">
                              <div className="absolute top-0 right-0 p-10 opacity-5"><Landmark size={120}/></div>
                              <h3 className="text-xl font-bold text-zinc-900 mb-10 border-b border-zinc-50 pb-6 flex items-center gap-4">
                                 <BookOpen size={24} className="text-rose-700"/> Cost Sharing Authority Library
                              </h3>
                              <div className="space-y-10">
                                 <div className="flex gap-8 items-start group">
-                                    <div className="p-4 bg-emerald-50 text-emerald-700 rounded-3xl group-hover:bg-emerald-700 group-hover:text-white transition-all shadow-sm"><Info size={22}/></div>
+                                    <div className="p-4 bg-emerald-50 text-emerald-700 rounded-sm group-hover:bg-emerald-700 group-hover:text-white transition-all shadow-sm"><Info size={22}/></div>
                                     <div>
                                         <h5 className="text-base font-bold text-zinc-900 uppercase">33 U.S.C. § 2213</h5>
                                         <p className="text-sm text-zinc-500 leading-relaxed mt-2">The primary statute governing non-Federal cost-sharing for Civil Works flood control projects. Establishes the 65/35 default split.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-8 items-start group">
-                                    <div className="p-4 bg-blue-50 text-blue-700 rounded-3xl group-hover:bg-blue-700 group-hover:text-white transition-all shadow-sm"><Info size={22}/></div>
+                                    <div className="p-4 bg-blue-50 text-blue-700 rounded-sm group-hover:bg-blue-700 group-hover:text-white transition-all shadow-sm"><Info size={22}/></div>
                                     <div>
                                         <h5 className="text-base font-bold text-zinc-900 uppercase">ER 405-1-12</h5>
                                         <p className="text-sm text-zinc-500 leading-relaxed mt-2">USACE Real Estate Regulation for LERRD (Lands, Easements, Rights-of-Way, Relocations, and Disposal) credit valuation and auditing.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-8 items-start group">
-                                    <div className="p-4 bg-purple-50 text-purple-700 rounded-3xl group-hover:bg-purple-700 group-hover:text-white transition-all shadow-sm"><Info size={22}/></div>
+                                    <div className="p-4 bg-purple-50 text-purple-700 rounded-sm group-hover:bg-purple-700 group-hover:text-white transition-all shadow-sm"><Info size={22}/></div>
                                     <div>
                                         <h5 className="text-base font-bold text-zinc-900 uppercase">WRDA Section 103</h5>
                                         <p className="text-sm text-zinc-500 leading-relaxed mt-2">Establishes cost-share requirements for commercial navigation and harbor development projects.</p>
@@ -270,7 +271,7 @@ const CostShareManager: React.FC = () => {
 };
 
 const Badge: React.FC<{ children: React.ReactNode, variant?: string }> = ({ children, variant }) => (
-    <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase border shadow-sm tracking-widest ${variant === 'neutral' ? 'bg-zinc-100 text-zinc-600 border-zinc-200' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>
+    <span className={`px-2.5 py-1 rounded-sm text-[9px] font-bold uppercase border shadow-sm tracking-widest ${variant === 'neutral' ? 'bg-zinc-100 text-zinc-600 border-zinc-200' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>
         {children}
     </span>
 );

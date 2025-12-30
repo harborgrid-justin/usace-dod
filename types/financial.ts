@@ -1,5 +1,10 @@
 import { AuditLogEntry } from './shared_records';
-import { RuleEvaluationResult, GPCStatus, QuarterlyReviewStatus } from './common';
+import { GPCStatus, QuarterlyReviewStatus, ADAViolationStatus, Brand } from './common';
+
+export * from './acquisition_types';
+export * from './travel_types';
+export * from './dwcf_types';
+export * from './funds_types';
 
 export interface Obligation {
     id: string;
@@ -53,7 +58,6 @@ export interface USSGLAccount {
     isActive: boolean;
 }
 
-// Added missing FMRVolume type
 export interface FMRVolume {
     id: string;
     volume: string;
@@ -63,234 +67,12 @@ export interface FMRVolume {
     pages: number;
 }
 
-/**
- * Acquisition Lifecycle Types
- */
-export type PRStatus = 'Draft' | 'Pending Certification' | 'Funds Certified' | 'Solicitation' | 'Awarded';
-export interface PurchaseRequest {
-    id: string;
-    description: string;
-    amount: number;
-    requester: string;
-    date: string;
-    status: PRStatus;
-    justification?: string;
-    appropriation?: string;
-    objectClass?: string;
-    wbsCode?: string;
-    auditLog: AuditLogEntry[];
-}
-
-export type ContractStatus = 'Active' | 'Under Mod' | 'Closed' | 'Completed' | 'Terminated' | 'Canceled';
-export interface Contract {
-    id: string;
-    vendor: string;
-    type: string;
-    value: number;
-    awardedDate: string;
-    status: ContractStatus;
-    prReference: string;
-    uei: string;
-    cageCode: string;
-    periodOfPerformance: { start: string; end: string };
-    gInvoicingStatus: 'Accepted' | 'Pending' | 'Not Applicable';
-    isBerryCompliant: boolean;
-    modifications: ContractMod[];
-    auditLog: AuditLogEntry[];
-}
-
-export interface ContractMod {
-    id: string;
-    modNumber: string;
-    date: string;
-    amountDelta: number;
-    description: string;
-    authority: string;
-    status: 'Executed' | 'Pending';
-}
-
-/**
- * Travel Types
- */
-export interface TravelOrder {
-    id: string;
-    traveler: string;
-    destination: string;
-    purpose: string;
-    startDate: string;
-    endDate: string;
-    estCost: number;
-    status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
-    fiscalYear: number;
-}
-
-export interface TravelVoucher {
-    id: string;
-    orderId: string;
-    traveler: string;
-    status: 'Draft' | 'Pending Review' | 'Approved' | 'Paid';
-    dateSubmitted?: string;
-    totalClaimed: number;
-    expenses: TravelExpense[];
-}
-
-export interface TravelExpense {
-    id: string;
-    date: string;
-    category: 'Airfare' | 'Lodging' | 'Meals' | 'Misc';
-    amount: number;
-    description: string;
-}
-
-/**
- * Revolving Fund (DWCF) Types
- */
-export interface DWCFAccount {
-    id: string;
-    fundCode: string;
-    accountName: string;
-    totalCashBalance: number;
-}
-
-export interface DWCFActivity {
-    id: string;
-    name: string;
-    collections: number;
-    disbursements: number;
-}
-
-export interface DWCFOrder {
-    id: string;
-    dwcfActivityId: string;
-    customer: string;
-    description: string;
-    totalAmount: number;
-    status: 'Draft' | 'Issued' | 'Accepted' | 'Work In Progress' | 'Complete' | 'Canceled';
-}
-
-export type DWCFBillingStatus = 'Draft' | 'Sent' | 'Paid' | 'Canceled';
-export interface DWCFBilling {
-    id: string;
-    orderId: string;
-    billingDate: string;
-    status: DWCFBillingStatus;
-    total: number;
-    isAdvanceBilling: boolean;
-    costs: { labor: number; material: number; overhead: number; surcharge: number };
-}
-
-export interface DWCFRateProfile {
-    id: string;
-    activityId: string;
-    fiscalYear: number;
-    compositeRate: number;
-    overheadRate: number;
-    surchargeRate: number;
-    netOperatingResult: number;
-    accumulatedOperatingResult: number;
-    status: 'Active' | 'Pending Approval';
-}
-
-export interface DWCFTransaction {
-    id: string;
-    date: string;
-    type: 'Collection' | 'Disbursement' | 'Adjustment';
-    amount: number;
-    description: string;
-}
-
-export interface UnfundedCustomerOrder {
-    id: string;
-    customer: string;
-    amount: number;
-    status: 'Requires Notification' | 'Pending OUSD(C)' | 'Cleared';
-    notificationTimestamp?: number;
-}
-
-// Added missing GPCTransaction type
-export interface GPCTransaction {
-    id: string;
-    merchant: string;
-    amount: number;
-    date: string;
-    cardholder: string;
-    status: GPCStatus;
-}
-
-/**
- * Miscellaneous Ledger Types
- */
-export interface UMDRecord {
-    id: string;
-    tas: string;
-    amount: number;
-    ageDays: number;
-    sourceModule: string;
-    researchStatus: string;
-    assignedTo: string;
-}
-
-export interface NULORecord {
-    id: string;
-    documentNumber: string;
-    amount: number;
-    varianceReason: string;
-    status: string;
-}
-
-export interface IDOCInterface {
-    id: string;
-    timestamp: string;
-    status: 'Success' | 'Warning' | 'Error';
-    direction: 'Inbound' | 'Outbound';
-    partner: string;
-    messageType: string;
-}
-
-export type ERPModule = 'FI' | 'CO' | 'MM' | 'SD' | 'BI' | 'PS' | 'ALL';
-
-/**
- * Funds Control and ADA Types
- */
-export type FundControlLevel = 'Apportionment' | 'Allotment' | 'Allocation' | 'Suballocation' | 'Suballotment';
-export interface FundControlNode {
-    id: string;
-    parentId: string | null;
-    name: string;
-    level: FundControlLevel;
-    totalAuthority: number;
-    amountDistributed: number;
-    amountCommitted: number;
-    amountObligated: number;
-    amountExpended: number;
-    isCMA: boolean;
-    children: FundControlNode[];
-    history: AEAHistoryEvent[];
-}
-
 export interface AEAHistoryEvent {
     timestamp: string;
     user: string;
     action: 'Created' | 'Increased' | 'Decreased' | 'Updated';
     amount: number;
     justification: string;
-}
-
-export interface Appropriation {
-    id: string;
-    commandId: string;
-    name: string;
-    totalAuthority: number;
-    obligated: number;
-    distributions: Distribution[];
-}
-
-export interface CommandNode {
-    id: string;
-    name: string;
-    totalAuthority: number;
-    obligated: number;
-    children?: CommandNode[];
 }
 
 export interface Distribution {
@@ -304,100 +86,95 @@ export interface Distribution {
     linkedThreadId?: string;
 }
 
-export type TransferAuthorityType = 'General Transfer Authority (GTA)' | 'Congressionally Directed' | 'Working Capital Fund' | 'MilCon' | 'Functional (10 USC 125)' | 'Inter-Agency (31 USC 1531)';
-export type TransferStage = 'Proposal' | 'SecDef Determination' | 'OMB Approval' | 'Reprogramming (DD 1415)' | 'Congressional Notification' | 'Treasury NET (SF 1151)' | 'Completed';
-export interface TransferAction {
+// Added missing DigitalThread interface for audit traceability
+export interface DigitalThread {
     id: string;
-    fromAccount: string;
-    toAccount: string;
-    amount: number;
-    authorityType: TransferAuthorityType;
-    legalCitation: string;
-    justification: string;
-    isHigherPriority?: boolean;
-    isUnforeseen?: boolean;
-    currentStage: TransferStage;
-    dates: { initiated: string; completed?: string };
-    documents: { dd1415?: string; sf1151?: string };
-}
-
-// Added missing DepositFundAccount type
-export interface DepositFundAccount {
-    id: string;
-    treasuryIndex: string;
-    accountName: string;
-    statutoryAuthorization: string;
-    auditRequirement: string;
-    quarterlyReviews: Record<string, QuarterlyReviewStatus>;
-    currentBalance: number;
-}
-
-// Added missing CIHOAccount type
-export interface CIHOAccount {
-    id: string;
-    tafs: string;
-    component: string;
-    balance: number;
-    cashHoldingAuthorityMemo: string;
-    lastReconciliationDate: string;
-}
-
-// Added missing CDOFunction type
-export type CDOFunction = 'Engineering' | 'Construction' | 'Operations' | 'Admin' | string;
-
-// Added missing CDOCostPool type
-export interface CDOCostPool {
-    id: string;
-    functionName: CDOFunction;
-    orgCode: string;
-    fyBudget: number;
-    obligated: number;
-    currentRate: number;
-    status: 'Active' | 'Inactive';
-}
-
-/**
- * CDO Transaction Logic Entity
- */
-export interface CDOTransaction {
-    id: string;
-    date: string;
-    type: 'Labor' | 'Non-Labor' | 'Accrual';
-    amount: number;
-    description: string;
-    function: CDOFunction;
-    employeeId?: string;
-    hours?: number;
-    isIncidental?: boolean;
-}
-
-/**
- * Reimbursable and Project Order Types
- */
-export type ProjectOrderStatus = 'Draft (Advance Planning)' | 'Issued' | 'Accepted' | 'Work In Progress' | 'Completed' | 'Canceled';
-export interface ProjectOrder {
-    id: string;
-    orderNumber: string;
-    description: string;
-    providerId: string;
-    requestingAgency: string;
+    vendorName: string;
     appropriation: string;
-    totalAmount: number;
-    obligatedAmount: number;
-    pricingMethod: 'Fixed Price' | 'Cost Reimbursement';
-    issueDate: string;
-    completionDate: string;
-    acceptanceDate?: string;
-    commencementDate?: string;
-    isSeverable: boolean;
-    percentInHouse: number;
-    isSpecificDefiniteCertain: boolean;
-    bonaFideNeedYear: number;
-    isDoDOwned: boolean;
-    isSameCommander: boolean;
-    status: ProjectOrderStatus;
-    linkedP2Number?: string;
-    documents: { fs7600a?: string; fs7600b?: string };
+    obligationAmt: number;
+    disbursementAmt: number;
+    unliquidatedAmt: number;
+    unit: string;
+    blockchainHash: string;
+    gaapStandard: string;
+    controlObjective: string;
+    tasSymbol: string;
+    eftStatus: string;
+    supplyClass: string;
+    niinNsn: string;
+    serialNumber: string;
+    uicCode: string;
+    readinessImpact: string;
+    bonaFideValid: boolean;
+    berryCompliant: boolean;
+    ppaInterestRisk: boolean;
+    gl1010: string;
+    programElement: string;
+    costCenter: string;
+    fadNumber: string;
+    vendorUEI: string;
+    contractVehicle: string;
+    miprReference: string;
+    socioEconomicStatus: string;
+    invoiceDaysPending?: number;
+    dssnNumber?: string;
+    betcCode?: string;
+    auditFindingId?: string;
+    capId?: string;
+    contingencyOpId?: string;
+}
+
+// Added missing UMDRecord
+export interface UMDRecord {
+    id: string;
+    tas: string;
+    amount: number;
+    ageDays: number;
+    sourceModule: string;
+    researchStatus: string;
+    assignedTo: string;
+}
+
+// Added missing NULORecord
+export interface NULORecord {
+    id: string;
+    documentNumber: string;
+    amount: number;
+    varianceReason: string;
+    status: string;
+}
+
+// Added missing IDOCInterface for ERP sync
+export interface IDOCInterface {
+    id: string;
+    status: 'Success' | 'Warning' | 'Error';
+    direction: 'Inbound' | 'Outbound';
+    partner: string;
+    messageType: string;
+    timestamp: string;
+}
+
+// Added missing GPCTransaction
+export interface GPCTransaction {
+    id: string;
+    merchant: string;
+    date: string;
+    cardholder: string;
+    amount: number;
+    status: GPCStatus;
+}
+
+// Added missing Reimbursable types
+export type ReimbursableCustomerType = 'Intra-DoD' | 'Inter-Agency' | 'Private Party' | 'FMS';
+
+export interface ReimbursableAgreement {
+    id: string;
+    buyer: string;
+    sender: string;
+    seller: string;
+    gtcNumber: string;
+    status: string;
+    estimatedTotalValue: number;
 }
 
 export interface ReimbursableOrder {
@@ -409,46 +186,72 @@ export interface ReimbursableOrder {
     billingFrequency: string;
 }
 
-export interface ReimbursableAgreement {
-    id: string;
-    buyer: string;
-    sender: string;
-    seller: string;
-    gtcNumber: string;
-    status: 'Active' | 'Proposed' | 'Closed';
-    estimatedTotalValue: number;
-}
+export type ProjectOrderStatus = 'Draft (Advance Planning)' | 'Issued' | 'Accepted' | 'Work In Progress' | 'Completed' | 'Canceled';
 
-export type ReimbursableCustomerType = 'Intra-DoD' | 'Inter-Agency' | 'Private Party' | 'FMS';
-
-/**
- * Expenditure Management
- */
-export type ExpenseUserRole = 'Clerk' | 'Approver' | 'Disbursing Officer' | 'REMIS_SYSTEM';
-export interface Expense {
+export interface ProjectOrder {
     id: string;
-    obligationId: string;
-    amount: number;
-    date: string;
+    orderNumber: string;
     description: string;
-    source: string;
-    status: 'Pending Approval' | 'Accrued' | 'Paid';
-    createdBy: ExpenseUserRole;
-    approvedBy?: string;
-    disbursedBy?: string;
-    disbursementId?: string;
-    auditLog: AuditLogEntry[];
+    providerId: string;
+    requestingAgency: string;
+    appropriation: string;
+    totalAmount: number;
+    obligatedAmount: number;
+    pricingMethod: string;
+    issueDate: string;
+    completionDate: string;
+    isSeverable: boolean;
+    percentInHouse: number;
+    isSpecificDefiniteCertain: boolean;
+    bonaFideNeedYear: number;
+    isDoDOwned: boolean;
+    isSameCommander: boolean;
+    status: ProjectOrderStatus;
+    documents: { fs7600a?: string };
+    linkedP2Number?: string;
+    // Fix: Added missing properties for lifecycle management
+    acceptanceDate?: string;
+    commencementDate?: string;
 }
 
-export interface Disbursement {
+// Added missing CommandNode type used in AppropriationsView
+export interface CommandNode {
     id: string;
-    expenseId: string;
-    amount: number;
-    date: string;
-    paymentMethod: string;
-    treasuryConfirmationId: string;
+    name: string;
+    level: string;
+    totalAuthority: number;
+    obligated: number;
+    amountObligated: number;
+    amountDistributed: number;
+    parentId: string | null;
+    children?: CommandNode[];
 }
 
+// Added missing DepositFundAccount interface
+export interface DepositFundAccount {
+    id: string;
+    treasuryIndex: string;
+    accountName: string;
+    statutoryAuthorization: string;
+    auditRequirement: string;
+    currentBalance: number;
+    quarterlyReviews: Record<string, QuarterlyReviewStatus>;
+}
+
+// Added missing CIHOAccount interface
+export interface CIHOAccount {
+    id: string;
+    tafs: string;
+    component: string;
+    balance: number;
+    cashHoldingAuthorityMemo: string;
+    lastReconciliationDate: string;
+}
+
+// Added missing ERPModule type
+export type ERPModule = 'FI' | 'CO' | 'MM' | 'SD' | 'BI' | 'PS';
+
+// Fix: Added missing CostTransfer interface
 export interface CostTransfer {
     id: string;
     sourceProjectId: string;
@@ -457,137 +260,10 @@ export interface CostTransfer {
     targetWorkItem: string;
     amount: number;
     justification: string;
+    status: 'Pending Approval' | 'Approved' | 'Posted' | 'Rejected';
     requestDate: string;
     postedDate?: string;
-    status: 'Pending Approval' | 'Approved' | 'Posted' | 'Rejected';
-    requestedBy: string;
     glTransactionId?: string;
+    requestedBy: string;
     auditLog: AuditLogEntry[];
-}
-
-// Fix: Added missing OHDAReimbursementStatus and JustificationDocStatus
-export type OHDAReimbursementStatus = 'Pending Validation' | 'Validated' | 'Reimbursed';
-export type JustificationDocStatus = 'Ready' | 'Draft' | 'Required';
-
-/**
- * Contingency Operation Logic Entity
- */
-export interface ContingencyOperation {
-    id: string;
-    name: string;
-    status: string;
-    type: string;
-    location: string;
-    fundingSource: 'OHDACA' | 'OCOTF' | 'Base' | string;
-    isBaseFunded: boolean;
-    executeOrderRef: string;
-    sfisCode: string;
-    startDate: string;
-    endDate?: string;
-    baselineCosts: number;
-    billableIncrementalCosts: number;
-    incrementalCosts: {
-        personnel: number;
-        operatingSupport: number;
-        investment: number;
-        retrograde: number;
-        reset: number;
-    };
-    costOffsets: { name: string; amount: number }[];
-    incrementalCostsBreakdown: { id: string; name: string; description: string; isApplicable: boolean; cost?: number }[];
-    ohdacaDetails?: {
-        fadNumber: string;
-        dscaFunding: number;
-        reimbursementRequests: { id: string; amount: number; status: OHDAReimbursementStatus }[];
-    };
-    justificationMaterials: Record<string, JustificationDocStatus>;
-    linkedThreadIds: string[];
-    estimates: {
-        preDeployment?: { cost: number; date: string };
-        budget?: { cost: number; date: string };
-        working?: { cost: number; date: string };
-    };
-}
-
-/**
- * Fiar and Audit Types
- */
-export interface FiarInsight {
-    title: string;
-    severity: string;
-    message: string;
-    recommendation: string;
-    impactArea: string;
-}
-
-/**
- * Digital Thread Traceability
- */
-export interface DigitalThread {
-    id: string;
-    appropriation: string;
-    unit: string;
-    programElement: string;
-    costCenter: string;
-    fadNumber: string;
-    vendorName: string;
-    vendorUEI: string;
-    contractVehicle: string;
-    miprReference: string;
-    socioEconomicStatus: string;
-    obligationAmt: number;
-    disbursementAmt: number;
-    unliquidatedAmt: number;
-    tasSymbol: string;
-    eftStatus: string;
-    supplyClass: string;
-    niinNsn: string;
-    serialNumber: string;
-    uicCode: string;
-    readinessImpact: string;
-    bonaFideValid: boolean;
-    berryCompliant: boolean;
-    ppaInterestRisk: boolean;
-    capId?: string;
-    auditFindingId?: string;
-    gl1010: string;
-    gaapStandard: string;
-    controlObjective: string;
-    blockchainHash: string;
-    contingencyOpId?: string;
-    invoiceDaysPending?: number;
-    dssnNumber?: string;
-    betcCode?: string;
-}
-
-/**
- * Resource Estimating and POM formulation
- */
-export type REStatus = 'Draft' | 'Under Review' | 'G-8 Certified' | 'Presidential Budget';
-export type BusinessLine = 'Navigation' | 'Flood Risk' | 'Environment' | 'Regulatory' | 'Recreation' | 'Emergency Management';
-export type CapabilityLevel = 'Capability 1' | 'Capability 2' | 'Capability 3';
-export interface BudgetLineItem {
-    id: string;
-    projectId: string;
-    projectName: string;
-    businessLine: BusinessLine;
-    fiscalYear: number;
-    capabilityLevel: CapabilityLevel;
-    objectClass: string;
-    amount: number;
-    justification: string;
-    status: REStatus;
-    isInflationAdjusted: boolean;
-    lastModified: string;
-}
-
-export interface POMEntry {
-    projectId: string;
-    projectName: string;
-    businessLine: BusinessLine;
-    fy1: number;
-    fy2: number;
-    fy3: number;
-    fy4: number;
-    fy5: number;
 }

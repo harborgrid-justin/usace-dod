@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Activity, ShieldAlert, Check, TrendingUp, AlertTriangle, LayoutGrid, Calendar, Landmark, Database } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
@@ -9,9 +10,9 @@ interface Props {
 }
 
 const KPICard = React.memo(({ label, value, sub, icon: Icon, colorClass, borderClass }: any) => (
-    <div className={`bg-white p-6 rounded-3xl border ${borderClass} shadow-sm flex flex-col justify-between transition-all hover:shadow-md`}>
+    <div className={`bg-white p-6 rounded-md border ${borderClass} shadow-sm flex flex-col justify-between transition-all hover:shadow-md`}>
         <div className="flex justify-between items-start mb-4">
-            <div className={`p-3 rounded-2xl bg-zinc-50 ${colorClass}`}><Icon size={20}/></div>
+            <div className={`p-3 rounded-sm bg-zinc-50 ${colorClass}`}><Icon size={20}/></div>
             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{sub}</p>
         </div>
         <div>
@@ -43,7 +44,7 @@ const CDOOverview: React.FC<Props> = ({ pools }) => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm flex flex-col h-[450px]">
+                <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-md p-8 shadow-sm flex flex-col h-[450px]">
                     <div className="flex justify-between items-center mb-10">
                         <div>
                             <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Cost Pool Consumption Matrix</h3>
@@ -62,11 +63,11 @@ const CDOOverview: React.FC<Props> = ({ pools }) => {
                                 <YAxis tick={{fontSize: 10, fill: '#a1a1aa'}} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val/1000}k`} />
                                 <Tooltip 
                                     cursor={{fill: 'rgba(0,0,0,0.02)'}} 
-                                    contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
+                                    contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '4px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
                                     formatter={(value: any) => formatCurrency(value)} 
                                 />
-                                <Bar dataKey="fyBudget" name="Budget" fill="#f4f4f5" radius={[6, 6, 0, 0]} barSize={24} />
-                                <Bar dataKey="obligated" name="Obligated" radius={[6, 6, 0, 0]} barSize={24}>
+                                <Bar dataKey="fyBudget" name="Budget" fill="#f4f4f5" radius={[2, 2, 0, 0]} barSize={24} />
+                                <Bar dataKey="obligated" name="Obligated" radius={[2, 2, 0, 0]} barSize={24}>
                                     {pools.map((entry, index) => <Cell key={index} fill={(entry.obligated / entry.fyBudget) > 0.85 ? '#be123c' : '#18181b'} />)}
                                 </Bar>
                             </BarChart>
@@ -74,14 +75,14 @@ const CDOOverview: React.FC<Props> = ({ pools }) => {
                     </div>
                 </div>
 
-                <div className="lg:col-span-4 bg-zinc-900 rounded-[32px] p-8 text-white shadow-2xl flex flex-col relative overflow-hidden h-[450px]">
+                <div className="lg:col-span-4 bg-zinc-900 rounded-md p-8 text-white shadow-2xl flex flex-col relative overflow-hidden h-[450px] border border-zinc-800">
                     <div className="absolute top-0 right-0 p-8 opacity-5 rotate-12"><ShieldAlert size={120} /></div>
                     <h4 className="text-sm font-bold uppercase tracking-widest flex items-center gap-3 mb-10 relative z-10">
                         <ShieldAlert size={18} className="text-rose-500" /> Policy Monitor
                     </h4>
                     <div className="space-y-6 relative z-10 flex-1 overflow-y-auto custom-scrollbar pr-2">
                         {pools.filter(p => (p.obligated / p.fyBudget) > 0.8).map(pool => (
-                             <div key={pool.id} className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl animate-in slide-in-from-right-2">
+                             <div key={pool.id} className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-sm animate-in slide-in-from-right-2">
                                 <div className="flex justify-between items-start mb-2">
                                     <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">High Consumption</span>
                                     <Activity size={14} className="text-rose-400 animate-pulse" />
@@ -92,7 +93,7 @@ const CDOOverview: React.FC<Props> = ({ pools }) => {
                                 </p>
                             </div>
                         ))}
-                        <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                        <div className="p-4 bg-white/5 border border-white/10 rounded-sm">
                             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">System Healthy</span>
                             <p className="text-xs text-zinc-400">All overhead pools are being distributed using stabilized FY24 rates.</p>
                         </div>
@@ -104,7 +105,7 @@ const CDOOverview: React.FC<Props> = ({ pools }) => {
                 </div>
             </div>
             
-            <div className="bg-white p-8 rounded-[32px] border border-zinc-200 shadow-sm">
+            <div className="bg-white p-8 rounded-md border border-zinc-200 shadow-sm">
                  <div className="flex justify-between items-center mb-10">
                      <div>
                         <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3">

@@ -2,41 +2,34 @@ import { FADocument, WorkAllowance } from '../types';
 import { MOCK_FADS, MOCK_WORK_ALLOWANCES } from '../constants';
 
 class CivilWorksDataService {
-    private fads: FADocument[];
-    private allowances: WorkAllowance[];
-    private listeners: Set<Function> = new Set();
+    private fads: FADocument[] = JSON.parse(JSON.stringify(MOCK_FADS));
+    private allowances: WorkAllowance[] = JSON.parse(JSON.stringify(MOCK_WORK_ALLOWANCES));
+    private listeners = new Set<Function>();
 
-    constructor() {
-        this.fads = JSON.parse(JSON.stringify(MOCK_FADS));
-        this.allowances = JSON.parse(JSON.stringify(MOCK_WORK_ALLOWANCES));
-    }
+    getFADs = () => this.fads;
+    getAllowances = () => this.allowances;
 
-    getFADs() { return this.fads; }
-    getAllowances() { return this.allowances; }
-
-    addFAD(fad: FADocument) {
+    addFAD = (fad: FADocument) => {
         this.fads = [fad, ...this.fads];
-        this.notifyListeners();
+        this.notify();
     }
 
-    addAllowance(allowance: WorkAllowance) {
+    addAllowance = (allowance: WorkAllowance) => {
         this.allowances = [allowance, ...this.allowances];
-        this.notifyListeners();
+        this.notify();
     }
 
-    updateAllowance(updated: WorkAllowance) {
+    updateAllowance = (updated: WorkAllowance) => {
         this.allowances = this.allowances.map(a => a.id === updated.id ? updated : a);
-        this.notifyListeners();
+        this.notify();
     }
 
     subscribe = (listener: Function) => {
         this.listeners.add(listener);
-        return () => { this.listeners.delete(listener); };
-    }
+        return () => this.listeners.delete(listener);
+    };
 
-    private notifyListeners() {
-        this.listeners.forEach(l => l());
-    }
+    private notify = () => this.listeners.forEach(l => l());
 }
 
 export const cwaService = new CivilWorksDataService();

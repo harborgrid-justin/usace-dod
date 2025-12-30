@@ -1,17 +1,51 @@
-/* Custom scrollbar for a more professional look */
+
+/* Custom scrollbar - High Density Enterprise Style */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.02);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #d4d4d8; /* zinc-300 */
-  border-radius: 2px;
+  border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa; /* zinc-400 */
+  background: #71717a; /* zinc-500 */
+}
+
+/* GFEBS Aesthetic: Glowing Elements for Authoritative State */
+.gfebs-glow-emerald {
+  box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.2);
+}
+.gfebs-glow-rose {
+  box-shadow: 0 0 15px -3px rgba(225, 29, 72, 0.2);
+}
+
+/* High-Contrast Fiduciary UI */
+.terminal-hud {
+  background: linear-gradient(180deg, rgba(9, 9, 11, 0.95) 0%, rgba(18, 18, 23, 0.98) 100%);
+  backdrop-filter: blur(20px);
+}
+
+/* Global Surface Pattern */
+.surface-grid {
+  background-image: radial-gradient(circle, #e4e4e7 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Tabular Numbers for Financials */
+.font-numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Typography Resizing Fixes */
+.text-balance {
+  text-wrap: balance;
+}
+.text-pretty {
+  text-wrap: pretty;
 }
 
 /* Keyframes for animations */
@@ -20,31 +54,47 @@
   to { opacity: 1; }
 }
 
-@keyframes slideInFromTop {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes slideInFromBottom {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes elasticIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
-/* Animation utility class */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Animation utility classes */
 .animate-in {
-  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-in.fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
+.animate-slide-right {
+  animation: slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-.glass-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(228, 228, 231, 0.6); /* zinc-200 */
+.animate-elastic {
+  animation: elasticIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-.ghost-border {
-  border: 1px solid rgba(0, 0, 0, 0.04);
+.glass-header {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.card-elevation {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+}
+
+.card-elevation:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
 }

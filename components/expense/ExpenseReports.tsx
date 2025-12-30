@@ -11,7 +11,7 @@ interface Props {
 const ExpenseReports: React.FC<Props> = ({ expenses, disbursements }) => {
     return (
         <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+            <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
                 <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-4">Expense Detail Report</h4>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -33,7 +33,7 @@ const ExpenseReports: React.FC<Props> = ({ expenses, disbursements }) => {
             </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
                     <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-4">Accrued Expense Aging</h4>
                      <table className="w-full text-left">
                         <thead><tr className="border-b bg-zinc-50"><th className="p-2 text-[10px] font-bold text-zinc-400 uppercase">Description</th><th className="p-2 text-[10px] font-bold text-zinc-400 uppercase text-right">Days Accrued</th></tr></thead>
@@ -47,7 +47,7 @@ const ExpenseReports: React.FC<Props> = ({ expenses, disbursements }) => {
                         </tbody>
                     </table>
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
                     <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-4">Disbursement Summary</h4>
                      <table className="w-full text-left">
                         <thead><tr className="border-b bg-zinc-50"><th className="p-2 text-[10px] font-bold text-zinc-400 uppercase">Treasury ID</th><th className="p-2 text-[10px] font-bold text-zinc-400 uppercase text-right">Amount</th></tr></thead>

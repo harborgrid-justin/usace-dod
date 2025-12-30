@@ -4,7 +4,7 @@ import { MOCK_EXPENSES, MOCK_DISBURSEMENTS } from '../constants';
 class ExpenseDisburseDataService {
     private expenses: Expense[];
     private disbursements: Disbursement[];
-    private listeners: Function[] = [];
+    private listeners = new Set<Function>();
 
     constructor() {
         this.expenses = JSON.parse(JSON.stringify(MOCK_EXPENSES));
@@ -15,30 +15,28 @@ class ExpenseDisburseDataService {
     getDisbursements() { return this.disbursements; }
 
     addExpense(expense: Expense) {
-        this.expenses.unshift(expense);
-        this.notifyListeners();
+        this.expenses = [expense, ...this.expenses];
+        this.notify();
     }
 
     updateExpense(updated: Expense) {
         this.expenses = this.expenses.map(e => e.id === updated.id ? updated : e);
-        this.notifyListeners();
+        this.notify();
     }
 
     addDisbursement(disbursement: Disbursement) {
-        this.disbursements.unshift(disbursement);
-        this.notifyListeners();
+        this.disbursements = [disbursement, ...this.disbursements];
+        this.notify();
     }
     
-    subscribe(listener: Function) {
-        this.listeners.push(listener);
-        return () => {
-            this.listeners = this.listeners.filter(l => l !== listener);
-        };
-    }
+    subscribe = (listener: Function) => {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    };
 
-    private notifyListeners() {
+    private notify = () => {
         this.listeners.forEach(l => l());
-    }
+    };
 }
 
 export const expenseDisburseService = new ExpenseDisburseDataService();

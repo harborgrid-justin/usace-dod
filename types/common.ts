@@ -1,3 +1,4 @@
+
 export type Brand<K, T> = K & { __brand: T };
 export type UserId = Brand<string, 'UserId'>;
 export type TransactionId = Brand<string, 'TransactionId'>;
@@ -48,6 +49,7 @@ export enum NavigationTab {
   RELOCATION = 'Relocation',
   REPORTS = 'Reports',
   GIS_MAP = 'GIS Map',
+  SYSTEM_ADMIN_USERS = 'User Management',
 }
 
 /**
@@ -65,11 +67,8 @@ export type QuarterlyReviewStatus = 'Completed' | 'Action Required' | 'Pending' 
 export type ReconciliationStatus = 'Open' | 'In-Research' | 'Resolved' | 'Escalated';
 export type ADAViolationStatus = 'Suspected' | 'Preliminary Review' | 'Formal Investigation' | 'Reported' | 'Closed - No Violation';
 
-// Added missing A123Status type
 export type A123Status = 'Pending' | 'In-Review' | 'Certified' | 'Flagged';
-// Added missing CostShareStatus type
 export type CostShareStatus = 'Initiated' | 'Active' | 'Completed';
-// Added missing GPCStatus type
 export type GPCStatus = 'Pending Approval' | 'Approved' | 'Flagged';
 
 export interface RuleEvaluationResult {

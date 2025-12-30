@@ -18,12 +18,28 @@ const CDOModuleView: React.FC<any> = ({ onSelectProject }) => {
     ];
 
     return (
-        <div className="p-8 space-y-6 animate-in h-full flex flex-col overflow-hidden">
-            <div className="flex justify-between items-end shrink-0">
-                <div><h2 className="text-2xl font-bold uppercase tracking-tight flex items-center gap-3"><PieChart size={24} className="text-rose-700" /> CDO Overhead</h2><p className="text-xs text-zinc-500">Indirect Cost Management</p></div>
-                <div className="flex bg-zinc-100 p-1 rounded-lg">
+        <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col max-w-[1600px] mx-auto overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0 px-2">
+                <div>
+                    <h2 className="text-2xl font-bold uppercase tracking-tight flex items-center gap-3">
+                        <PieChart size={28} className="text-rose-700" /> CDO Overhead
+                    </h2>
+                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em] mt-1.5">
+                        Indirect Cost Management • Service Center Pools
+                    </p>
+                </div>
+                <div className="flex bg-zinc-100 p-1 rounded-md shadow-inner overflow-x-auto custom-scrollbar">
                     {tabs.map(t => (
-                        <button key={t.id} onClick={() => setActiveTab(t.id)} className={`px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-all ${activeTab === t.id ? 'bg-white shadow-sm text-rose-700' : 'text-zinc-500'}`}>{t.id}</button>
+                        <button 
+                            key={t.id} 
+                            onClick={() => setActiveTab(t.id)} 
+                            className={`px-4 py-1.5 rounded-sm text-[10px] font-bold uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
+                                activeTab === t.id ? 'bg-white shadow-sm text-rose-700' : 'text-zinc-500 hover:text-zinc-800'
+                            }`}
+                        >
+                            <t.icon size={12} />
+                            {t.id}
+                        </button>
                     ))}
                 </div>
             </div>

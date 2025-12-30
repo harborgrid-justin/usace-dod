@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { Obligation, Expense } from '../../types';
@@ -10,9 +11,9 @@ interface Props {
 }
 
 const KPICard = ({ title, value, icon: Icon, colorClass }: { title: string, value: string, icon: React.ElementType, colorClass: string }) => (
-    <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group">
+    <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group">
         <div className="flex justify-between items-start mb-6">
-            <div className={`p-3 rounded-2xl ${colorClass.replace('text-', 'bg-').replace('600', '50')} transition-colors group-hover:scale-110`}>
+            <div className={`p-3 rounded-sm ${colorClass.replace('text-', 'bg-').replace('600', '50')} transition-colors group-hover:scale-105`}>
                 <Icon size={20} className={colorClass} />
             </div>
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Live</span>
@@ -45,7 +46,7 @@ const ExpenseDashboard: React.FC<Props> = ({ obligations, expenses }) => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm flex flex-col h-[450px]">
+                <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-md p-8 shadow-sm flex flex-col h-[450px]">
                     <div className="flex justify-between items-center mb-10">
                         <div>
                             <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2"><ShieldAlert size={16} className="text-rose-700"/> High-Impact Liability Candidates</h3>
@@ -54,9 +55,9 @@ const ExpenseDashboard: React.FC<Props> = ({ obligations, expenses }) => {
                     </div>
                     <div className="space-y-3 overflow-y-auto custom-scrollbar pr-2 flex-1">
                         {expenses.filter(e => e.status === 'Pending Approval').map(exp => (
-                             <div key={exp.id} className="p-4 bg-zinc-50 border border-zinc-100 rounded-2xl flex justify-between items-center hover:bg-white hover:border-rose-200 transition-all group">
+                             <div key={exp.id} className="p-4 bg-zinc-50 border border-zinc-100 rounded-sm flex justify-between items-center hover:bg-white hover:border-rose-200 transition-all group">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-white rounded-lg border border-zinc-100 group-hover:text-rose-700 transition-colors"><Hourglass size={16}/></div>
+                                    <div className="p-2 bg-white rounded-sm border border-zinc-100 group-hover:text-rose-700 transition-colors"><Hourglass size={16}/></div>
                                     <div>
                                         <p className="text-sm font-bold text-zinc-800">{exp.description}</p>
                                         <p className="text-[10px] text-zinc-400 font-mono tracking-widest uppercase mt-0.5">{exp.id} • Age: 12d</p>
@@ -68,7 +69,7 @@ const ExpenseDashboard: React.FC<Props> = ({ obligations, expenses }) => {
                     </div>
                 </div>
 
-                <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm flex flex-col h-[450px]">
+                <div className="bg-white border border-zinc-200 rounded-md p-8 shadow-sm flex flex-col h-[450px]">
                     <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-10 flex items-center gap-2"><BarChart3 size={16} className="text-rose-700"/> Lifecycle Mix</h3>
                      <div className="flex-1 w-full min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -76,7 +77,7 @@ const ExpenseDashboard: React.FC<Props> = ({ obligations, expenses }) => {
                                 <Pie data={expenseStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={8} stroke="none">
                                     {expenseStatusData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                 </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '11px' }}/>
+                                <Tooltip contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '4px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '11px' }}/>
                             </PieChart>
                         </ResponsiveContainer>
                     </div>

@@ -1,3 +1,6 @@
+
+import { AuditLogEntry } from './types/shared_records';
+
 export * from './types/common';
 export * from './types/shared_records';
 export * from './types/usace';
@@ -117,4 +120,31 @@ export interface LaborStandard {
     workloadUnit: string;
     laborCategory: LaborCategory;
     hoursPerUnit: number;
+}
+
+// Added missing Expense & Disbursement types
+export type ExpenseUserRole = 'Clerk' | 'Approver' | 'Disbursing Officer';
+
+export interface Expense {
+    id: string;
+    obligationId: string;
+    amount: number;
+    date: string;
+    description: string;
+    source: string;
+    status: 'Pending Approval' | 'Accrued' | 'Paid' | 'Rejected';
+    createdBy: string;
+    approvedBy?: string;
+    disbursedBy?: string;
+    disbursementId?: string;
+    auditLog: AuditLogEntry[];
+}
+
+export interface Disbursement {
+    id: string;
+    expenseId: string;
+    amount: number;
+    date: string;
+    paymentMethod: string;
+    treasuryConfirmationId: string;
 }

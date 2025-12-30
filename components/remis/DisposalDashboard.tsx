@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
     Shuffle, Plus, DollarSign, Activity, Clock, Building2, Search, 
@@ -65,7 +66,7 @@ const DisposalDashboard: React.FC<DisposalDashboardProps> = ({ onNavigateToAsset
                     ))}
                 </div>
                 <div className="pb-3">
-                    <button onClick={() => setIsFormOpen(true)} className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-md ${REMIS_THEME.classes.buttonPrimary}`}>
+                    <button onClick={() => setIsFormOpen(true)} className={`flex items-center gap-2 px-5 py-2 rounded-sm text-[10px] font-bold uppercase transition-all shadow-md ${REMIS_THEME.classes.buttonPrimary}`}>
                         <Plus size={14}/> Declare Excess (ROE)
                     </button>
                 </div>
@@ -75,32 +76,32 @@ const DisposalDashboard: React.FC<DisposalDashboardProps> = ({ onNavigateToAsset
                 {activeTab === 'Registry' && (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-4">
-                                <div className="p-3 bg-zinc-50 text-zinc-600 rounded-xl border border-zinc-100"><Shuffle size={20}/></div>
+                            <div className="bg-white p-5 rounded-md border border-zinc-200 shadow-sm flex items-center gap-4">
+                                <div className="p-3 bg-zinc-50 text-zinc-600 rounded-sm border border-zinc-100"><Shuffle size={20}/></div>
                                 <div><p className="text-[10px] font-bold text-zinc-400 uppercase">Active Actions</p><p className="text-xl font-mono font-bold text-zinc-900">{stats.count}</p></div>
                             </div>
-                            <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-4">
-                                <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100"><ShieldCheck size={20}/></div>
+                            <div className="bg-white p-5 rounded-md border border-zinc-200 shadow-sm flex items-center gap-4">
+                                <div className="p-3 bg-emerald-50 text-emerald-700 rounded-sm border border-emerald-100"><ShieldCheck size={20}/></div>
                                 <div><p className="text-[10px] font-bold text-zinc-400 uppercase">Screening Done</p><p className="text-xl font-mono font-bold text-zinc-900">{stats.screeningComplete}</p></div>
                             </div>
-                            <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-4 lg:col-span-2">
-                                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100"><DollarSign size={20}/></div>
+                            <div className="bg-white p-5 rounded-md border border-zinc-200 shadow-sm flex items-center gap-4 lg:col-span-2">
+                                <div className="p-3 bg-blue-50 text-blue-600 rounded-sm border border-blue-100"><DollarSign size={20}/></div>
                                 <div><p className="text-[10px] font-bold text-zinc-400 uppercase">Projected Recovery (PRV)</p><p className="text-xl font-mono font-bold text-zinc-900">{formatCurrency(stats.totalProceeds)}</p></div>
                             </div>
                         </div>
 
-                        <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden">
+                        <div className="bg-white border border-zinc-200 rounded-md shadow-sm flex flex-col overflow-hidden">
                             <div className="p-4 border-b border-zinc-100 bg-zinc-50/30 flex justify-between items-center">
                                 <div className="relative max-w-md w-full">
                                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"/>
                                     <input 
                                         type="text" placeholder="Filter by RPUID or Action..." value={searchTerm}
                                         onChange={e => setSearchTerm(e.target.value)}
-                                        className={`w-full pl-9 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none transition-all ${REMIS_THEME.classes.inputFocus}`}
+                                        className={`w-full pl-9 pr-3 py-1.5 bg-white border border-zinc-200 rounded-sm text-xs focus:outline-none transition-all ${REMIS_THEME.classes.inputFocus}`}
                                     />
                                 </div>
                                 <div className="flex gap-2">
-                                    <span className="px-2 py-1 bg-zinc-100 text-zinc-500 rounded text-[9px] font-bold uppercase border border-zinc-200">GSA Integrated</span>
+                                    <span className="px-2 py-1 bg-zinc-100 text-zinc-500 rounded-sm text-[9px] font-bold uppercase border border-zinc-200">GSA Integrated</span>
                                 </div>
                             </div>
                             <table className="w-full text-left">
@@ -125,7 +126,7 @@ const DisposalDashboard: React.FC<DisposalDashboardProps> = ({ onNavigateToAsset
                                             <td className="p-4 text-xs text-zinc-600 uppercase font-medium">{d.type}</td>
                                             <td className="p-4 text-right text-xs font-mono font-bold text-zinc-900">{formatCurrency(d.estimatedProceeds)}</td>
                                             <td className="p-4 text-center">
-                                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${d.screeningStatus === 'Final' ? REMIS_THEME.classes.statusActive : REMIS_THEME.classes.badge.warning}`}>
+                                                <span className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase border ${d.screeningStatus === 'Final' ? REMIS_THEME.classes.statusActive : REMIS_THEME.classes.badge.warning}`}>
                                                     {d.screeningStatus}
                                                 </span>
                                             </td>
@@ -141,17 +142,17 @@ const DisposalDashboard: React.FC<DisposalDashboardProps> = ({ onNavigateToAsset
                 {activeTab === 'Analytics' && (
                     <div className="space-y-8 animate-in slide-in-from-bottom-4">
                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                            <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
                                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Average Recovery Time</p>
                                 <p className="text-2xl font-mono font-bold text-zinc-900">242 Days</p>
                             </div>
-                            <div className="bg-zinc-900 p-6 rounded-2xl shadow-xl">
+                            <div className="bg-zinc-900 p-6 rounded-md shadow-xl">
                                 <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">Portfolio Recovery Factor</p>
                                 <p className="text-2xl font-mono font-bold text-white">88.4%</p>
                             </div>
                          </div>
                          
-                         <div className="bg-white border border-zinc-200 rounded-[40px] p-10 shadow-sm flex flex-col h-[500px]">
+                         <div className="bg-white border border-zinc-200 rounded-md p-10 shadow-sm flex flex-col h-[500px]">
                             <div className="flex justify-between items-center mb-10">
                                 <div>
                                     <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
@@ -168,9 +169,9 @@ const DisposalDashboard: React.FC<DisposalDashboardProps> = ({ onNavigateToAsset
                                         <YAxis tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val/1e6}M`}/>
                                         <Tooltip 
                                             formatter={(v: any) => formatCurrency(v)}
-                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                            contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                                         />
-                                        <Bar dataKey="estimatedProceeds" radius={[6, 6, 0, 0]} barSize={40}>
+                                        <Bar dataKey="estimatedProceeds" radius={[2, 2, 0, 0]} barSize={40}>
                                             {disposals.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={['#18181b', '#059669', '#2563eb'][index % 3]} />
                                             ))}
@@ -183,13 +184,12 @@ const DisposalDashboard: React.FC<DisposalDashboardProps> = ({ onNavigateToAsset
                 )}
 
                 {activeTab === 'Pipeline' && (
-                    <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-sm animate-in fade-in h-full flex flex-col">
+                    <div className="bg-white border border-zinc-200 rounded-md overflow-hidden shadow-sm animate-in fade-in h-full flex flex-col">
                         <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
                             <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
                                 <Truck size={18} className="text-zinc-600"/> GSA Screening Pipeline (GSA X-Press)
                             </h3>
-                            {/* Fix: Added usage of RefreshCcw icon which was missing import */}
-                            <button className="px-5 py-2 bg-zinc-900 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-md active:scale-95">
+                            <button className="px-5 py-2 bg-zinc-900 text-white rounded-sm text-[10px] font-bold uppercase hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-md active:scale-95">
                                 <RefreshCcw size={14}/> Refresh GSA Feed
                             </button>
                         </div>
@@ -208,7 +208,7 @@ const DisposalDashboard: React.FC<DisposalDashboardProps> = ({ onNavigateToAsset
                                     {disposals.filter(d => d.screeningStatus !== 'Final').map(d => (
                                         <tr key={d.id} className="hover:bg-zinc-50/50 transition-colors">
                                             <td className="py-4">
-                                                <span className={`px-2 py-1 rounded text-[9px] font-bold uppercase border ${d.screeningStatus.includes('Homeless') ? 'bg-rose-50 text-rose-700 border-rose-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                                                <span className={`px-2 py-1 rounded-sm text-[9px] font-bold uppercase border ${d.screeningStatus.includes('Homeless') ? 'bg-rose-50 text-rose-700 border-rose-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
                                                     {d.screeningStatus}
                                                 </span>
                                             </td>
@@ -235,33 +235,33 @@ const DisposalDashboard: React.FC<DisposalDashboardProps> = ({ onNavigateToAsset
 
                 {activeTab === 'Policy' && (
                     <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-right-4">
-                        <div className="bg-white border border-zinc-200 rounded-3xl p-10 shadow-sm relative overflow-hidden">
+                        <div className="bg-white border border-zinc-200 rounded-md p-10 shadow-sm relative overflow-hidden">
                              <div className="absolute top-0 right-0 p-8 opacity-5"><Landmark size={120}/></div>
                              <h3 className="text-xl font-bold text-zinc-900 mb-8 border-b border-zinc-50 pb-4">Statutory Disposal Framework</h3>
                              <div className="space-y-10">
                                 <div className="flex gap-8 items-start group">
-                                    <div className="p-4 bg-zinc-900 text-white rounded-3xl group-hover:bg-rose-700 transition-all shadow-lg"><ShieldCheck size={24}/></div>
+                                    <div className="p-4 bg-zinc-900 text-white rounded-md group-hover:bg-rose-700 transition-all shadow-lg"><ShieldCheck size={24}/></div>
                                     <div>
                                         <h5 className="text-base font-bold text-zinc-900 uppercase">FMR Vol 12, Chapter 6</h5>
                                         <p className="text-sm text-zinc-500 leading-relaxed mt-2">Prescribes uniform policy and procedures for the accounting and reporting of real property disposal actions across the Department.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-8 items-start group">
-                                    <div className="p-4 bg-zinc-900 text-white rounded-3xl group-hover:bg-blue-700 transition-all shadow-lg"><FileText size={24}/></div>
+                                    <div className="p-4 bg-zinc-900 text-white rounded-md group-hover:bg-blue-700 transition-all shadow-lg"><FileText size={24}/></div>
                                     <div>
                                         <h5 className="text-base font-bold text-zinc-900 uppercase">McKinney-Vento Act</h5>
                                         <p className="text-sm text-zinc-500 leading-relaxed mt-2">Mandatory screening requirement for all excess property to determine suitability for homeless assistance use.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-8 items-start group">
-                                    <div className="p-4 bg-zinc-900 text-white rounded-3xl group-hover:bg-emerald-700 transition-all shadow-lg"><BookOpen size={24}/></div>
+                                    <div className="p-4 bg-zinc-900 text-white rounded-md group-hover:bg-emerald-700 transition-all shadow-lg"><BookOpen size={24}/></div>
                                     <div>
                                         <h5 className="text-base font-bold text-zinc-900 uppercase">41 CFR 102-75</h5>
                                         <p className="text-sm text-zinc-500 leading-relaxed mt-2">Federal Management Regulation governing the utilization and disposal of real property by executive agencies.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-8 items-start group">
-                                    <div className="p-4 bg-zinc-900 text-white rounded-3xl group-hover:bg-indigo-700 transition-all shadow-lg"><AlertTriangle size={24}/></div>
+                                    <div className="p-4 bg-zinc-900 text-white rounded-md group-hover:bg-indigo-700 transition-all shadow-lg"><AlertTriangle size={24}/></div>
                                     <div>
                                         <h5 className="text-base font-bold text-zinc-900 uppercase">Executive Order 12512</h5>
                                         <p className="text-sm text-zinc-500 leading-relaxed mt-2">Requirement for agencies to identify and report underutilized real property to the GSA on an annual basis.</p>

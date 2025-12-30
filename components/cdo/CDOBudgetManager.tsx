@@ -1,7 +1,7 @@
+
 import React, { useState, useTransition, useMemo } from 'react';
 import { CDOCostPool } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
-// Fix: Added missing Landmark and X icons to the lucide-react imports
 import { DollarSign, Save, RefreshCw, TrendingUp, AlertCircle, Lock, Calculator, CheckCircle2, ShieldAlert, ArrowRight, Landmark, X } from 'lucide-react';
 import Badge from '../shared/Badge';
 
@@ -34,8 +34,7 @@ const CDOBudgetManager: React.FC<Props> = ({ pools, onUpdateBudget }) => {
     return (
         <div className={`flex flex-col h-full space-y-8 animate-in fade-in transition-opacity ${isPending ? 'opacity-70' : 'opacity-100'}`}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
-                <div className="bg-zinc-900 rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between">
-                    {/* Fix: Usage of Landmark icon which was missing import */}
+                <div className="bg-zinc-900 rounded-md p-8 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between">
                     <div className="absolute top-0 right-0 p-8 opacity-10"><Landmark size={100}/></div>
                     <div>
                         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2">Total CDO Authority</p>
@@ -47,7 +46,7 @@ const CDOBudgetManager: React.FC<Props> = ({ pools, onUpdateBudget }) => {
                     </div>
                 </div>
                 
-                <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm flex flex-col justify-between">
+                <div className="bg-white border border-zinc-200 rounded-md p-8 shadow-sm flex flex-col justify-between">
                     <div>
                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Resource Utilization</p>
                         <p className="text-4xl font-mono font-bold text-blue-600 tracking-tighter">{((totalObligated / totalBudget) * 100).toFixed(1)}%</p>
@@ -63,7 +62,7 @@ const CDOBudgetManager: React.FC<Props> = ({ pools, onUpdateBudget }) => {
                     </div>
                 </div>
 
-                <div className="bg-emerald-900 rounded-[32px] p-8 text-white shadow-xl flex flex-col justify-between relative overflow-hidden">
+                <div className="bg-emerald-900 rounded-md p-8 text-white shadow-xl flex flex-col justify-between relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldAlert size={100}/></div>
                     <div>
                         <h4 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -73,22 +72,22 @@ const CDOBudgetManager: React.FC<Props> = ({ pools, onUpdateBudget }) => {
                             Table of Distributions and Allowances (TDA) caps are strictly enforced for FY24. Surplus re-alignment is pending March 31 review.
                         </p>
                     </div>
-                    <button className="w-full mt-6 py-3 bg-white text-emerald-900 rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl hover:bg-emerald-50 transition-all">
+                    <button className="w-full mt-6 py-3 bg-white text-emerald-900 rounded-sm text-[10px] font-bold uppercase tracking-widest shadow-xl hover:bg-emerald-50 transition-all">
                         Execute SNaP Sync
                     </button>
                 </div>
             </div>
 
-            <div className="bg-white border border-zinc-200 rounded-[40px] shadow-sm flex flex-col flex-1 overflow-hidden">
+            <div className="bg-white border border-zinc-200 rounded-md shadow-sm flex flex-col flex-1 overflow-hidden">
                 <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-white rounded-2xl border border-zinc-200 text-zinc-400 shadow-sm"><Calculator size={20}/></div>
+                        <div className="p-3 bg-white rounded-sm border border-zinc-200 text-zinc-400 shadow-sm"><Calculator size={20}/></div>
                         <div>
                             <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Mission Pool Control Table</h3>
                             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter mt-1">Fiscal Year 2024 • Q2 Snapshot</p>
                         </div>
                     </div>
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-[10px] font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg">
+                    <button className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-sm text-[10px] font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg">
                         <RefreshCw size={14}/> Re-Formulate Baseline
                     </button>
                 </div>
@@ -117,7 +116,7 @@ const CDOBudgetManager: React.FC<Props> = ({ pools, onUpdateBudget }) => {
                                         </td>
                                         <td className="p-6">
                                             <div className="flex flex-col gap-1.5">
-                                                <span className="font-mono text-xs font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-lg border border-zinc-200 w-fit">{pool.orgCode}</span>
+                                                <span className="font-mono text-xs font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-sm border border-zinc-200 w-fit">{pool.orgCode}</span>
                                                 <Badge variant="neutral">{pool.status}</Badge>
                                             </div>
                                         </td>
@@ -128,7 +127,7 @@ const CDOBudgetManager: React.FC<Props> = ({ pools, onUpdateBudget }) => {
                                                     <input 
                                                         type="number" value={editValue} autoFocus
                                                         onChange={(e) => setEditValue(Number(e.target.value))}
-                                                        className="w-40 p-2 text-right font-mono font-bold text-sm border-2 border-zinc-900 rounded-xl outline-none shadow-xl"
+                                                        className="w-40 p-2 text-right font-mono font-bold text-sm border-2 border-zinc-900 rounded-sm outline-none shadow-xl"
                                                     />
                                                 </div>
                                             ) : (
@@ -151,14 +150,13 @@ const CDOBudgetManager: React.FC<Props> = ({ pools, onUpdateBudget }) => {
                                         <td className="p-6 text-center">
                                             {isEditing ? (
                                                 <div className="flex justify-center gap-2">
-                                                    <button onClick={() => handleSave(pool)} className="p-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 transition-colors"><Save size={16}/></button>
-                                                    {/* Fix: Added usage of X icon after importing it */}
-                                                    <button onClick={() => setEditingId(null)} className="p-2 bg-zinc-100 text-zinc-500 rounded-xl hover:bg-zinc-200 transition-colors"><X size={16}/></button>
+                                                    <button onClick={() => handleSave(pool)} className="p-2 bg-emerald-600 text-white rounded-sm hover:bg-emerald-500 transition-colors"><Save size={16}/></button>
+                                                    <button onClick={() => setEditingId(null)} className="p-2 bg-zinc-100 text-zinc-500 rounded-sm hover:bg-zinc-200 transition-colors"><X size={16}/></button>
                                                 </div>
                                             ) : (
                                                 <button 
                                                     onClick={() => {setEditingId(pool.id); setEditValue(pool.fyBudget);}}
-                                                    className="p-3 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-2xl transition-all"
+                                                    className="p-3 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-sm transition-all"
                                                 >
                                                     <TrendingUp size={20}/>
                                                 </button>

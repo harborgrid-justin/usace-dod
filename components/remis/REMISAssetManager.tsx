@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { Building2, Search, MapPin, Globe, Plus, ArrowRight, Edit, Trash2 } from 'lucide-react';
+import { Building2, Search, Globe, Plus, ArrowRight } from 'lucide-react';
 import { RealPropertyAsset } from '../../types';
 import { remisService } from '../../services/RemisDataService';
 import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
@@ -62,7 +63,7 @@ const REMISAssetManager: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col h-full overflow-hidden bg-white border border-zinc-200 rounded-2xl shadow-sm animate-in fade-in">
+        <div className="flex flex-col h-full overflow-hidden bg-white border border-zinc-200 rounded-md shadow-sm animate-in fade-in">
             <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
                     <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
@@ -75,11 +76,11 @@ const REMISAssetManager: React.FC = () => {
                             placeholder="Filter by RPUID or Name..." 
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className={`w-full sm:w-64 pl-9 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all ${REMIS_THEME.classes.inputFocus}`}
+                            className={`w-full sm:w-64 pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all ${REMIS_THEME.classes.inputFocus}`}
                         />
                     </div>
                 </div>
-                <button onClick={() => { setSelectedAssetId(null); setView('form'); }} className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-sm ${REMIS_THEME.classes.buttonPrimary}`}>
+                <button onClick={() => { setSelectedAssetId(null); setView('form'); }} className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase transition-all shadow-sm ${REMIS_THEME.classes.buttonPrimary}`}>
                     <Plus size={14}/> New Asset Record
                 </button>
             </div>
@@ -107,11 +108,11 @@ const REMISAssetManager: React.FC = () => {
                                     </div>
                                 </td>
                                 <td className="p-4 text-xs text-zinc-600 truncate">{asset.installation}</td>
-                                <td className="p-4"><span className="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded border font-mono">{asset.catcode}</span></td>
+                                <td className="p-4"><span className="text-[10px] bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-sm border border-zinc-200 font-mono">{asset.catcode}</span></td>
                                 <td className="p-4 text-xs text-zinc-600">{asset.interestType}</td>
                                 <td className="p-4 text-right text-xs font-mono text-zinc-800">{asset.sqFt > 0 ? `${asset.sqFt.toLocaleString()} SF` : `${asset.acres} AC`}</td>
                                 <td className="p-4 text-center">
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${
+                                    <span className={`px-2.5 py-1 rounded-sm text-[9px] font-bold uppercase border ${
                                         asset.status === 'Active' ? REMIS_THEME.classes.statusActive : REMIS_THEME.classes.badge.warning
                                     }`}>{asset.status}</span>
                                 </td>

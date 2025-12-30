@@ -1,3 +1,4 @@
+
 import React, { lazy } from 'react';
 import { NavigationTab, AgencyContext } from '../../types';
 
@@ -21,9 +22,10 @@ interface RouterProps {
 const ActiveViewRouter: React.FC<RouterProps> = (props) => {
     const { agency } = props;
 
+    // Strict agency routing hierarchy
     if (agency === 'USACE_REMIS') return <RemisRouter {...props} />;
-    if (agency.startsWith('OSD_')) return <OsdRouter {...props} />;
     if (agency === 'USACE_CEFMS') return <UsaceCefmsRouter {...props} />;
+    if (agency.startsWith('OSD_')) return <OsdRouter {...props} />;
     
     return <ArmyGfebsRouter {...props} />;
 };

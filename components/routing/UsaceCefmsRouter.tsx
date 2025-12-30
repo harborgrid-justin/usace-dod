@@ -30,8 +30,8 @@ const UsaceCefmsRouter: React.FC<any> = ({ tab, agency, projectId, setProjectId,
         case NavigationTab.CIVIL_WORKS_ALLOWANCE: return <CivilWorksAllowanceView />;
         case NavigationTab.CDO_MANAGEMENT: return <CDOModuleView onSelectProject={(id) => { setProjectId(id); navigate(NavigationTab.USACE_PROJECTS); }} />;
         case NavigationTab.ASSET_LIFECYCLE: return <AssetLifecycleView />;
+        case NavigationTab.REVOLVING_FUNDS: return <RevolvingFundsView />;
         case NavigationTab.ERP_CORE: return <CEFMSModulesView onNavigate={navigate} />;
-        case NavigationTab.REIMBURSABLES: return <RevolvingFundsView onSelectThread={(id) => { setThreadId(id); navigate(NavigationTab.DIGITAL_THREAD); }} />;
         default: return <DashboardView setActiveTab={navigate} agency={agency} />;
     }
 };

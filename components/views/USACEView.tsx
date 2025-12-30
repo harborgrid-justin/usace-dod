@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useDeferredValue } from 'react';
 import { 
     Construction, Ruler, FileText, Activity, AlertTriangle, 
@@ -82,7 +83,7 @@ const USACEView: React.FC<{ selectedProjectId: string | null; onSelectProject: (
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
-                        <Construction size={24} className="text-rose-700" /> P2 Lifecycle
+                        <Construction size={24} className="text-rose-700" /> P2 Project Lifecycle
                     </h2>
                     <p className="text-xs text-zinc-500 font-medium mt-1">Authoritative Project Management Workbench</p>
                 </div>
@@ -116,7 +117,7 @@ const USACEView: React.FC<{ selectedProjectId: string | null; onSelectProject: (
             </div>
 
             <div className="flex-1 min-h-0 flex flex-col">
-                <div className="flex bg-zinc-100 p-1 rounded-lg self-start mb-4 overflow-x-auto">
+                <div className="flex bg-zinc-100 p-1 rounded-lg self-start mb-4 overflow-x-auto max-w-full">
                     {['All', 'Civil Works', 'Military Programs'].map((f) => (
                         <button 
                             key={f}

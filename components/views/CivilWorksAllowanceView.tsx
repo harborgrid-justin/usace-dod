@@ -32,8 +32,8 @@ const CivilWorksAllowanceView: React.FC = () => {
     };
 
     return (
-        <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
+        <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col max-w-[1600px] mx-auto overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0 px-2">
                 <div>
                     <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
                         <FileText size={24} className="text-rose-700" /> Civil Works Allowance
@@ -41,10 +41,10 @@ const CivilWorksAllowanceView: React.FC = () => {
                     <p className="text-xs text-zinc-500 font-medium mt-1">FAD Tracking & Work Allowance (WA) Issuance (ER 37-1-30)</p>
                 </div>
                 
-                <div className="flex bg-zinc-100 p-1 rounded-lg">
+                <div className="flex bg-zinc-100 p-1 rounded-lg shadow-inner">
                     <button 
                         onClick={() => setActiveTab('Dashboard')}
-                        className={`flex items-center gap-2 px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-all whitespace-nowrap ${
+                        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap ${
                             activeTab === 'Dashboard' ? 'bg-white shadow-sm text-rose-700' : 'text-zinc-500 hover:text-zinc-700'
                         }`}
                     >
@@ -52,7 +52,7 @@ const CivilWorksAllowanceView: React.FC = () => {
                     </button>
                     <button 
                         onClick={() => setActiveTab('Management')}
-                        className={`flex items-center gap-2 px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-all whitespace-nowrap ${
+                        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap ${
                             activeTab === 'Management' ? 'bg-white shadow-sm text-rose-700' : 'text-zinc-500 hover:text-zinc-700'
                         }`}
                     >
@@ -61,7 +61,7 @@ const CivilWorksAllowanceView: React.FC = () => {
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0 bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-0 flex flex-col">
                 {activeTab === 'Dashboard' ? (
                     <CWA_Dashboard fads={fads} allowances={allowances} />
                 ) : (

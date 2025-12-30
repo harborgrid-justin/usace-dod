@@ -1,17 +1,13 @@
-import React, { useState, useMemo, useTransition } from 'react';
+
+import React, { useState, useTransition } from 'react';
 import { 
-    ArrowLeft, FileSignature, Calendar, DollarSign, Activity, 
-    ShieldCheck, Eye, Plus, History, User, FileText, 
-    AlertTriangle, Archive, PlayCircle, Ban, Database, ClipboardCheck, Trash2, Edit2, Clock,
-    // Fix: Added missing CheckCircle2 import
-    CheckCircle2
+    ArrowLeft, FileSignature, Database, ClipboardCheck, Plus, History, 
+    FileText, Trash2, Edit2, CheckCircle2, ShieldCheck
 } from 'lucide-react';
-import { Outgrant, OutgrantStatus, OutgrantInspection, UtilizationSummary, InspectionStatus } from '../../types';
-import { formatCurrency, formatRelativeTime } from '../../utils/formatting';
-import { remisService } from '../../services/RemisDataService';
+import { Outgrant, OutgrantStatus, OutgrantInspection, InspectionStatus } from '../../types';
+import { formatCurrency } from '../../utils/formatting';
 import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
 import { useToast } from '../shared/ToastContext';
-import { REMIS_THEME } from '../../constants';
 import RemisAuditTrail from './RemisAuditTrail';
 import InspectionModal from './InspectionModal';
 
@@ -69,7 +65,7 @@ const OutgrantDetail: React.FC<{ outgrant: Outgrant, onBack: () => void, onUpdat
             'Closed': 'bg-zinc-100 text-zinc-500 border-zinc-200'
         };
         // @ts-ignore
-        return <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border whitespace-nowrap ${colors[status]}`}>{status}</span>;
+        return <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-sm border whitespace-nowrap ${colors[status]}`}>{status}</span>;
     };
 
     return (
@@ -77,13 +73,13 @@ const OutgrantDetail: React.FC<{ outgrant: Outgrant, onBack: () => void, onUpdat
             <div className="bg-white border-b border-zinc-200 px-6 py-6 flex flex-col gap-6 sticky top-0 z-20 shadow-sm">
                 <div className="flex justify-between items-center">
                     <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 uppercase">
-                        <ArrowLeft size={16}/> Back to Queue
+                        <ArrowLeft size={16}/> Back to Registry
                     </button>
                     <div className="flex gap-2">
                         {outgrant.status === 'Proposed' && (
-                            <button onClick={() => handleAction('Active')} className="px-5 py-2 bg-zinc-900 text-white rounded-xl text-[10px] font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg">Activate Grant</button>
+                            <button onClick={() => handleAction('Active')} className="px-5 py-2 bg-zinc-900 text-white rounded-sm text-[10px] font-bold uppercase hover:bg-zinc-800 transition-all shadow-lg">Activate Grant</button>
                         )}
-                        <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase border ${outgrant.status === 'Active' ? REMIS_THEME.classes.statusActive : REMIS_THEME.classes.badge.warning}`}>
+                        <span className={`px-4 py-1.5 rounded-sm text-[9px] font-bold uppercase border ${outgrant.status === 'Active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'}`}>
                             {outgrant.status}
                         </span>
                     </div>
@@ -91,20 +87,20 @@ const OutgrantDetail: React.FC<{ outgrant: Outgrant, onBack: () => void, onUpdat
 
                 <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex items-center gap-5">
-                        <div className="p-4 bg-emerald-50 text-emerald-700 rounded-2xl shadow-inner border border-emerald-100 shrink-0"><FileSignature size={32}/></div>
+                        <div className="p-4 bg-emerald-50 text-emerald-700 rounded-sm shadow-inner border border-emerald-100 shrink-0"><FileSignature size={32}/></div>
                         <div>
                             <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">{outgrant.grantee}</h2>
                             <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500 font-medium">
-                                <span className="font-mono bg-zinc-100 px-1.5 py-0.5 rounded border">{outgrant.id}</span>
+                                <span className="font-mono bg-zinc-100 px-1.5 py-0.5 rounded-sm border border-zinc-200">{outgrant.id}</span>
                                 <span>{outgrant.type} Authority</span>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm min-w-[250px]">
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Annual Rent Revenue</p>
+                    <div className="bg-white border border-zinc-200 rounded-md p-4 shadow-sm min-w-[200px]">
+                        <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Annual Rent Revenue</p>
                         <div className="flex items-center justify-between">
                             <span className="text-xl font-mono font-bold text-zinc-900">{formatCurrency(outgrant.annualRent)}</span>
-                            <button onClick={handleBill} className="p-1.5 hover:bg-zinc-50 rounded-lg text-emerald-600 transition-colors" title="Trigger Billing">
+                            <button onClick={handleBill} className="p-1.5 hover:bg-zinc-50 rounded-sm text-emerald-600 transition-colors" title="Trigger Billing">
                                 <Database size={18}/>
                             </button>
                         </div>
@@ -130,16 +126,16 @@ const OutgrantDetail: React.FC<{ outgrant: Outgrant, onBack: () => void, onUpdat
                 <div className="max-w-6xl mx-auto space-y-8 pb-20">
                     
                     {activeTab === 'General' && (
-                        <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
+                        <div className="bg-white border border-zinc-200 rounded-md p-8 shadow-sm">
                             <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-6 flex items-center gap-3">
-                                <FileText size={18} className="text-zinc-400"/> Regulatory Data (Req 12.1.2)
+                                <FileText size={16} className="text-zinc-400"/> Regulatory Data (Req 12.1.2)
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div className="space-y-6">
                                     <div><p className="text-[10px] text-zinc-400 font-bold uppercase mb-1.5">Statutory Authority</p><p className="text-sm font-bold text-zinc-800">{outgrant.authority}</p></div>
                                     <div><p className="text-[10px] text-zinc-400 font-bold uppercase mb-1.5">Permitted Land Use</p><p className="text-sm text-zinc-700 leading-relaxed">{outgrant.permittedUse}</p></div>
                                 </div>
-                                <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 space-y-4">
+                                <div className="bg-zinc-50 rounded-md p-6 border border-zinc-100 space-y-4">
                                     <div className="flex justify-between items-center text-xs pb-3 border-b border-zinc-200/50">
                                         <span className="text-zinc-500">Effective Date</span>
                                         <span className="font-mono font-bold text-zinc-800">{outgrant.termStart}</span>
@@ -158,16 +154,16 @@ const OutgrantDetail: React.FC<{ outgrant: Outgrant, onBack: () => void, onUpdat
                     )}
 
                     {activeTab === 'Inspections' && (
-                        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+                        <div className="bg-white border border-zinc-200 rounded-md shadow-sm overflow-hidden flex flex-col">
                             <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
                                 <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3">
-                                    <ClipboardCheck size={18} className="text-zinc-400"/> Compliance Inspections
+                                    <ClipboardCheck size={16} className="text-zinc-400"/> Compliance Inspections
                                 </h4>
                                 <button 
                                     onClick={() => { setSelectedInspection(null); setIsInspectionModalOpen(true); }}
-                                    className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase shadow-sm ${REMIS_THEME.classes.buttonPrimary}`}
+                                    className="px-4 py-2 rounded-sm bg-zinc-900 text-white text-[10px] font-bold uppercase shadow-sm hover:bg-zinc-800 transition-all flex items-center gap-2"
                                 >
-                                    <Plus size={14} className="inline mr-2"/> Schedule Review
+                                    <Plus size={12} /> Schedule Review
                                 </button>
                             </div>
                             <div className="overflow-x-auto">
@@ -186,7 +182,7 @@ const OutgrantDetail: React.FC<{ outgrant: Outgrant, onBack: () => void, onUpdat
                                             <tr key={insp.id} className="hover:bg-zinc-50 transition-colors group">
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="p-2 bg-zinc-100 rounded-lg text-zinc-400"><ClipboardCheck size={14}/></div>
+                                                        <div className="p-2 bg-zinc-100 rounded-sm text-zinc-400"><ClipboardCheck size={14}/></div>
                                                         <p className="text-xs font-bold text-zinc-900">{insp.type}</p>
                                                     </div>
                                                 </td>
@@ -204,8 +200,8 @@ const OutgrantDetail: React.FC<{ outgrant: Outgrant, onBack: () => void, onUpdat
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => { setSelectedInspection(insp); setIsInspectionModalOpen(true); }} className="p-1.5 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded transition-all"><Edit2 size={14}/></button>
-                                                        <button onClick={() => handleDeleteInspection(insp.id)} className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all"><Trash2 size={14}/></button>
+                                                        <button onClick={() => { setSelectedInspection(insp); setIsInspectionModalOpen(true); }} className="p-1.5 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-sm transition-all"><Edit2 size={14}/></button>
+                                                        <button onClick={() => handleDeleteInspection(insp.id)} className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-all"><Trash2 size={14}/></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -220,13 +216,13 @@ const OutgrantDetail: React.FC<{ outgrant: Outgrant, onBack: () => void, onUpdat
                     )}
 
                     {activeTab === 'History' && (
-                        <div className="bg-white border border-zinc-200 rounded-[40px] p-10 shadow-sm animate-in fade-in">
+                        <div className="bg-white border border-zinc-200 rounded-md p-8 shadow-sm animate-in fade-in">
                             <div className="flex justify-between items-center mb-10 border-b border-zinc-50 pb-6">
                                 <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3">
-                                    <History size={20} className="text-zinc-400"/> Authoritative Change Ledger
+                                    <History size={16} className="text-zinc-400"/> Authoritative Change Ledger
                                 </h4>
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600">
-                                    <ShieldCheck size={14}/> RECORD AUTHENTICATED
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm border border-emerald-100">
+                                    <ShieldCheck size={12}/> RECORD AUTHENTICATED
                                 </div>
                             </div>
                             <RemisAuditTrail log={outgrant.auditLog} />

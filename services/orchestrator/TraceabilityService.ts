@@ -27,6 +27,12 @@ export class TraceabilityService {
                 expense: { id: 'EXP-001', status: 'Accrued' },
                 disbursement: { id: 'DISB-001', status: 'Paid' },
                 costTransfer: { id: 'CT-24-002', status: 'Posted' }
+            },
+            assets: {
+                realEstate: '101',
+                capitalAsset: { id: 'RPUID-662104', status: 'CIP' },
+                workOrder: { id: 'WO-24-1001', type: 'PM' },
+                auditLog: { count: 12 }
             }
         };
     }

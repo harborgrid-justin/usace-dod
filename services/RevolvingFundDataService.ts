@@ -13,65 +13,47 @@ const INITIAL_RATES: DWCFRateProfile[] = [
 ];
 
 class RevolvingFundDataService {
-    private accounts: DWCFAccount[];
-    private activities: DWCFActivity[];
-    private orders: DWCFOrder[];
-    private billings: DWCFBilling[];
-    private rates: DWCFRateProfile[];
+    private accounts: DWCFAccount[] = JSON.parse(JSON.stringify(MOCK_DWCF_ACCOUNTS));
+    private activities: DWCFActivity[] = JSON.parse(JSON.stringify(MOCK_DWCF_ACTIVITIES));
+    private orders: DWCFOrder[] = JSON.parse(JSON.stringify(MOCK_DWCF_ORDERS));
+    private billings: DWCFBilling[] = JSON.parse(JSON.stringify(MOCK_DWCF_BILLINGS));
+    private rates: DWCFRateProfile[] = JSON.parse(JSON.stringify(INITIAL_RATES));
     private transactions: DWCFTransaction[] = [];
-    private unfundedOrders: UnfundedCustomerOrder[];
-    private listeners: Set<Function> = new Set();
+    private unfundedOrders: UnfundedCustomerOrder[] = JSON.parse(JSON.stringify(MOCK_UNFUNDED_ORDERS));
+    private listeners = new Set<Function>();
 
-    constructor() {
-        this.accounts = JSON.parse(JSON.stringify(MOCK_DWCF_ACCOUNTS));
-        this.activities = JSON.parse(JSON.stringify(MOCK_DWCF_ACTIVITIES));
-        this.orders = JSON.parse(JSON.stringify(MOCK_DWCF_ORDERS));
-        this.billings = JSON.parse(JSON.stringify(MOCK_DWCF_BILLINGS));
-        this.rates = JSON.parse(JSON.stringify(INITIAL_RATES));
-        this.unfundedOrders = JSON.parse(JSON.stringify(MOCK_UNFUNDED_ORDERS));
-    }
+    getAccounts = () => this.accounts;
+    getActivities = () => this.activities;
+    getOrders = () => this.orders;
+    getBillings = () => this.billings;
+    getRates = () => this.rates;
+    getTransactions = () => this.transactions;
+    getUnfundedOrders = () => this.unfundedOrders;
 
-    getAccounts() { return this.accounts; }
-    getActivities() { return this.activities; }
-    getOrders() { return this.orders; }
-    getBillings() { return this.billings; }
-    getRates() { return this.rates; }
-    getTransactions() { return this.transactions; }
-    getUnfundedOrders() { return this.unfundedOrders; }
+    addOrder = (order: DWCFOrder) => { this.orders = [order, ...this.orders]; this.notify(); };
+    addBilling = (billing: DWCFBilling) => { this.billings = [billing, ...this.billings]; this.notify(); };
 
-    addOrder(order: DWCFOrder) {
-        this.orders = [order, ...this.orders];
-        this.notifyListeners();
-    }
-
-    addBilling(billing: DWCFBilling) {
-        this.billings = [billing, ...this.billings];
-        this.notifyListeners();
-    }
-
-    updateBillingStatus(id: string, status: DWCFBillingStatus) {
+    updateBillingStatus = (id: string, status: DWCFBillingStatus) => {
         this.billings = this.billings.map(b => b.id === id ? { ...b, status } : b);
-        this.notifyListeners();
-    }
+        this.notify();
+    };
 
-    updateRate(updatedRate: DWCFRateProfile) {
+    updateRate = (updatedRate: DWCFRateProfile) => {
         this.rates = this.rates.map(r => r.id === updatedRate.id ? updatedRate : r);
-        this.notifyListeners();
-    }
+        this.notify();
+    };
 
-    updateUnfundedOrder(id: string, updates: Partial<UnfundedCustomerOrder>) {
+    updateUnfundedOrder = (id: string, updates: Partial<UnfundedCustomerOrder>) => {
         this.unfundedOrders = this.unfundedOrders.map(o => o.id === id ? { ...o, ...updates } : o);
-        this.notifyListeners();
-    }
+        this.notify();
+    };
 
     subscribe = (listener: Function) => {
         this.listeners.add(listener);
-        return () => { this.listeners.delete(listener); };
-    }
+        return () => this.listeners.delete(listener);
+    };
 
-    private notifyListeners() {
-        this.listeners.forEach(l => l());
-    }
+    private notify = () => this.listeners.forEach(l => l());
 }
 
 export const revolvingFundService = new RevolvingFundDataService();

@@ -1,32 +1,26 @@
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { AlertTriangle, RefreshCcw, ShieldAlert } from 'lucide-react';
 
-interface Props {
+interface ErrorBoundaryProps {
   children?: ReactNode;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   errorMessage: string;
 }
 
 /**
  * ErrorBoundary
- * catch-all domain for handling runtime exceptions.
+ * Catch-all domain for handling runtime exceptions with technical precision.
  */
-/* Fix: Use the explicitly imported Component class to ensure state, setState, and props are correctly identified by TypeScript */
-class ErrorBoundary extends Component<Props, State> {
-  // Explicit state initialization ensures 'this.state' is available
-  constructor(props: Props) {
-    super(props);
-    this.state = { 
-      hasError: false, 
-      errorMessage: '' 
-    };
-  }
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    errorMessage: ''
+  };
 
-  static getDerivedStateFromError(error: any): State {
+  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
     const message = error instanceof Error 
       ? error.message 
       : typeof error === 'string' 
@@ -36,39 +30,42 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, errorMessage: message };
   }
 
-  componentDidCatch(error: any, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("D-AFMP Critical Runtime Exception:", error, errorInfo);
   }
 
+  /**
+   * Reset the boundary state to attempt recovery
+   */
   handleTryAgain = () => {
-    // setState is inherited from Component
     this.setState({ hasError: false, errorMessage: '' });
   };
 
   render() {
-    // state and props are correctly accessible on this after correctly extending Component
     if (this.state.hasError) {
       return (
         <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 p-8 text-center animate-in fade-in">
-          <div className="p-4 bg-rose-50 rounded-[24px] border border-rose-100 mb-6 shadow-sm">
-            <AlertTriangle size={32} className="text-rose-600" />
+          <div className="p-3 bg-rose-50 rounded-md border border-rose-200 mb-6 shadow-sm">
+            <AlertTriangle size={24} className="text-rose-600" />
           </div>
-          <h2 className="text-xl font-bold text-zinc-900 uppercase tracking-tight">Module Initialization Error</h2>
-          <p className="text-sm mt-3 max-w-md text-zinc-500 leading-relaxed font-medium">
+          <h2 className="text-lg font-black text-zinc-900 uppercase tracking-widest">Module Initialization Error</h2>
+          <p className="text-xs mt-2 max-w-md text-zinc-500 font-mono">
             The platform encountered a protocol mismatch or an illegal instruction while rendering this domain.
           </p>
           
-          <div className="mt-6 p-4 bg-white border border-zinc-200 rounded-2xl font-mono text-[11px] text-zinc-600 max-w-lg w-full overflow-auto shadow-inner">
-            <div className="flex items-center gap-2 mb-2 text-rose-600 font-bold uppercase">
-              <div className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+          <div className="mt-8 p-4 bg-white border border-zinc-200 rounded-md font-mono text-[10px] text-zinc-600 max-w-lg w-full overflow-auto shadow-inner">
+            <div className="flex items-center gap-2 mb-2 text-rose-700 font-bold uppercase tracking-wider">
+              <ShieldAlert size={12} />
               Runtime Trace
             </div>
-            {this.state.errorMessage}
+            <div className="p-2 bg-zinc-50 rounded-sm border border-zinc-100 break-all">
+                {this.state.errorMessage}
+            </div>
           </div>
 
           <button
             onClick={this.handleTryAgain}
-            className="mt-8 px-6 py-2.5 bg-zinc-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl flex items-center gap-2 active:scale-95"
+            className="mt-8 px-6 py-2.5 bg-zinc-900 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-md flex items-center gap-2 active:scale-95 border border-zinc-950"
           >
             <RefreshCcw size={14} /> Re-Initialize Domain
           </button>

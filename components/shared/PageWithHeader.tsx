@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ArrowLeft, Landmark, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -15,7 +16,7 @@ const PageWithHeader: React.FC<Props> = ({ title, subtitle, onBack, children, ac
       <div className="flex items-center gap-6">
         <button 
             onClick={onBack} 
-            className="p-3 bg-white border border-zinc-200 rounded-2xl text-zinc-500 hover:text-rose-700 hover:border-rose-200 transition-all shadow-sm active:scale-95"
+            className="p-3 bg-white border border-zinc-200 rounded-sm text-zinc-500 hover:text-rose-700 hover:border-rose-200 transition-all shadow-sm active:scale-95"
             aria-label="Navigate back"
         >
           <ArrowLeft size={20} />

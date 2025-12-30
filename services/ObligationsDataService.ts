@@ -2,33 +2,27 @@ import { Obligation } from '../types';
 import { MOCK_OBLIGATIONS } from '../constants';
 
 class ObligationsDataService {
-    private obligations: Obligation[];
-    private listeners: Set<Function> = new Set();
+    private obligations: Obligation[] = JSON.parse(JSON.stringify(MOCK_OBLIGATIONS));
+    private listeners = new Set<Function>();
 
-    constructor() {
-        this.obligations = JSON.parse(JSON.stringify(MOCK_OBLIGATIONS));
-    }
+    getObligations = () => this.obligations;
 
-    getObligations(): Obligation[] { return this.obligations; }
-
-    addObligation(obligation: Obligation) {
+    addObligation = (obligation: Obligation) => {
         this.obligations = [obligation, ...this.obligations];
-        this.notifyListeners();
+        this.notify();
     }
 
-    updateObligation(updatedObligation: Obligation) {
+    updateObligation = (updatedObligation: Obligation) => {
         this.obligations = this.obligations.map(o => o.id === updatedObligation.id ? updatedObligation : o);
-        this.notifyListeners();
+        this.notify();
     }
 
     subscribe = (listener: Function) => {
         this.listeners.add(listener);
-        return () => { this.listeners.delete(listener); };
-    }
+        return () => this.listeners.delete(listener);
+    };
 
-    private notifyListeners() {
-        this.listeners.forEach(l => l());
-    }
+    private notify = () => this.listeners.forEach(l => l());
 }
 
 export const obligationsService = new ObligationsDataService();

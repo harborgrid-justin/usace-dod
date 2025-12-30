@@ -1,3 +1,4 @@
+
 import React, { useState, useTransition, useMemo } from 'react';
 import { Obligation, Expense, ExpenseUserRole } from '../../types';
 import { formatCurrency, formatCurrencyExact } from '../../utils/formatting';
@@ -52,7 +53,7 @@ const ExpenseManager: React.FC<Props> = ({ activeUser, obligations, expenses, on
 
     return (
         <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 h-full transition-opacity ${isPending ? 'opacity-70' : 'opacity-100'}`}>
-            <div className="lg:col-span-4 bg-white border border-zinc-200 rounded-[32px] shadow-sm flex flex-col overflow-hidden">
+            <div className="lg:col-span-4 bg-white border border-zinc-200 rounded-md shadow-sm flex flex-col overflow-hidden">
                 <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center shrink-0">
                     <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2"><Database size={14} className="text-rose-700"/> Active Obligations</h3>
                     <Badge variant="neutral">{obligations.length} Active</Badge>
@@ -62,7 +63,7 @@ const ExpenseManager: React.FC<Props> = ({ activeUser, obligations, expenses, on
                         <button 
                             key={obl.id} 
                             onClick={() => startTransition(() => setSelectedObligationId(obl.id))} 
-                            className={`w-full text-left p-5 rounded-2xl border transition-all ${selectedObligationId === obl.id ? 'bg-zinc-900 border-zinc-900 text-white shadow-xl scale-[1.02] z-10' : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300'}`}
+                            className={`w-full text-left p-5 rounded-sm border transition-all ${selectedObligationId === obl.id ? 'bg-zinc-900 border-zinc-900 text-white shadow-xl scale-[1.02] z-10' : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300'}`}
                         >
                             <div className="flex justify-between items-start mb-2">
                                 <span className={`text-[10px] font-mono font-bold ${selectedObligationId === obl.id ? 'text-zinc-500' : 'text-zinc-400'}`}>{obl.documentNumber}</span>
@@ -77,7 +78,7 @@ const ExpenseManager: React.FC<Props> = ({ activeUser, obligations, expenses, on
                 </div>
             </div>
 
-            <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-[32px] shadow-sm flex flex-col overflow-hidden">
+            <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-md shadow-sm flex flex-col overflow-hidden">
                  <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center shrink-0">
                     <div>
                         <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">
@@ -89,12 +90,12 @@ const ExpenseManager: React.FC<Props> = ({ activeUser, obligations, expenses, on
                 {selectedObligation ? (
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
                         {filteredExpenses.map(exp => (
-                            <div key={exp.id} className="p-5 border border-zinc-100 rounded-3xl hover:border-rose-200 transition-all bg-white shadow-sm flex flex-col group">
+                            <div key={exp.id} className="p-5 border border-zinc-100 rounded-md hover:border-rose-200 transition-all bg-white shadow-sm flex flex-col group">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <div className="flex items-center gap-3 mb-1">
                                             <p className="text-sm font-bold text-zinc-800">{exp.description}</p>
-                                            <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase border ${
+                                            <span className={`px-2 py-0.5 rounded-sm text-[8px] font-bold uppercase border ${
                                                 exp.status === 'Paid' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 
                                                 exp.status === 'Accrued' ? 'bg-blue-50 border-blue-200 text-blue-700' : 
                                                 'bg-amber-50 border-amber-200 text-amber-700'
@@ -111,12 +112,12 @@ const ExpenseManager: React.FC<Props> = ({ activeUser, obligations, expenses, on
                                     <AuditTrail expense={exp} />
                                     <div className="flex gap-2">
                                         {activeUser === 'Approver' && exp.status === 'Pending Approval' && (
-                                            <button onClick={() => onApprove(exp.id)} className="px-5 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 shadow-lg flex items-center gap-2">
+                                            <button onClick={() => onApprove(exp.id)} className="px-5 py-2 bg-blue-600 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 shadow-lg flex items-center gap-2">
                                                 <ShieldCheck size={14}/> Approve Accrual
                                             </button>
                                         )}
                                         {activeUser === 'Disbursing Officer' && exp.status === 'Accrued' && (
-                                            <button onClick={() => onDisburse(exp.id)} className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 shadow-lg flex items-center gap-2">
+                                            <button onClick={() => onDisburse(exp.id)} className="px-5 py-2 bg-emerald-600 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 shadow-lg flex items-center gap-2">
                                                 <DollarSign size={14}/> Authorize Outlay
                                             </button>
                                         )}
@@ -126,22 +127,22 @@ const ExpenseManager: React.FC<Props> = ({ activeUser, obligations, expenses, on
                         ))}
 
                         {activeUser === 'Clerk' && (
-                            <div className="p-8 bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-[32px] space-y-6">
+                            <div className="p-8 bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-md space-y-6">
                                 <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3">
                                     <Plus size={16} className="text-rose-700"/> Requirement Intake
                                 </h4>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-1.5 block">Invoice / Rationale</label>
-                                        <input type="text" value={formDesc} onChange={e => setFormDesc(e.target.value)} placeholder="e.g., Progress Payment #12" className="w-full bg-white border border-zinc-200 rounded-xl p-3 text-sm focus:outline-none focus:border-rose-400 transition-all shadow-sm" />
+                                        <input type="text" value={formDesc} onChange={e => setFormDesc(e.target.value)} placeholder="e.g., Progress Payment #12" className="w-full bg-white border border-zinc-200 rounded-sm p-3 text-sm focus:outline-none focus:border-rose-400 transition-all shadow-sm" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-1.5 block">Payment Magnitude ($)</label>
-                                        <input type="number" value={formAmount} onChange={e => setFormAmount(Number(e.target.value))} placeholder="0.00" className="w-full bg-white border border-zinc-200 rounded-xl p-3 text-sm font-mono font-bold focus:outline-none focus:border-rose-400 transition-all shadow-sm" />
+                                        <input type="number" value={formAmount} onChange={e => setFormAmount(Number(e.target.value))} placeholder="0.00" className="w-full bg-white border border-zinc-200 rounded-sm p-3 text-sm font-mono font-bold focus:outline-none focus:border-rose-400 transition-all shadow-sm" />
                                     </div>
                                 </div>
-                                {error && <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-center gap-3 text-rose-700 text-xs font-bold animate-in zoom-in"><AlertTriangle size={18}/> {error}</div>}
-                                <button onClick={handleCreate} className="w-full py-4 bg-zinc-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95">
+                                {error && <div className="p-4 bg-rose-50 border border-rose-100 rounded-sm flex items-center gap-3 text-rose-700 text-xs font-bold animate-in zoom-in"><AlertTriangle size={18}/> {error}</div>}
+                                <button onClick={handleCreate} className="w-full py-4 bg-zinc-900 text-white rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95">
                                     <Send size={18}/> Commit to Approval Workflow
                                 </button>
                             </div>

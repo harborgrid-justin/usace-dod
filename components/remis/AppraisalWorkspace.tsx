@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
 import { Scale, Search, Plus, Eye, EyeOff, FileText, Lock, CheckCircle2, History, ArrowRight } from 'lucide-react';
 import { AppraisalRecord } from '../../types';
@@ -50,7 +51,7 @@ const AppraisalWorkspace: React.FC = () => {
     if (view === 'detail' && selectedRecord) return <AppraisalDetail record={selectedRecord} onBack={() => {setSelectedId(null); setView('list');}} onUpdate={handleUpdate} />;
 
     return (
-        <div className={`flex flex-col h-full bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden animate-in fade-in transition-opacity ${isPending ? 'opacity-70' : 'opacity-100'}`}>
+        <div className={`flex flex-col h-full bg-white border border-zinc-200 rounded-md shadow-sm overflow-hidden animate-in fade-in transition-opacity ${isPending ? 'opacity-70' : 'opacity-100'}`}>
             <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
@@ -66,10 +67,10 @@ const AppraisalWorkspace: React.FC = () => {
                             placeholder="Filter by RPUID..." 
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className={`w-full sm:w-64 pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all ${REMIS_THEME.classes.inputFocus}`}
+                            className={`w-full sm:w-64 pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all ${REMIS_THEME.classes.inputFocus}`}
                         />
                     </div>
-                    <button onClick={() => setView('form')} className={`flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-sm ${REMIS_THEME.classes.buttonPrimary}`}>
+                    <button onClick={() => setView('form')} className={`flex items-center justify-center gap-2 px-6 py-2 rounded-sm text-[10px] font-bold uppercase transition-all shadow-sm ${REMIS_THEME.classes.buttonPrimary}`}>
                         <Plus size={14}/> Initiate Valuation
                     </button>
                 </div>
@@ -95,7 +96,7 @@ const AppraisalWorkspace: React.FC = () => {
                                     <p className="text-xs font-bold text-zinc-900">{record.id}</p>
                                     <p className="text-[10px] font-mono text-zinc-500 mt-1">{record.assetId}</p>
                                 </td>
-                                <td className="p-5"><span className="text-[10px] bg-zinc-100 px-2 py-1 rounded border font-medium text-zinc-600">{record.standard}</span></td>
+                                <td className="p-5"><span className="text-[10px] bg-zinc-100 px-2 py-1 rounded-sm border font-medium text-zinc-600">{record.standard}</span></td>
                                 <td className="p-5 text-xs text-zinc-500 font-mono">{record.valuationDate}</td>
                                 <td className="p-5 text-xs font-bold text-zinc-700">{record.appraiserName}</td>
                                 <td className="p-5 text-right">
@@ -109,7 +110,7 @@ const AppraisalWorkspace: React.FC = () => {
                                     </div>
                                 </td>
                                 <td className="p-5 text-center">
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${record.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>{record.status}</span>
+                                    <span className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase border ${record.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>{record.status}</span>
                                 </td>
                                 <td className="p-5 text-right"><ArrowRight size={16} className="text-zinc-200 group-hover:text-emerald-600 transition-all ml-auto"/></td>
                             </tr>

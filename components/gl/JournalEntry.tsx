@@ -1,224 +1,259 @@
+
 import React, { useState, useMemo, useTransition } from 'react';
 import { JournalEntryLine, GLTransaction } from '../../types';
-import { MOCK_GL_TRANSACTIONS, MOCK_USSGL_ACCOUNTS, MOCK_FUND_HIERARCHY } from '../../constants';
-import { Plus, Send, Check, X, FileCheck, Shield, BookCopy, Link2, AlertOctagon, ShieldCheck, Trash2, Database, History, User } from 'lucide-react';
-import { formatCurrencyExact } from '../../utils/formatting';
+import { MOCK_GL_TRANSACTIONS, REMIS_THEME } from '../../constants';
+import { Plus, Send, ShieldCheck, Database, History, Search, ArrowRight, User, Landmark, Scale, FileText } from 'lucide-react';
 import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
-import { sanitizeInput } from '../../utils/security';
-import Badge from '../shared/Badge';
 import { useToast } from '../shared/ToastContext';
+import LineEntryForm from './LineEntryForm';
+import { formatCurrencyExact } from '../../utils/formatting';
+import Badge from '../shared/Badge';
 
-interface JournalEntryProps {
-    onSelectProject: (projectId: string) => void;
-}
-
-const JournalEntry: React.FC<JournalEntryProps> = ({ onSelectProject }) => {
-    const [isPending, startTransition] = useTransition();
-    const { addToast } = useToast();
+const JournalEntry: React.FC = () => {
     const [entries, setEntries] = useState<GLTransaction[]>(MOCK_GL_TRANSACTIONS);
-    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
-    
     const [lines, setLines] = useState<JournalEntryLine[]>([
         { ussglAccount: '101000', description: '', debit: 0, credit: 0, fund: '0100', costCenter: 'S11100' },
-        { ussglAccount: '101000', description: '', debit: 0, credit: 0, fund: '0100', costCenter: 'S11100' }
+        { ussglAccount: '211000', description: '', debit: 0, credit: 0, fund: '0100', costCenter: 'S11100' }
     ]);
-    const [description, setDescription] = useState('');
-    const [validationMsg, setValidationMsg] = useState<{valid: boolean, message: string} | null>(null);
+    const [desc, setDesc] = useState('');
+    const { addToast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
-    const selectedEntry = useMemo(() => entries.find(e => e.id === selectedEntryId), [entries, selectedEntryId]);
-    const totalDebits = useMemo(() => lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0), [lines]);
-    const totalCredits = useMemo(() => lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0), [lines]);
-    const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01 && totalDebits > 0;
+    const selectedEntry = useMemo(() => entries.find(e => e.id === selectedId), [entries, selectedId]);
 
-    const handleLineChange = (index: number, field: keyof JournalEntryLine, value: any) => {
-        const newLines = [...lines];
-        (newLines[index] as any)[field] = field === 'description' ? sanitizeInput(value) : value;
-        setLines(newLines);
-        setValidationMsg(null);
+    const handleLineChange = (idx: number, f: keyof JournalEntryLine, v: any) => {
+        const next = [...lines];
+        (next[idx] as any)[f] = v;
+        setLines(next);
     };
 
-    const handlePreValidate = () => {
-        const tempTx: Partial<GLTransaction> = { lines, totalAmount: totalDebits };
-        const result = IntegrationOrchestrator.validateGlAgainstAda(tempTx as GLTransaction, MOCK_FUND_HIERARCHY);
-        setValidationMsg(result);
-    };
+    const submit = () => {
+        const totalDebit = lines.reduce((s, l) => s + l.debit, 0);
+        const totalCredit = lines.reduce((s, l) => s + l.credit, 0);
 
-    const handleSubmit = () => {
-        if (!isBalanced || !description) return;
-        startTransition(() => {
-            const newEntry: GLTransaction = {
-                id: `JE-${Date.now()}`,
-                date: new Date().toISOString().split('T')[0],
-                description: sanitizeInput(description),
-                type: 'Manual Journal', sourceModule: 'Manual Journal', referenceDoc: 'Manual Entry',
-                totalAmount: totalDebits, status: 'Pending Approval', createdBy: 'USACE_RM_ADMIN', lines,
-                auditLog: [{ timestamp: new Date().toISOString(), user: 'USACE_RM_ADMIN', action: 'Entry Created' }],
-            };
-            setEntries([newEntry, ...entries]);
-            setIsCreating(false);
-            setSelectedEntryId(newEntry.id);
-            addToast('Journal Entry submitted for approval.', 'success');
-        });
+        if (Math.abs(totalDebit - totalCredit) > 0.01) {
+            addToast('Ledger Mismatch: Debits must equal Credits.', 'error');
+            return;
+        }
+
+        const newEntry: GLTransaction = {
+            id: `JE-${Date.now()}`,
+            date: new Date().toISOString().split('T')[0],
+            description: desc,
+            type: 'Manual Journal',
+            totalAmount: totalDebit,
+            status: 'Posted',
+            createdBy: 'Fiduciary_Admin',
+            sourceModule: 'GL',
+            referenceDoc: 'MANUAL',
+            lines,
+            auditLog: [{
+                timestamp: new Date().toISOString(),
+                user: 'Fiduciary_Admin',
+                action: 'Posted',
+                details: 'Manual journal entry finalized.'
+            }]
+        };
+
+        setEntries([newEntry, ...entries]);
+        setIsCreating(false);
+        setSelectedId(newEntry.id);
+        addToast('Journal Entry Posted to USSGL.', 'success');
     };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 h-full overflow-hidden animate-in fade-in">
-            {/* Sidebar Ledger */}
-            <div className="lg:col-span-4 border-r border-zinc-200 flex flex-col bg-zinc-50/30">
-                <div className="p-6 border-b border-zinc-100 bg-white flex justify-between items-center shadow-sm">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Journal Register</h3>
-                    <button onClick={() => { setIsCreating(true); setSelectedEntryId(null); }} className="p-2 bg-zinc-900 text-white rounded-xl shadow-lg hover:bg-zinc-800 transition-all"><Plus size={18}/></button>
+            {/* Left Rail: Register */}
+            <div className="lg:col-span-4 border-r border-zinc-100 bg-zinc-50/50 flex flex-col min-h-0">
+                <div className="p-5 border-b border-zinc-100 bg-white flex justify-between items-center shrink-0">
+                    <div>
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-900">Journal Register</h3>
+                        <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">FY 2024 Audit Stream</p>
+                    </div>
+                    <button 
+                        onClick={() => { setIsCreating(true); setSelectedId(null); }} 
+                        className="p-2 bg-zinc-900 text-white rounded-sm shadow-sm hover:bg-zinc-800 transition-all active:scale-95"
+                    >
+                        <Plus size={16}/>
+                    </button>
                 </div>
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
-                    {entries.map(entry => (
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+                    {entries.map(e => (
                         <button 
-                            key={entry.id} 
-                            onClick={() => { setSelectedEntryId(entry.id); setIsCreating(false); }} 
-                            className={`w-full text-left p-5 rounded-2xl border transition-all ${selectedEntryId === entry.id ? 'bg-zinc-900 border-zinc-900 text-white shadow-xl scale-[1.01]' : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300'}`}
+                            key={e.id} 
+                            onClick={() => { setSelectedId(e.id); setIsCreating(false); }} 
+                            className={`w-full text-left p-4 rounded-md border transition-all relative group ${
+                                selectedId === e.id 
+                                ? 'bg-zinc-900 border-zinc-900 text-white shadow-md z-10' 
+                                : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-400'
+                            }`}
                         >
-                            <div className="flex justify-between items-start mb-2">
-                                <span className={`text-[10px] font-mono font-bold ${selectedEntryId === entry.id ? 'text-zinc-400' : 'text-zinc-400'}`}>{entry.id}</span>
-                                <span className="text-sm font-mono font-bold tracking-tight">{formatCurrencyExact(entry.totalAmount)}</span>
+                            <div className="flex justify-between items-start mb-3">
+                                <span className={`text-[10px] font-mono font-bold ${selectedId === e.id ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                                    {e.id}
+                                </span>
+                                <Badge variant={e.status === 'Posted' ? 'success' : 'warning'}>{e.status}</Badge>
                             </div>
-                            <p className="text-xs font-bold truncate leading-tight mb-3">{entry.description}</p>
-                            <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-1">
-                                <Badge variant={entry.status === 'Posted' ? 'success' : 'warning'}>{entry.status}</Badge>
-                                <span className="text-[10px] font-mono opacity-60">{entry.date}</span>
+                            <p className="text-xs font-bold truncate pr-4">{e.description}</p>
+                            <div className="mt-4 flex justify-between items-center">
+                                <p className={`text-[9px] font-mono font-bold ${selectedId === e.id ? 'text-zinc-500' : 'text-zinc-400'}`}>{e.date}</p>
+                                <p className={`font-mono font-bold text-xs ${selectedId === e.id ? 'text-emerald-400' : 'text-zinc-900'}`}>
+                                    {formatCurrencyExact(e.totalAmount)}
+                                </p>
                             </div>
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Workspace Area */}
-            <div className={`lg:col-span-8 p-10 overflow-y-auto custom-scrollbar bg-white transition-opacity ${isPending ? 'opacity-70' : 'opacity-100'}`}>
+            {/* Right Panel: Workspace */}
+            <div className="lg:col-span-8 p-8 overflow-y-auto custom-scrollbar bg-white min-h-0">
                 {isCreating ? (
-                    <div className="max-w-4xl mx-auto space-y-10 animate-in slide-in-from-right-4">
+                    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-2">
                         <div>
-                            <h3 className="text-3xl font-bold text-zinc-900 tracking-tight">Post New Journal Entry</h3>
-                            <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">SFFAS Manual Adjustment Ledger</p>
+                            <h3 className="text-2xl font-bold text-zinc-900 tracking-tight">Manual Posting Protocol</h3>
+                            <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1.5">SFFAS Double-Entry Transaction Ledger</p>
                         </div>
-                        
+
                         <div className="space-y-6">
                             <div>
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">Standard Description (Narrative Justification)</label>
-                                <input value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:border-zinc-900 transition-all" placeholder="e.g., Year-End Accrual for Service Contract W912QR..." />
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">Instruction Narrative</label>
+                                <textarea 
+                                    value={desc} 
+                                    onChange={e => setDesc(e.target.value)} 
+                                    placeholder="Enter authoritative justification for this fiduciary event..." 
+                                    className="w-full p-5 bg-zinc-50 border border-zinc-200 rounded-sm text-sm focus:bg-white focus:ring-4 focus:ring-zinc-100 transition-all outline-none resize-none h-24 shadow-inner" 
+                                />
                             </div>
 
-                            <div className="space-y-3">
-                                <div className="grid grid-cols-12 gap-3 px-2 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-                                    <div className="col-span-3">Account</div>
-                                    <div className="col-span-4">Memo / Segment</div>
-                                    <div className="col-span-2 text-right">Debit</div>
-                                    <div className="col-span-2 text-right">Credit</div>
-                                    <div className="col-span-1"></div>
-                                </div>
-                                {lines.map((line, index) => (
-                                    <div key={index} className="grid grid-cols-12 gap-3 items-center bg-zinc-50 p-3 rounded-2xl border border-zinc-100 group">
-                                        <select value={line.ussglAccount} onChange={e => handleLineChange(index, 'ussglAccount', e.target.value)} className="col-span-3 bg-white border border-zinc-200 rounded-xl p-2 text-xs font-mono font-bold outline-none">
-                                            {MOCK_USSGL_ACCOUNTS.map(acc => <option key={acc.accountNumber} value={acc.accountNumber}>{acc.accountNumber}</option>)}
-                                        </select>
-                                        <input value={line.description} onChange={e => handleLineChange(index, 'description', e.target.value)} placeholder="WBS / Cost Center" className="col-span-4 bg-white border border-zinc-200 rounded-xl p-2 text-xs outline-none focus:border-zinc-900"/>
-                                        <input type="number" value={line.debit || ''} onChange={e => handleLineChange(index, 'debit', parseFloat(e.target.value))} className="col-span-2 bg-white border border-zinc-200 rounded-xl p-2 text-xs text-right font-mono font-bold outline-none focus:border-zinc-900"/>
-                                        <input type="number" value={line.credit || ''} onChange={e => handleLineChange(index, 'credit', parseFloat(e.target.value))} className="col-span-2 bg-white border border-zinc-200 rounded-xl p-2 text-xs text-right font-mono font-bold outline-none focus:border-zinc-900"/>
-                                        <button onClick={() => setLines(lines.filter((_, i) => i !== index))} className="col-span-1 text-zinc-300 hover:text-rose-600 transition-colors"><Trash2 size={16}/></button>
-                                    </div>
-                                ))}
-                                <button onClick={() => setLines([...lines, { ussglAccount: '101000', description: '', debit: 0, credit: 0, fund: '0100', costCenter: 'S11100' }])} className="text-[10px] font-bold text-zinc-500 uppercase hover:text-zinc-900 flex items-center gap-2 px-2"><Plus size={14}/> Add Journal Line</button>
-                            </div>
+                            <LineEntryForm 
+                                lines={lines} 
+                                onChange={handleLineChange} 
+                                onRemove={i => setLines(lines.filter((_, idx) => idx !== i))} 
+                                onAdd={() => setLines([...lines, { ussglAccount: '101000', description: '', debit: 0, credit: 0, fund: '0100', costCenter: 'S11100' }])} 
+                            />
                         </div>
 
-                        <div className="bg-zinc-900 rounded-[32px] p-8 text-white shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8 border border-zinc-800">
-                             <div className="flex gap-10">
-                                <div><p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Total Debits</p><p className="text-xl font-mono font-bold text-white">{formatCurrencyExact(totalDebits)}</p></div>
-                                <div><p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Total Credits</p><p className="text-xl font-mono font-bold text-white">{formatCurrencyExact(totalCredits)}</p></div>
-                             </div>
-                             <div className="flex gap-4">
-                                <button onClick={handlePreValidate} disabled={!isBalanced} className="px-6 py-3 border border-white/20 text-white rounded-2xl text-[10px] font-bold uppercase hover:bg-white/5 transition-all flex items-center gap-2 disabled:opacity-30">
-                                    <ShieldCheck size={18} className="text-emerald-400"/> Validate Control
-                                </button>
-                                <button onClick={handleSubmit} disabled={!isBalanced || !description || (validationMsg && !validationMsg.valid)} className="px-10 py-3 bg-white text-zinc-900 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-100 transition-all flex items-center gap-2 shadow-xl shadow-white/5 disabled:opacity-30">
-                                    <Send size={18}/> Post to Ledger
-                                </button>
-                             </div>
+                        <div className="pt-8 border-t border-zinc-100 flex justify-end gap-3">
+                            <button 
+                                onClick={() => setIsCreating(false)}
+                                className="px-6 py-2.5 bg-white border border-zinc-200 rounded-sm text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 transition-all"
+                            >
+                                Discard
+                            </button>
+                            <button 
+                                onClick={submit} 
+                                className="px-10 py-2.5 bg-zinc-900 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-xl active:scale-95 transition-all flex items-center gap-3"
+                            >
+                                <Send size={14}/> Execute Posting
+                            </button>
                         </div>
                     </div>
                 ) : selectedEntry ? (
-                    <div className="animate-in fade-in space-y-10">
+                    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in">
                         <div className="flex justify-between items-start border-b border-zinc-100 pb-8">
                             <div>
-                                <h3 className="text-3xl font-bold text-zinc-900 tracking-tight">{selectedEntry.description}</h3>
-                                <div className="flex items-center gap-4 mt-3 text-xs text-zinc-500 font-medium">
-                                    <span className="font-mono bg-zinc-100 px-2 py-0.5 rounded border">{selectedEntry.id}</span>
-                                    <span>Origin: {selectedEntry.sourceModule}</span>
-                                    <div className="w-1 h-1 rounded-full bg-zinc-200" />
-                                    <span>Posted by {selectedEntry.createdBy}</span>
+                                <div className="flex items-center gap-4 mb-2">
+                                    <h3 className="text-2xl font-bold text-zinc-900 tracking-tight">{selectedEntry.id}</h3>
+                                    <Badge variant="success">POSTED</Badge>
+                                </div>
+                                <p className="text-sm text-zinc-500 font-medium leading-relaxed">{selectedEntry.description}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Magnitude</p>
+                                <p className="text-3xl font-mono font-bold text-zinc-900 tracking-tighter">{formatCurrencyExact(selectedEntry.totalAmount)}</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="p-5 bg-zinc-50 rounded-md border border-zinc-100">
+                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-3">Origin Module</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-white rounded-sm border border-zinc-200"><Database size={16} className="text-zinc-500"/></div>
+                                    <span className="text-xs font-bold text-zinc-700 uppercase tracking-tight">{selectedEntry.sourceModule}</span>
                                 </div>
                             </div>
-                            <Badge variant={selectedEntry.status === 'Posted' ? 'success' : 'warning'}>{selectedEntry.status}</Badge>
+                            <div className="p-5 bg-zinc-50 rounded-md border border-zinc-100">
+                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-3">Ref Doc</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-white rounded-sm border border-zinc-200"><FileText size={16} className="text-zinc-500"/></div>
+                                    <span className="text-xs font-mono font-bold text-zinc-700">{selectedEntry.referenceDoc}</span>
+                                </div>
+                            </div>
+                            <div className="p-5 bg-zinc-50 rounded-md border border-zinc-100">
+                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-3">Author</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-white rounded-sm border border-zinc-200"><User size={16} className="text-zinc-500"/></div>
+                                    <span className="text-xs font-bold text-zinc-700 truncate">{selectedEntry.createdBy}</span>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-sm">
+
+                        <div className="bg-white border border-zinc-200 rounded-md overflow-hidden shadow-sm">
+                            <div className="p-4 bg-zinc-900 text-white flex justify-between items-center">
+                                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Scale size={14} className="text-emerald-400"/> T-Account Protocol
+                                </h4>
+                                <span className="text-[10px] font-mono text-zinc-500 font-bold">USSGL_2024_01</span>
+                            </div>
                             <table className="w-full text-left">
-                                <thead className="bg-zinc-50 border-b border-zinc-100">
-                                    <tr className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                                        <th className="p-4">USSGL Account</th>
-                                        <th className="p-4">Line Memo</th>
-                                        <th className="p-4 text-right">Debit</th>
-                                        <th className="p-4 text-right">Credit</th>
+                                <thead className="bg-zinc-50 border-b border-zinc-100 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                                    <tr>
+                                        <th className="p-4">Account / Narrative</th>
+                                        <th className="p-4 text-right">Debit ($)</th>
+                                        <th className="p-4 text-right">Credit ($)</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-zinc-50">
-                                    {selectedEntry.lines.map((line, i) => (
-                                        <tr key={i}>
-                                            <td className="p-4 font-mono text-sm font-bold text-zinc-800">{line.ussglAccount}</td>
-                                            <td className="p-4 text-xs font-medium text-zinc-500">{line.description || '-'}</td>
-                                            <td className="p-4 text-right font-mono text-sm">{line.debit > 0 ? formatCurrencyExact(line.debit) : '-'}</td>
-                                            <td className="p-4 text-right font-mono text-sm">{line.credit > 0 ? formatCurrencyExact(line.credit) : '-'}</td>
+                                <tbody className="divide-y divide-zinc-50 font-mono">
+                                    {selectedEntry.lines.map((l, i) => (
+                                        <tr key={i} className="hover:bg-zinc-50/50">
+                                            <td className="p-4">
+                                                <p className="text-[11px] font-bold text-zinc-900">{l.ussglAccount}</p>
+                                                <p className="text-[9px] text-zinc-400 font-bold uppercase mt-0.5">{l.description || 'System Posting'}</p>
+                                            </td>
+                                            <td className="p-4 text-right text-[11px] font-bold text-zinc-700">{l.debit > 0 ? formatCurrencyExact(l.debit) : '-'}</td>
+                                            <td className="p-4 text-right text-[11px] font-bold text-zinc-700">{l.credit > 0 ? formatCurrencyExact(l.credit) : '-'}</td>
                                         </tr>
                                     ))}
                                 </tbody>
-                                <tfoot className="bg-zinc-900 text-white font-mono">
+                                <tfoot className="bg-zinc-900 text-white font-mono text-xs font-bold">
                                     <tr>
-                                        <td colSpan={2} className="p-4 text-xs font-bold uppercase tracking-widest">Aggregate Verification</td>
-                                        <td className="p-4 text-right text-sm font-bold">{formatCurrencyExact(selectedEntry.totalAmount)}</td>
-                                        <td className="p-4 text-right text-sm font-bold">{formatCurrencyExact(selectedEntry.totalAmount)}</td>
+                                        <td className="p-4 uppercase text-[9px] tracking-widest font-bold">In-Balance Verification</td>
+                                        <td className="p-4 text-right">{formatCurrencyExact(selectedEntry.totalAmount)}</td>
+                                        <td className="p-4 text-right">{formatCurrencyExact(selectedEntry.totalAmount)}</td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-zinc-50 rounded-3xl p-8 border border-zinc-200">
-                                <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-6 flex items-center gap-2"><History size={16}/> Audit Log</h4>
-                                <div className="space-y-4">
-                                    {selectedEntry.auditLog.map((log, i) => (
-                                        <div key={i} className="flex gap-4 text-xs">
-                                            <div className="font-mono text-zinc-400 w-24 shrink-0 uppercase tracking-tighter">{formatCurrencyExact(0).replace('$0.00','')} {log.timestamp.split('T')[0]}</div>
-                                            <div className="flex-1">
-                                                <p className="font-bold text-zinc-800">{log.action}</p>
-                                                <p className="text-zinc-500 mt-0.5">{log.details || 'Standard system posting event.'}</p>
-                                            </div>
+                        <div className="space-y-6 pt-6">
+                            <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                                <History size={16}/> Forensic Audit Trail
+                            </h4>
+                            <div className="space-y-4">
+                                {selectedEntry.auditLog.map((log, i) => (
+                                    <div key={i} className="flex gap-4 p-4 bg-zinc-50 border border-zinc-100 rounded-md text-xs group hover:border-zinc-300 transition-all">
+                                        <div className="font-mono text-zinc-400 font-bold shrink-0">{log.timestamp.split('T')[1].substring(0,5)}</div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-zinc-800 uppercase text-[10px] mb-1">{log.action}</p>
+                                            <p className="text-zinc-500 leading-relaxed italic">"{log.details}"</p>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="bg-white border border-zinc-200 rounded-3xl p-8 flex flex-col justify-center items-center text-center">
-                                <ShieldCheck size={48} className="text-emerald-500 mb-4" />
-                                <h4 className="text-sm font-bold text-zinc-900 uppercase">Fiduciary Lock</h4>
-                                <p className="text-xs text-zinc-500 mt-2 leading-relaxed">
-                                    This entry is formally posted to the authoritative ledger. Edits must be performed via reversing entry per USSGL requirements.
-                                </p>
+                                        <div className="text-[9px] font-bold text-zinc-400 uppercase bg-white px-2 py-1 rounded-sm border border-zinc-200 h-fit">{log.user}</div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-zinc-300 gap-6">
-                        <div className="p-10 rounded-[40px] bg-zinc-50 border-2 border-dashed border-zinc-200"><Database size={64} className="opacity-20" /></div>
-                        <div className="text-center">
-                            <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Journal Register Idle</h4>
-                            <p className="text-xs text-zinc-400 max-w-xs leading-relaxed mt-2">Select an authoritative entry from the register or initiate a new manual journal worksheet.</p>
+                    <div className="flex flex-col items-center justify-center h-full text-zinc-300 gap-6 py-20">
+                        <div className="p-8 bg-zinc-50 rounded-md border border-zinc-100 shadow-inner">
+                             <Database size={48} className="opacity-10" />
+                        </div>
+                        <div className="text-center space-y-1">
+                            <p className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Workspace Dormant</p>
+                            <p className="text-xs text-zinc-400 max-w-[240px] leading-relaxed">Select a posting from the register to initiate forensic review.</p>
                         </div>
                     </div>
                 )}

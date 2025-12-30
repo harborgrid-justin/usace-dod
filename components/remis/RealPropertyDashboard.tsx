@@ -1,30 +1,36 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Building2, DollarSign, Activity, TrendingUp, Maximize, Calendar } from 'lucide-react';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Building2, DollarSign, Activity, TrendingUp, Maximize, Calendar, ArrowRight } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, Cell, ScatterChart, Scatter, ZAxis, YAxis, CartesianGrid } from 'recharts';
 import { formatCurrency } from '../../utils/formatting';
 import { remisService } from '../../services/RemisDataService';
-import { RealPropertyAsset, Outgrant } from '../../types';
+import { RealPropertyAsset, Outgrant, NavigationTab } from '../../types';
 import { REMIS_THEME } from '../../constants';
+import { usePlatform } from '../../context/PlatformContext';
 
 const KPICard = React.memo(({ title, value, subtext, icon: Icon, trend }: any) => (
-    <div className={`bg-white p-6 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-between transition-all group min-h-[140px] ${REMIS_THEME.classes.cardHover}`}>
+    <div className={`bg-white p-6 rounded-md border border-zinc-200 shadow-sm flex flex-col justify-between transition-all group min-h-[140px] ${REMIS_THEME.classes.cardHover}`}>
         <div className="flex justify-between items-start mb-4">
             <div>
                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{title}</p>
                 <p className="text-3xl font-mono font-bold text-zinc-900 mt-2 tracking-tight">{value}</p>
             </div>
-            <div className={`p-2.5 rounded-lg transition-colors shrink-0 ${REMIS_THEME.classes.iconContainer} ${REMIS_THEME.classes.iconColor}`}>
+            <div className={`p-3 rounded-sm transition-colors shrink-0 ${REMIS_THEME.classes.iconContainer} ${REMIS_THEME.classes.iconColor}`}>
                 <Icon size={22} />
             </div>
         </div>
         <div className="flex items-center justify-between">
             <p className="text-[10px] font-medium text-zinc-500 truncate mr-2">{subtext}</p>
-            {trend && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${REMIS_THEME.classes.iconContainer} ${REMIS_THEME.classes.iconColor}`}>{trend}</span>}
+            {trend && <span className={`text-[9px] font-bold px-2 py-1 rounded-sm border ${REMIS_THEME.classes.iconContainer} ${REMIS_THEME.classes.iconColor}`}>{trend}</span>}
         </div>
     </div>
 ));
 
-const RealPropertyDashboard: React.FC = () => {
+interface Props {
+    onNavigateToAsset?: (id: string) => void;
+}
+
+const RealPropertyDashboard: React.FC<Props> = ({ onNavigateToAsset }) => {
     const [assets, setAssets] = useState<RealPropertyAsset[]>(remisService.getAssets());
     const [outgrants, setOutgrants] = useState<Outgrant[]>(remisService.getOutgrants());
 
@@ -45,6 +51,7 @@ const RealPropertyDashboard: React.FC = () => {
     }, [assets, outgrants]);
 
     const chartData = useMemo(() => assets.map(a => ({
+        id: a.rpuid,
         name: a.rpaName,
         fci: a.currentValue > 0 ? (1 - (a.deferredMaintenance / a.currentValue)) * 100 : 100,
         mdi: a.missionDependency === 'Critical' ? 90 : a.missionDependency === 'Dependent' ? 60 : 30,
@@ -62,7 +69,7 @@ const RealPropertyDashboard: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-12 gap-8">
-                <div className="col-span-12 xl:col-span-8 bg-white p-8 rounded-[40px] border border-zinc-200 shadow-sm flex flex-col h-[500px]">
+                <div className="col-span-12 xl:col-span-8 bg-white p-8 rounded-md border border-zinc-200 shadow-sm flex flex-col h-[500px]">
                     <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-10 flex items-center gap-3">
                         <Activity size={18} className="text-rose-600" /> Infrastructure Health Matrix (FCI vs MDI)
                     </h3>
@@ -76,7 +83,12 @@ const RealPropertyDashboard: React.FC = () => {
                                 <Tooltip cursor={{ strokeDasharray: '3 3' }} />
                                 <Scatter name="Assets" data={chartData}>
                                     {chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fci < 60 && entry.mdi > 70 ? '#e11d48' : entry.fci > 80 ? REMIS_THEME.colors.primary : REMIS_THEME.colors.secondary} />
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={entry.fci < 60 && entry.mdi > 70 ? '#e11d48' : entry.fci > 80 ? REMIS_THEME.colors.primary : REMIS_THEME.colors.secondary} 
+                                            className="cursor-pointer"
+                                            onClick={() => onNavigateToAsset?.(entry.id)}
+                                        />
                                     ))}
                                 </Scatter>
                             </ScatterChart>
@@ -84,21 +96,28 @@ const RealPropertyDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="col-span-12 xl:col-span-4 bg-zinc-900 rounded-[40px] p-8 text-white shadow-2xl flex flex-col h-[500px] border border-zinc-800">
+                <div className="col-span-12 xl:col-span-4 bg-zinc-900 rounded-md p-8 text-white shadow-2xl flex flex-col h-[500px] border border-zinc-800">
                     <h3 className="text-sm font-bold uppercase tracking-widest mb-10 flex items-center gap-3 text-emerald-400">
                         <Maximize size={18}/> Utilization Hotspots
                     </h3>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-2">
                         {chartData.sort((a,b) => b.utilization - a.utilization).map((asset, i) => (
-                            <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                            <button 
+                                key={i} 
+                                onClick={() => onNavigateToAsset?.(asset.id)}
+                                className="w-full text-left p-4 rounded-sm bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group"
+                            >
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-bold truncate max-w-[150px]">{asset.name}</span>
-                                    <span className="font-mono text-emerald-400 text-xs font-bold">{asset.utilization}%</span>
+                                    <span className="text-xs font-bold truncate max-w-[150px] group-hover:text-emerald-400 transition-colors">{asset.name}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-mono text-emerald-400 text-xs font-bold">{asset.utilization}%</span>
+                                        <ArrowRight size={12} className="text-zinc-600 group-hover:text-white transition-all"/>
+                                    </div>
                                 </div>
                                 <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
                                     <div className="h-full bg-emerald-500" style={{ width: `${asset.utilization}%` }} />
                                 </div>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </div>

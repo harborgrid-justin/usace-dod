@@ -62,8 +62,8 @@ const CEFMSModulesView: React.FC<Props> = ({ onNavigate }) => {
     const categories: Category[] = ['All', 'Finance', 'Budget', 'Assets', 'Cost', 'Orders', 'Manpower', 'Admin'];
 
     return (
-        <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto h-full flex flex-col">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="p-4 sm:p-8 space-y-6 animate-in max-w-[1600px] mx-auto h-full flex flex-col overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
                         <Grid size={24} className="text-rose-700" /> CEFMS Modules Inventory
@@ -71,29 +71,29 @@ const CEFMSModulesView: React.FC<Props> = ({ onNavigate }) => {
                     <p className="text-xs text-zinc-500 font-medium mt-1">Functional Area Map (Codes 1-15)</p>
                 </div>
                 
-                <div className="flex items-center gap-4">
-                    <div className="relative group">
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <div className="relative group w-full">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-hover:text-zinc-600 transition-colors" />
                         <input 
                             type="text" 
                             placeholder="Search code (e.g. AX, GL)..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium w-full sm:w-64 focus:outline-none focus:border-zinc-400 transition-all"
+                            className="w-full pl-9 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium focus:outline-none focus:border-zinc-400 transition-all shadow-sm"
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2 shrink-0">
+            <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2 shrink-0 max-w-full">
                 {categories.map(cat => (
                     <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
                         className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all whitespace-nowrap border ${
                             selectedCategory === cat 
-                            ? 'bg-rose-700 text-white border-rose-700' 
-                            : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300 hover:text-zinc-900'
+                            ? 'bg-rose-700 text-white border-rose-700 shadow-md' 
+                            : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300 hover:text-zinc-900 shadow-sm'
                         }`}
                     >
                         {cat}
@@ -106,23 +106,26 @@ const CEFMSModulesView: React.FC<Props> = ({ onNavigate }) => {
                     <button 
                         key={index}
                         onClick={() => module.targetTab && onNavigate(module.targetTab)}
-                        className="bg-white border border-zinc-200 rounded-xl p-4 text-left hover:border-rose-300 hover:shadow-md transition-all group flex flex-col h-32 active:scale-[0.98]"
+                        className="bg-white border border-zinc-200 rounded-xl p-5 text-left hover:border-rose-300 hover:shadow-lg transition-all group flex flex-col h-36 active:scale-[0.98] shadow-sm relative overflow-hidden"
                     >
-                        <div className="flex justify-between items-start mb-3">
+                        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+                            <module.icon size={64}/>
+                        </div>
+                        <div className="flex justify-between items-start mb-3 relative z-10">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-zinc-50 rounded-lg group-hover:bg-rose-50 transition-colors">
+                                <div className="p-2 bg-zinc-50 rounded-lg group-hover:bg-rose-50 transition-colors border border-zinc-100">
                                     <module.icon size={18} className="text-zinc-500 group-hover:text-rose-700" />
                                 </div>
-                                <span className="text-lg font-mono font-bold text-zinc-900 group-hover:text-rose-700">{module.code}</span>
+                                <span className="text-lg font-mono font-bold text-zinc-900 group-hover:text-rose-700 transition-colors">{module.code}</span>
                             </div>
-                            <span className="text-[9px] font-bold uppercase text-zinc-400 bg-zinc-50 px-2 py-1 rounded">
+                            <span className="text-[9px] font-bold uppercase text-zinc-400 bg-zinc-100 px-2 py-1 rounded border border-zinc-200">
                                 {module.category}
                             </span>
                         </div>
-                        <h3 className="text-xs font-bold text-zinc-800 leading-snug line-clamp-1 mb-1">
+                        <h3 className="text-xs font-bold text-zinc-800 leading-snug line-clamp-1 mb-1 relative z-10 uppercase tracking-tight">
                             {module.name}
                         </h3>
-                        <p className="text-[10px] text-zinc-500 leading-tight line-clamp-2">{module.desc}</p>
+                        <p className="text-[10px] text-zinc-500 leading-tight line-clamp-2 relative z-10 font-medium">{module.desc}</p>
                     </button>
                 ))}
             </div>

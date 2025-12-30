@@ -1,9 +1,12 @@
+
 import React, { useState, useMemo, useEffect, useTransition, useCallback } from 'react';
-import { Landmark, TrendingUp, ChevronsRight, GitMerge, List } from 'lucide-react';
-import { CommandNode, Appropriation, AgencyContext } from '../../types';
+import { Landmark, TrendingUp, ChevronsRight, GitMerge, List, ShieldCheck, Database, ArrowUpRight } from 'lucide-react';
+import { CommandNode, Appropriation, AgencyContext, NavigationTab } from '../../types';
 import AppropriationLifecycleManager from '../appropriations/AppropriationLifecycleManager';
 import FundsFlowVisualizer from '../appropriations/FundsFlowVisualizer';
 import { fundsService } from '../../services/FundsDataService';
+import { formatCurrency } from '../../utils/formatting';
+import { REMIS_THEME } from '../../constants';
 
 interface AppropriationsViewProps {
   onSelectThread: (threadId: string) => void;
@@ -11,31 +14,42 @@ interface AppropriationsViewProps {
 }
 
 const CommandCard: React.FC<{ node: CommandNode, onManage: (commandId: string) => void }> = ({ node, onManage }) => (
-  <div className="bg-white p-6 rounded-xl border border-zinc-200 hover:border-zinc-300 transition-all group flex flex-col justify-between shadow-sm">
-    <div>
-      <div className="flex justify-between items-start mb-6">
-          <div>
-            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1">{node.id}</p>
-            <h3 className="text-lg font-bold text-zinc-900 uppercase tracking-tight">{node.name}</h3>
-          </div>
-          <div className="p-2 bg-zinc-50 rounded-lg text-zinc-400 border border-zinc-100 group-hover:text-zinc-800 transition-colors"><Landmark size={18}/></div>
-      </div>
-      <div className="space-y-4">
-          <div>
-            <div className="flex justify-between text-[10px] font-bold uppercase mb-1.5">
-                <span className="text-zinc-500">Obligation Burn</span>
-                <span className="text-zinc-900 font-mono">{((node.obligated/node.totalAuthority)*100).toFixed(1)}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-                <div className="h-full bg-zinc-800 transition-all duration-1000" style={{ width: `${(node.obligated/node.totalAuthority)*100}%` }} />
-            </div>
-          </div>
-      </div>
+  <button 
+    onClick={() => onManage(node.id)}
+    className={`${REMIS_THEME.enterprise.container} ${REMIS_THEME.enterprise.interactive} p-6 text-left group w-full`}
+  >
+    <div className="flex justify-between items-start mb-8">
+        <div className="min-w-0">
+          <p className={REMIS_THEME.enterprise.label}>{node.id}</p>
+          <h3 className="text-lg font-bold text-zinc-900 uppercase tracking-tight mt-1 leading-tight truncate">{node.name}</h3>
+        </div>
+        <div className={`p-2.5 rounded-lg bg-zinc-50 border border-zinc-100 text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-700 transition-all shadow-inner shrink-0`}>
+            <Landmark size={20}/>
+        </div>
     </div>
-    <button onClick={() => onManage(node.id)} className="mt-6 w-full py-2.5 bg-zinc-50 hover:bg-zinc-100 border border-zinc-100 rounded-lg text-[10px] font-bold uppercase tracking-wide text-zinc-600 hover:text-zinc-900 transition-all flex items-center justify-center gap-2">
-      Allocate Resources <ChevronsRight size={12} />
-    </button>
-  </div>
+    
+    <div className="space-y-5">
+        <div>
+            <div className="flex justify-between text-[9px] font-bold uppercase mb-2">
+                <span className="text-zinc-500 tracking-widest">Authority Consumed</span>
+                <span className="text-zinc-900 font-mono tracking-tighter text-xs">{((node.obligated/node.totalAuthority)*100).toFixed(1)}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden shadow-inner">
+                <div className="h-full bg-zinc-900 transition-all duration-1000 group-hover:bg-rose-700" style={{ width: `${(node.obligated/node.totalAuthority)*100}%` }} />
+            </div>
+        </div>
+        
+        <div className="flex justify-between items-end pt-4 border-t border-zinc-50">
+            <div className="min-w-0">
+                <p className={REMIS_THEME.enterprise.label}>Total Limit</p>
+                <p className="text-base font-mono font-bold text-zinc-900 truncate">{formatCurrency(node.totalAuthority)}</p>
+            </div>
+            <div className="flex items-center gap-1.5 text-[9px] font-bold text-rose-700 uppercase group-hover:translate-x-1 transition-transform shrink-0">
+                Manage <ArrowUpRight size={12} />
+            </div>
+        </div>
+    </div>
+  </button>
 );
 
 const AppropriationsView: React.FC<AppropriationsViewProps> = ({ onSelectThread, agency }) => {
@@ -56,7 +70,6 @@ const AppropriationsView: React.FC<AppropriationsViewProps> = ({ onSelectThread,
 
   const config = useMemo(() => {
     const armyRoot = hierarchy[0].children?.find(c => c.id === 'ARMY-ROOT');
-    const osdRoot = hierarchy[0].children?.find(c => c.id === 'OSD-ROOT');
     const usaceNode = armyRoot?.children?.find(n => n.id === 'USACE');
 
     switch (agency) {
@@ -80,7 +93,7 @@ const AppropriationsView: React.FC<AppropriationsViewProps> = ({ onSelectThread,
 
   if (selectedAppropriation) {
     return (
-      <div className="h-full overflow-y-auto custom-scrollbar">
+      <div className="h-full w-full overflow-hidden flex flex-col bg-zinc-50/50">
         <AppropriationLifecycleManager 
             appropriation={selectedAppropriation}
             commandName={config.nodesToRender.find(c => c.id === selectedAppropriation.commandId)?.name || 'N/A'}
@@ -92,39 +105,50 @@ const AppropriationsView: React.FC<AppropriationsViewProps> = ({ onSelectThread,
   }
 
   return (
-    <div className={`p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}>
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
-         <div>
-            <h2 className="text-2xl font-semibold text-zinc-900 uppercase tracking-tight">{config.rootName}</h2>
-            <div className="hidden sm:flex gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1"><TrendingUp size={14}/> Top-Line Authority: {config.topLine}</div>
+    <div className={`p-6 sm:p-10 space-y-10 animate-in h-full w-full flex flex-col transition-opacity duration-300 bg-zinc-50/50 overflow-hidden ${isPending ? 'opacity-50' : 'opacity-100'}`}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-zinc-200 pb-10 shrink-0">
+         <div className="flex items-center gap-4 min-w-0">
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center shadow-lg shrink-0">
+                <Landmark size={24} className="text-white" />
+            </div>
+            <div className="min-w-0">
+               <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-tighter leading-none truncate">{config.rootName}</h2>
+               <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2 truncate">
+                  <Database size={14} className="shrink-0"/> Top-Line Statutory Authority: <span className="text-zinc-900 font-mono font-bold whitespace-nowrap">{config.topLine}</span>
+               </p>
+            </div>
          </div>
          
-         <div className="flex bg-zinc-100 p-1 rounded-lg shadow-inner">
+         <div className="flex bg-zinc-100 p-1 rounded-xl shadow-inner border border-zinc-200/50 shrink-0">
             <button 
                 onClick={() => setViewMode('Cards')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-all whitespace-nowrap ${viewMode === 'Cards' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
+                className={`flex items-center gap-2 px-6 py-2 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap ${viewMode === 'Cards' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
             >
-                <List size={14} /> Cards
+                <List size={14} /> Matrix View
             </button>
             <button 
                 onClick={() => setViewMode('Flow')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded text-[10px] font-bold uppercase transition-all whitespace-nowrap ${viewMode === 'Flow' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
+                className={`flex items-center gap-2 px-6 py-2 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap ${viewMode === 'Flow' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
             >
-                <GitMerge size={14} /> Stream
+                <GitMerge size={14} /> Stream Analysis
             </button>
          </div>
       </div>
       
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pb-6">
-        {viewMode === 'Cards' ? (
-             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6`}>
-                {config.nodesToRender.map((node) => (
-                    <CommandCard key={node.id} node={node as unknown as CommandNode} onManage={handleSelectAppropriation} />
-                ))}
-            </div>
-        ) : (
-            <FundsFlowVisualizer hierarchy={hierarchy} />
-        )}
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pb-12">
+        <div className="w-full">
+            {viewMode === 'Cards' ? (
+                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                    {config.nodesToRender.map((node) => (
+                        <CommandCard key={node.id} node={node as unknown as CommandNode} onManage={handleSelectAppropriation} />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white border border-zinc-200 rounded-2xl p-10 shadow-sm min-h-full w-full">
+                    <FundsFlowVisualizer hierarchy={hierarchy} />
+                </div>
+            )}
+        </div>
       </div>
     </div>
   );

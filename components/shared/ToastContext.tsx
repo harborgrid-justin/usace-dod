@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { X, CheckCircle2, AlertTriangle, Info, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -42,37 +43,40 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
-      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3">
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`flex items-start gap-4 p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-2 animate-in slide-in-from-right-10 fade-in duration-300 w-[360px] bg-white group ${
-              toast.type === 'success' ? 'border-emerald-500/20' :
-              toast.type === 'error' ? 'border-rose-500/20' :
-              toast.type === 'warning' ? 'border-amber-500/20' :
-              'border-zinc-500/10'
+            className={`flex items-start gap-3 p-4 rounded-md border shadow-lg animate-in slide-in-from-right-10 fade-in duration-200 w-[340px] bg-white group ${
+              toast.type === 'success' ? 'border-emerald-500/30 shadow-emerald-900/5' :
+              toast.type === 'error' ? 'border-rose-500/30 shadow-rose-900/5' :
+              toast.type === 'warning' ? 'border-amber-500/30 shadow-amber-900/5' :
+              'border-zinc-300 shadow-zinc-900/5'
             }`}
           >
-            <div className={`p-2 rounded-xl mt-0.5 ${
+            <div className={`p-1.5 rounded-sm mt-0.5 shrink-0 ${
                toast.type === 'success' ? 'bg-emerald-50 text-emerald-600' :
                toast.type === 'error' ? 'bg-rose-50 text-rose-600' :
                toast.type === 'warning' ? 'bg-amber-50 text-amber-600' :
-               'bg-zinc-900 text-white'
+               'bg-zinc-100 text-zinc-900'
             }`}>
-              {toast.type === 'success' && <CheckCircle2 size={20} />}
-              {toast.type === 'error' && <AlertCircle size={20} />}
-              {toast.type === 'warning' && <AlertTriangle size={20} />}
-              {toast.type === 'info' && <Info size={20} />}
-              {toast.type === 'processing' && <Loader2 size={20} className="animate-spin" />}
+              {toast.type === 'success' && <CheckCircle2 size={16} strokeWidth={2} />}
+              {toast.type === 'error' && <AlertCircle size={16} strokeWidth={2} />}
+              {toast.type === 'warning' && <AlertTriangle size={16} strokeWidth={2} />}
+              {toast.type === 'info' && <Info size={16} strokeWidth={2} />}
+              {toast.type === 'processing' && <Loader2 size={16} className="animate-spin" strokeWidth={2} />}
             </div>
             <div className="flex-1 min-w-0 pt-0.5">
-                <p className="text-xs font-bold text-zinc-900 uppercase tracking-widest mb-1">
-                    {toast.type === 'processing' ? 'Processing Authority' : toast.type === 'success' ? 'Protocol Verified' : 'System Notification'}
+                <p className="text-[10px] font-black text-zinc-900 uppercase tracking-widest mb-1 leading-none">
+                    {toast.type === 'processing' ? 'Processing Authority' : toast.type === 'success' ? 'Protocol Verified' : toast.type === 'error' ? 'Execution Error' : 'System Notification'}
                 </p>
-                <p className="text-sm font-medium text-zinc-500 leading-relaxed">{toast.message}</p>
+                <p className="text-xs font-medium text-zinc-600 leading-snug">{toast.message}</p>
             </div>
-            <button onClick={() => removeToast(toast.id)} className="p-1 text-zinc-300 hover:text-zinc-900 transition-colors">
-              <X size={16} />
+            <button 
+              onClick={() => removeToast(toast.id)} 
+              className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-sm transition-all"
+            >
+              <X size={14} strokeWidth={2} />
             </button>
           </div>
         ))}

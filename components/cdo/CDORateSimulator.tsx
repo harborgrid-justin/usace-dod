@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { TrendingUp, RefreshCw, AlertTriangle, Calculator, ShieldAlert, Landmark, DollarSign, Activity } from 'lucide-react';
 import { CDOCostPool } from '../../types';
@@ -28,7 +29,7 @@ const CDORateSimulator: React.FC<Props> = ({ pools }) => {
 
     return (
         <div className="flex flex-col gap-8 animate-in fade-in h-full overflow-y-auto custom-scrollbar p-1">
-            <div className="bg-zinc-900 rounded-[40px] p-10 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
+            <div className="bg-zinc-900 rounded-md p-10 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
                 <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12"><Calculator size={160}/></div>
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                     <div className="lg:col-span-7 space-y-8">
@@ -56,11 +57,11 @@ const CDORateSimulator: React.FC<Props> = ({ pools }) => {
                         </div>
                     </div>
                     <div className="lg:col-span-5 grid grid-cols-1 gap-6 relative z-10">
-                        <div className="p-6 bg-white/5 border border-white/10 rounded-[32px] backdrop-blur-xl shadow-inner">
+                        <div className="p-6 bg-white/5 border border-white/10 rounded-md backdrop-blur-xl shadow-inner">
                             <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Projected Surcharge Recovery</p>
                             <p className="text-4xl font-mono font-bold text-emerald-400">{formatCurrency(simulatedDemand * 0.18)}</p>
                         </div>
-                        <div className="p-6 bg-white/5 border border-white/10 rounded-[32px] backdrop-blur-xl shadow-inner">
+                        <div className="p-6 bg-white/5 border border-white/10 rounded-md backdrop-blur-xl shadow-inner">
                             <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Effective Variance Delta</p>
                             <p className={`text-4xl font-mono font-bold ${simulatedDemand > currentTotalDemand ? 'text-rose-400' : 'text-blue-400'}`}>
                                 {simulatedDemand > currentTotalDemand ? '+' : '-'}{formatCurrency(Math.abs(simulatedDemand - currentTotalDemand))}
@@ -71,7 +72,7 @@ const CDORateSimulator: React.FC<Props> = ({ pools }) => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-[40px] p-10 shadow-sm flex flex-col h-[400px]">
+                <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-md p-10 shadow-sm flex flex-col h-[400px]">
                     <div className="flex justify-between items-center mb-10">
                         <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3">
                             <Activity size={18} className="text-zinc-400"/> Projected Cash Burn Pattern
@@ -89,7 +90,7 @@ const CDORateSimulator: React.FC<Props> = ({ pools }) => {
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5"/>
                                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
                                 <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={(val) => `$${val/1e6}M`}/>
-                                <Tooltip formatter={(val: number) => formatCurrency(val)} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
+                                <Tooltip formatter={(val: number) => formatCurrency(val)} contentStyle={{borderRadius: '4px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
                                 <Area type="monotone" dataKey="baseline" stroke="#a1a1aa" strokeDasharray="5 5" fill="none" name="Baseline" />
                                 <Area type="monotone" dataKey="simulated" stroke="#be123c" strokeWidth={3} fill="url(#simColor)" name="Simulated Burn" />
                             </AreaChart>
@@ -97,27 +98,27 @@ const CDORateSimulator: React.FC<Props> = ({ pools }) => {
                     </div>
                 </div>
 
-                <div className="lg:col-span-1 bg-white border border-zinc-200 rounded-[40px] p-10 shadow-sm space-y-8">
+                <div className="lg:col-span-1 bg-white border border-zinc-200 rounded-md p-10 shadow-sm space-y-8">
                     <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3 border-b border-zinc-50 pb-4">
                         <ShieldAlert size={18} className="text-amber-500"/> Risk Indicators
                     </h4>
                     <div className="space-y-6">
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-amber-50 rounded-2xl text-amber-600 border border-amber-100 shadow-sm"><AlertTriangle size={20}/></div>
+                            <div className="p-3 bg-amber-50 rounded-sm text-amber-600 border border-amber-100 shadow-sm"><AlertTriangle size={20}/></div>
                             <div>
                                 <p className="text-xs font-bold text-zinc-900">Stabilization Conflict</p>
                                 <p className="text-[10px] text-zinc-500 leading-relaxed mt-1">Simulated workload change exceeds +/- 10% threshold. Rates must be re-negotiated to avoid AOR deficit.</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-blue-50 rounded-2xl text-blue-600 border border-blue-100 shadow-sm"><Landmark size={20}/></div>
+                            <div className="p-3 bg-blue-50 rounded-sm text-blue-600 border border-blue-100 shadow-sm"><Landmark size={20}/></div>
                             <div>
                                 <p className="text-xs font-bold text-zinc-900">Capital Surcharge Impact</p>
                                 <p className="text-[10px] text-zinc-500 leading-relaxed mt-1">New project volume will accelerate PRIP recovery by an estimated 14 months.</p>
                             </div>
                         </div>
                     </div>
-                    <button className="w-full mt-6 py-4 bg-zinc-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-3">
+                    <button className="w-full mt-6 py-4 bg-zinc-900 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest shadow-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 active:scale-95">
                         <DollarSign size={16}/> Lock Rate Simulation
                     </button>
                 </div>

@@ -1,8 +1,9 @@
+
 import React, { useState, useMemo, useTransition } from 'react';
 import { LGHLease, LeaseStatus, LeaseScoring } from '../../types';
 import Modal from '../shared/Modal';
-import { AlertTriangle, ShieldCheck, Landmark, DollarSign, Calculator, Info, FileText, Check, Shield } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatting';
+import { AlertTriangle, ShieldCheck, DollarSign, Calculator, FileText, Check, Shield } from 'lucide-react';
+import { REMIS_THEME } from '../../constants';
 import Badge from '../shared/Badge';
 
 interface Props {
@@ -67,7 +68,7 @@ const LeaseDetailModal: React.FC<Props> = ({ lease, onClose, onSave }) => {
                         <div>
                             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">Property Designation</label>
                             <input 
-                                type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-sm font-bold bg-zinc-50/50 focus:bg-white focus:border-cyan-500 transition-all outline-none shadow-inner"
+                                type="text" className="w-full border border-zinc-200 rounded-sm p-3 text-sm font-bold bg-zinc-50/50 focus:bg-white focus:border-cyan-500 transition-all outline-none shadow-inner"
                                 value={formData.propertyName}
                                 onChange={e => setFormData({...formData, propertyName: e.target.value})}
                                 placeholder="e.g. Sunset Heights (Phase II)" required
@@ -77,11 +78,11 @@ const LeaseDetailModal: React.FC<Props> = ({ lease, onClose, onSave }) => {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">PIID / Lease #</label>
-                                <input type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-xs font-mono bg-zinc-50/50" value={formData.leaseNumber} onChange={e => setFormData({...formData, leaseNumber: e.target.value})} required />
+                                <input type="text" className="w-full border border-zinc-200 rounded-sm p-3 text-xs font-mono bg-zinc-50/50" value={formData.leaseNumber} onChange={e => setFormData({...formData, leaseNumber: e.target.value})} required />
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">Execution Status</label>
-                                <select className="w-full border border-zinc-200 rounded-2xl p-4 text-xs font-bold bg-zinc-50/50 focus:bg-white transition-all outline-none" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as LeaseStatus})}>
+                                <select className="w-full border border-zinc-200 rounded-sm p-3 text-xs font-bold bg-zinc-50/50 focus:bg-white transition-all outline-none" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as LeaseStatus})}>
                                     <option>Active</option><option>Expiring</option><option>Pending Renewal</option><option>Holdover</option>
                                 </select>
                             </div>
@@ -89,21 +90,21 @@ const LeaseDetailModal: React.FC<Props> = ({ lease, onClose, onSave }) => {
 
                         <div>
                             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1 mb-2 block">Situs Address</label>
-                            <input type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-sm bg-zinc-50/50" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                            <input type="text" className="w-full border border-zinc-200 rounded-sm p-3 text-sm bg-zinc-50/50" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
                         </div>
                     </div>
 
-                    <div className="bg-zinc-900 rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
+                    <div className="bg-zinc-900 rounded-md p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
                         <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12"><Calculator size={120}/></div>
                         <h4 className="text-xs font-bold uppercase tracking-[0.2em] mb-10 flex items-center gap-3 text-cyan-400">
                              <DollarSign size={16}/> Financial Commitment
                         </h4>
                         <div className="space-y-8 relative z-10">
-                            <div className="p-5 bg-white/5 border border-white/10 rounded-2xl shadow-inner">
+                            <div className="p-5 bg-white/5 border border-white/10 rounded-sm shadow-inner">
                                 <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5 block">Calculated Annual Rent ($)</label>
                                 <input type="number" className="w-full bg-transparent border-none p-0 text-3xl font-mono font-bold text-white focus:ring-0" value={formData.annualRent || ''} onChange={e => setFormData({...formData, annualRent: Number(e.target.value)})} placeholder="0.00" />
                             </div>
-                            <div className="p-5 bg-white/5 border border-white/10 rounded-2xl shadow-inner">
+                            <div className="p-5 bg-white/5 border border-white/10 rounded-sm shadow-inner">
                                 <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5 block">Estimated FMV @ Inception</label>
                                 <input type="number" className="w-full bg-transparent border-none p-0 text-3xl font-mono font-bold text-white focus:ring-0" value={formData.fairMarketValue || ''} onChange={e => setFormData({...formData, fairMarketValue: Number(e.target.value)})} placeholder="0.00" />
                             </div>
@@ -111,7 +112,7 @@ const LeaseDetailModal: React.FC<Props> = ({ lease, onClose, onSave }) => {
                     </div>
                 </div>
 
-                <div className="p-8 rounded-[40px] border border-zinc-200 bg-zinc-100/50 space-y-6 shadow-inner relative overflow-hidden">
+                <div className="p-8 rounded-md border border-zinc-200 bg-zinc-100/50 space-y-6 shadow-inner relative overflow-hidden">
                     <div className="flex justify-between items-center relative z-10">
                         <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-3">
                             <Shield size={16} className="text-cyan-700" /> Lifecycle Budget Scoring (90% Test)
@@ -126,7 +127,7 @@ const LeaseDetailModal: React.FC<Props> = ({ lease, onClose, onSave }) => {
                     </div>
                     
                     <div className="flex items-start gap-6 relative z-10">
-                        <div className={`p-4 rounded-2xl shadow-xl transition-all ${isCapitalScore ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}`}>
+                        <div className={`p-4 rounded-md shadow-xl transition-all ${isCapitalScore ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}`}>
                             {isCapitalScore ? <AlertTriangle size={28}/> : <ShieldCheck size={28}/>}
                         </div>
                         <div className="flex-1 space-y-2">
@@ -144,11 +145,11 @@ const LeaseDetailModal: React.FC<Props> = ({ lease, onClose, onSave }) => {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-8 border-t border-zinc-100">
-                    <button type="button" onClick={onClose} className="px-8 py-3 border border-zinc-200 rounded-2xl text-xs font-bold uppercase text-zinc-500 hover:bg-zinc-50 transition-all">Cancel</button>
+                    <button type="button" onClick={onClose} className="px-8 py-3 border border-zinc-200 rounded-sm text-xs font-bold uppercase text-zinc-500 hover:bg-zinc-50 transition-all">Cancel</button>
                     <button 
                         type="submit" 
                         disabled={isPending}
-                        className="px-12 py-3 bg-zinc-900 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-2xl active:scale-95 transition-all flex items-center gap-3 disabled:opacity-30"
+                        className={`px-12 py-3 bg-zinc-900 text-white rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-2xl active:scale-95 transition-all flex items-center gap-3 disabled:opacity-30 ${REMIS_THEME.classes.buttonPrimary}`}
                     >
                         {isPending ? <Check className="animate-pulse" size={18}/> : <FileText size={18}/>} 
                         {isPending ? 'Syncing...' : 'Commit Portfolio Record'}
