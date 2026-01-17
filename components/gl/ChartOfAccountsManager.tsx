@@ -1,10 +1,12 @@
 
 import React, { useState, useMemo, useDeferredValue } from 'react';
-import { MOCK_USSGL_ACCOUNTS, REMIS_THEME } from '../../constants';
-import { Search, Shield, CheckCircle, AlertCircle, Link2, Filter, Database, Hash } from 'lucide-react';
+import { REMIS_THEME } from '../../constants';
+import { Search, Shield, CheckCircle, AlertCircle, Link2, Hash } from 'lucide-react';
 import Badge from '../shared/Badge';
+import { useFinanceData } from '../../hooks/useDomainData';
 
 const ChartOfAccountsManager: React.FC = () => {
+    const { ussglAccounts } = useFinanceData();
     const [searchTerm, setSearchTerm] = useState('');
     const deferredSearch = useDeferredValue(searchTerm);
     const [categoryFilter, setCategoryFilter] = useState('All');
@@ -15,12 +17,12 @@ const ChartOfAccountsManager: React.FC = () => {
     const categories = ['All', 'Asset', 'Liability', 'Net Position', 'Budgetary', 'Revenue', 'Expense'];
 
     const filteredAccounts = useMemo(() => {
-        return MOCK_USSGL_ACCOUNTS.filter(acc => {
+        return ussglAccounts.filter(acc => {
             const matchesSearch = acc.accountNumber.includes(deferredSearch) || acc.description.toLowerCase().includes(deferredSearch.toLowerCase());
             const matchesCategory = categoryFilter === 'All' || acc.category === categoryFilter;
             return matchesSearch && matchesCategory;
         });
-    }, [deferredSearch, categoryFilter]);
+    }, [deferredSearch, categoryFilter, ussglAccounts]);
 
     const handleValidate = () => {
         const isValid = combo.fund === '0100' && combo.org === 'S11100';

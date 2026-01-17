@@ -1,52 +1,15 @@
-
 import React, { useState, useMemo } from 'react';
 import { HardHat, Clock, Calendar, CheckCircle2, DollarSign, Briefcase, ChevronLeft, Search, FileText, Plus, ChevronRight, User, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatting';
 import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
 import { MOCK_CDO_POOLS } from '../../constants';
+import { useLaborData } from '../../hooks/useDomainData';
+import { laborService } from '../../services/LaborDataService';
+import { Timecard } from '../../types';
 
 interface LaborCostingViewProps {
-    onSelectProject: (projectId: string) => void;
+    onSelectProject: (id: string) => void;
 }
-
-interface Timecard {
-    id: string;
-    employeeName: string;
-    employeeGrade: string;
-    payPeriod: string;
-    status: 'Draft' | 'Signed' | 'Certified' | 'Processed';
-    totalHours: number;
-    totalCost: number;
-    entries: { project: string; workItem: string; hours: number[]; rate: number }[];
-}
-
-const MOCK_TIMECARDS: Timecard[] = [
-    {
-        id: 'TC-24-05-001',
-        employeeName: 'John Smith',
-        employeeGrade: 'GS-12',
-        payPeriod: '2024-03-A',
-        status: 'Draft',
-        totalHours: 80,
-        totalCost: 6840,
-        entries: [
-            { project: '123456 - Ohio River Lock', workItem: 'Eng Services', hours: [8, 8, 8, 8, 8, 0, 0, 8, 8, 8, 8, 8, 0, 0], rate: 85.50 },
-            { project: 'CDO - Overhead', workItem: 'General Admin', hours: [1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], rate: 85.50 },
-        ]
-    },
-    {
-        id: 'TC-24-05-002',
-        employeeName: 'Jane Doe',
-        employeeGrade: 'GS-11',
-        payPeriod: '2024-03-A',
-        status: 'Signed',
-        totalHours: 80,
-        totalCost: 5200,
-        entries: [
-            { project: '998877 - Miss. River Maint', workItem: 'Field Ops', hours: [9, 9, 9, 9, 4, 0, 0, 9, 9, 9, 9, 4, 0, 0], rate: 65.00 },
-        ]
-    }
-];
 
 const TimecardDetail: React.FC<{ timecard: Timecard; onBack: () => void; onStatusUpdate: (status: Timecard['status']) => void; onSelectProject: (id: string) => void }> = ({ timecard, onBack, onStatusUpdate, onSelectProject }) => {
     const numDays = timecard.entries[0]?.hours.length || 0;
@@ -184,7 +147,7 @@ const TimecardList: React.FC<{ timecards: Timecard[]; onSelect: (tc: Timecard) =
 
 const LaborCostingView: React.FC<LaborCostingViewProps> = ({ onSelectProject }) => {
     const [view, setView] = useState<'list' | 'detail'>('list');
-    const [timecards, setTimecards] = useState<Timecard[]>(MOCK_TIMECARDS);
+    const { timecards } = useLaborData();
     const [selectedTimecard, setSelectedTimecard] = useState<Timecard | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -196,7 +159,7 @@ const LaborCostingView: React.FC<LaborCostingViewProps> = ({ onSelectProject }) 
     const handleStatusUpdate = (newStatus: Timecard['status']) => {
         if (!selectedTimecard) return;
         const updatedTC = { ...selectedTimecard, status: newStatus };
-        setTimecards(timecards.map(tc => tc.id === updatedTC.id ? updatedTC : tc));
+        laborService.updateTimecard(updatedTC);
         setSelectedTimecard(updatedTC);
         if (newStatus === 'Signed' || newStatus === 'Certified') setView('list');
     };

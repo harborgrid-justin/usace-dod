@@ -1,12 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
-import { MOCK_O_AND_M_APPROPRIATIONS } from '../../constants';
 import OandMTreeRow from '../appropriations/OandMTreeRow';
 import OandMJustificationPanel from '../appropriations/OandMJustificationPanel';
 import OandMProposalModal from '../appropriations/OandMProposalModal';
+import { useFundsData } from '../../hooks/useDomainData';
 
 const OandMAppropriationsView = () => {
-  const [data, setData] = useState(MOCK_O_AND_M_APPROPRIATIONS);
+  const { oAndM: data } = useFundsData();
   const [activeAppropId, setActiveAppropId] = useState('OMA');
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({ 'BA1': true });
   const [selectedSag, setSelectedSag] = useState<any>(null);
@@ -26,7 +26,7 @@ const OandMAppropriationsView = () => {
          </div>
          <div className="lg:col-span-4 h-full"><OandMJustificationPanel sag={selectedSag} onUpdate={setSelectedSag} /></div>
       </div>
-      {proposal && <OandMProposalModal proposal={proposal} onClose={() => setProposal(null)} onSave={() => setProposal(null)} />}
+      {proposal && <OandMProposalModal changeProposal={proposal} setChangeProposal={setProposal} onClose={() => setProposal(null)} onSave={() => setProposal(null)} />}
     </div>
   );
 };

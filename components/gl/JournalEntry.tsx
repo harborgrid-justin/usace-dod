@@ -1,16 +1,17 @@
 
 import React, { useState, useMemo, useTransition } from 'react';
 import { JournalEntryLine, GLTransaction } from '../../types';
-import { MOCK_GL_TRANSACTIONS, REMIS_THEME } from '../../constants';
+import { REMIS_THEME } from '../../constants';
 import { Plus, Send, ShieldCheck, Database, History, Search, ArrowRight, User, Landmark, Scale, FileText } from 'lucide-react';
-import { IntegrationOrchestrator } from '../../services/IntegrationOrchestrator';
 import { useToast } from '../shared/ToastContext';
 import LineEntryForm from './LineEntryForm';
 import { formatCurrencyExact } from '../../utils/formatting';
 import Badge from '../shared/Badge';
+import { useGLData } from '../../hooks/useDomainData';
+import { glService } from '../../services/GLDataService';
 
 const JournalEntry: React.FC = () => {
-    const [entries, setEntries] = useState<GLTransaction[]>(MOCK_GL_TRANSACTIONS);
+    const { transactions: entries } = useGLData();
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [lines, setLines] = useState<JournalEntryLine[]>([
@@ -57,7 +58,7 @@ const JournalEntry: React.FC = () => {
             }]
         };
 
-        setEntries([newEntry, ...entries]);
+        glService.addTransaction(newEntry);
         setIsCreating(false);
         setSelectedId(newEntry.id);
         addToast('Journal Entry Posted to USSGL.', 'success');

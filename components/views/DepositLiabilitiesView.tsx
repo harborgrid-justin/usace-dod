@@ -1,21 +1,22 @@
+
 import React, { useState, useMemo, useTransition } from 'react';
-import { Library, FileCheck, Users, Shield } from 'lucide-react';
-import { MOCK_DEPOSIT_FUNDS, MOCK_LIABILITY_TRANSACTIONS } from '../../constants';
-import { DepositFundAccount } from '../../types';
-import { AuditOutcomeBadge, QuarterlyReviewIndicator } from '../shared/StatusBadges';
+import { Library, FileCheck, Users } from 'lucide-react';
+import { QuarterlyReviewIndicator } from '../shared/StatusBadges';
 import { formatCurrencyExact } from '../../utils/formatting';
+import { useFinanceData } from '../../hooks/useDomainData';
 
 const DepositLiabilitiesView: React.FC = () => {
+  const { depositFunds, liabilityTransactions } = useFinanceData();
   const [isPending, startTransition] = useTransition();
-  const [selectedFundId, setSelectedFundId] = useState<string>(MOCK_DEPOSIT_FUNDS[0].id);
+  const [selectedFundId, setSelectedFundId] = useState<string>(depositFunds[0]?.id || '');
 
   const selectedFund = useMemo(() => 
-    MOCK_DEPOSIT_FUNDS.find(f => f.id === selectedFundId),
-  [selectedFundId]);
+    depositFunds.find(f => f.id === selectedFundId),
+  [depositFunds, selectedFundId]);
 
   const transactions = useMemo(() => {
-    return MOCK_LIABILITY_TRANSACTIONS.filter(t => t.depositFundId === selectedFundId);
-  }, [selectedFundId]);
+    return liabilityTransactions.filter(t => t.depositFundId === selectedFundId);
+  }, [liabilityTransactions, selectedFundId]);
 
   const handleFundClick = (id: string) => {
     startTransition(() => {
@@ -31,7 +32,7 @@ const DepositLiabilitiesView: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
-          {MOCK_DEPOSIT_FUNDS.map(fund => (
+          {depositFunds.map(fund => (
             <button 
               key={fund.id}
               onClick={() => handleFundClick(fund.id)}

@@ -1,9 +1,9 @@
-
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useCallback } from 'react';
 import { BrainCircuit, Search, Info, ShieldAlert } from 'lucide-react';
 import { getFinancialAdvice, performDeepAudit } from '../../services/geminiService';
-import { MOCK_DIGITAL_THREADS } from '../../constants';
-import { RemoteData } from '../../types';
+import { complianceService } from '../../services/ComplianceDataService';
+import { useService } from '../../hooks/useService';
+import { RemoteData, DigitalThread } from '../../types';
 import SentinelTerminal from './Analytics/SentinelTerminal';
 import ForensicScrubber from './Analytics/ForensicScrubber';
 
@@ -14,11 +14,14 @@ const AnalyticsView: React.FC = () => {
   const [activeDomain, setActiveDomain] = useState<'General' | 'Forensic'>('General');
   const [isPending, startTransition] = useTransition();
 
+  // Access Digital Threads from Compliance Service
+  const threads = useService<DigitalThread[]>(complianceService, useCallback(() => complianceService.getDigitalThreads(), []));
+
   const runG8Sentinel = async () => {
     setAnalysisState({ status: 'LOADING' });
     try {
       const advice = await getFinancialAdvice(query || "Identify potential ADA violations.", { 
-        threads: MOCK_DIGITAL_THREADS 
+        threads: threads 
       });
       startTransition(() => setAnalysisState({ status: 'SUCCESS', data: advice }));
     } catch (e: any) { setAnalysisState({ status: 'FAILURE', error: e }); }
@@ -27,7 +30,7 @@ const AnalyticsView: React.FC = () => {
   const runDeepAudit = async () => {
     setAuditState({ status: 'LOADING' });
     try {
-        const result = await performDeepAudit('Real Property', MOCK_DIGITAL_THREADS);
+        const result = await performDeepAudit('Real Property', threads);
         startTransition(() => setAuditState({ status: 'SUCCESS', data: result }));
     } catch (e: any) { setAuditState({ status: 'FAILURE', error: e }); }
   };

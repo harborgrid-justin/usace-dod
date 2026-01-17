@@ -1,22 +1,23 @@
+
 import React, { useState, useMemo, useTransition, useCallback } from 'react';
-import { Wallet, CheckCircle, AlertTriangle, FileText, Calendar, Shield } from 'lucide-react';
-import { MOCK_CIHO_ACCOUNTS, MOCK_CIHO_TRANSACTIONS } from '../../constants';
-import { CIHOAccount, NavigationTab } from '../../types';
-import { AuditOutcomeBadge } from '../shared/StatusBadges';
+import { Wallet, CheckCircle, FileText, Calendar } from 'lucide-react';
+import { NavigationTab } from '../../types';
 import { formatCurrencyExact } from '../../utils/formatting';
+import { useFinanceData } from '../../hooks/useDomainData';
+import { financeService } from '../../services/FinanceDataService';
 
 interface CIHOViewProps {
     setActiveTab: (tab: NavigationTab) => void;
 }
 
 const CIHOView: React.FC<CIHOViewProps> = ({ setActiveTab }) => {
+    const { cihoAccounts, cihoTransactions } = useFinanceData();
     const [isPending, startTransition] = useTransition();
-    const [accounts, setAccounts] = useState<CIHOAccount[]>(MOCK_CIHO_ACCOUNTS);
-    const [selectedId, setSelectedId] = useState<string>(accounts[0].id);
+    const [selectedId, setSelectedId] = useState<string>(cihoAccounts[0]?.id || '');
 
     const selectedAccount = useMemo(() => 
-        accounts.find(a => a.id === selectedId), 
-    [accounts, selectedId]);
+        cihoAccounts.find(a => a.id === selectedId), 
+    [cihoAccounts, selectedId]);
 
     const handleAccountClick = useCallback((id: string) => {
         startTransition(() => {
@@ -25,15 +26,17 @@ const CIHOView: React.FC<CIHOViewProps> = ({ setActiveTab }) => {
     }, []);
 
     const transactions = useMemo(() => 
-        MOCK_CIHO_TRANSACTIONS.filter(t => t.cihoAccountId === selectedId),
-    [selectedId]);
+        cihoTransactions.filter(t => t.cihoAccountId === selectedId),
+    [cihoTransactions, selectedId]);
 
     const handleReconcile = (accountId: string) => {
-        setAccounts(prev => prev.map(acc => 
-            acc.id === accountId 
-            ? { ...acc, lastReconciliationDate: new Date().toISOString().split('T')[0] } 
-            : acc
-        ));
+        const account = cihoAccounts.find(a => a.id === accountId);
+        if (account) {
+            financeService.updateCihoAccount({
+                ...account,
+                lastReconciliationDate: new Date().toISOString().split('T')[0]
+            });
+        }
     };
 
     return (
@@ -44,7 +47,7 @@ const CIHOView: React.FC<CIHOViewProps> = ({ setActiveTab }) => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
                 <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
-                    {accounts.map(acc => (
+                    {cihoAccounts.map(acc => (
                         <button 
                             key={acc.id} 
                             onClick={() => handleAccountClick(acc.id)}

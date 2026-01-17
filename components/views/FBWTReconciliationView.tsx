@@ -1,11 +1,12 @@
 
 import React, { useMemo, useTransition, useCallback } from 'react';
-import { Scale, CheckCircle, AlertCircle, XCircle, Users, FileDigit } from 'lucide-react';
-import { MOCK_FBWT_CASES, MOCK_SCORECARD_DATA, MOCK_FBWT_TRANSACTIONS, REMIS_THEME } from '../../constants';
+import { Scale, CheckCircle, AlertCircle, XCircle, Users } from 'lucide-react';
+import { MOCK_SCORECARD_DATA, REMIS_THEME } from '../../constants';
 import { ScorecardStatus } from '../../types';
 import { ReconciliationStatusBadge } from '../shared/StatusBadges';
 import { formatCurrencyExact } from '../../utils/formatting';
 import Badge from '../shared/Badge';
+import { useFinanceData } from '../../hooks/useDomainData';
 
 interface FBWTReconciliationViewProps {
   onSelectThread: (threadId: string) => void;
@@ -31,6 +32,7 @@ const ScorecardCard = React.memo(({ status, metric, details }: { status: Scoreca
 });
 
 const FBWTReconciliationView: React.FC<FBWTReconciliationViewProps> = ({ onSelectThread }) => {
+  const { fbwtCases, fbwtTransactions } = useFinanceData();
   const [isPending, startTransition] = useTransition();
 
   const handleThreadClick = useCallback((id: string) => {
@@ -38,8 +40,6 @@ const FBWTReconciliationView: React.FC<FBWTReconciliationViewProps> = ({ onSelec
         onSelectThread(id);
     });
   }, [onSelectThread]);
-
-  const cases = useMemo(() => MOCK_FBWT_CASES, []);
 
   return (
     <div className="p-6 sm:p-8 space-y-8 animate-in h-full overflow-y-auto custom-scrollbar pb-8 bg-zinc-50/50">
@@ -78,7 +78,7 @@ const FBWTReconciliationView: React.FC<FBWTReconciliationViewProps> = ({ onSelec
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-50">
-                            {cases.map(c => (
+                            {fbwtCases.map(c => (
                                 <tr 
                                     key={c.id} 
                                     className="hover:bg-zinc-50 transition-colors cursor-pointer group"
@@ -90,7 +90,7 @@ const FBWTReconciliationView: React.FC<FBWTReconciliationViewProps> = ({ onSelec
                                     </td>
                                     <td className="px-6 py-4 text-xs font-mono text-zinc-900 font-bold text-right">{formatCurrencyExact(c.amount)}</td>
                                     <td className="px-6 py-4 text-xs font-mono text-center text-zinc-500">{c.age}d</td>
-                                    <td className="px-6 py-4"><ReconciliationStatusBadge status={c.status} /></td>
+                                    <td className="px-6 py-4"><ReconciliationStatusBadge status={c.status as any} /></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -122,7 +122,7 @@ const FBWTReconciliationView: React.FC<FBWTReconciliationViewProps> = ({ onSelec
                 <div className={`${REMIS_THEME.enterprise.container} p-6 shadow-sm`}>
                      <h3 className="text-[10px] font-bold text-zinc-900 uppercase tracking-[0.2em] mb-6">Recent Ledger Events</h3>
                      <div className="space-y-3">
-                        {MOCK_FBWT_TRANSACTIONS.map(tx => (
+                        {fbwtTransactions.map(tx => (
                             <div key={tx.id} className="p-4 bg-zinc-50 border border-zinc-100 rounded-xl hover:border-zinc-300 transition-all group">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-[10px] font-bold text-zinc-800 uppercase tracking-tight group-hover:text-rose-700 transition-colors">{tx.type}</span>

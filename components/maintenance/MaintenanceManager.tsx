@@ -1,15 +1,18 @@
+
 import React, { useState } from 'react';
-import { ClipboardList, Wrench, CalendarClock, Package, Book, ArrowLeft } from 'lucide-react';
+import { ClipboardList, Wrench, CalendarClock, Package, Book } from 'lucide-react';
 import RequestHub from './modules/RequestHub';
 import WorkOrderTracker from './modules/WorkOrderTracker';
 import PMScheduleEngine from './modules/PMScheduleEngine';
 import InventoryConsole from './modules/InventoryConsole';
 import JobPlanLibrary from './modules/JobPlanLibrary';
 import WorkOrderDetailModal from './WorkOrderDetailModal';
-import { MOCK_INVENTORY, MOCK_VENDORS } from '../../constants';
 import { WorkOrder } from '../../types';
+import { useMaintenanceData } from '../../hooks/useDomainData';
+import { maintenanceService } from '../../services/MaintenanceDataService';
 
 const MaintenanceManager: React.FC = () => {
+    const { workOrders, inventory, vendors } = useMaintenanceData();
     const [activeTab, setActiveTab] = useState('WorkOrders');
     const [viewState, setViewState] = useState<'DASHBOARD' | 'DETAIL'>('DASHBOARD');
     const [selectedWO, setSelectedWO] = useState<WorkOrder | null>(null);
@@ -28,15 +31,22 @@ const MaintenanceManager: React.FC = () => {
         setViewState('DASHBOARD');
         setSelectedWO(null);
     };
+    
+    const handleUpdateWO = (updated: WorkOrder, updateInventory: boolean = false) => {
+        maintenanceService.updateWorkOrder(updated);
+        // If inventory was used, we assume WorkOrderDetailModal handled inventory validation
+        // In a real app, the service would handle transaction logic.
+        handleBack();
+    };
 
     if (viewState === 'DETAIL' && selectedWO) {
         return (
             <WorkOrderDetailModal 
                 workOrder={selectedWO} 
-                inventory={MOCK_INVENTORY} 
-                vendors={MOCK_VENDORS} 
+                inventory={inventory} 
+                vendors={vendors} 
                 onClose={handleBack} 
-                onUpdate={handleBack} 
+                onUpdate={handleUpdateWO} 
             />
         );
     }

@@ -1,25 +1,24 @@
 
 import React, { useState, useMemo, useTransition } from 'react';
-import { Globe, Users, FileText, Search, Plus, ShieldAlert, Activity, Navigation, MapPin } from 'lucide-react';
-import { MOCK_CONTINGENCY_OPERATIONS } from '../../constants';
+import { Globe, Search, Plus, ShieldAlert, Activity, Navigation, MapPin } from 'lucide-react';
 import OperationDetailPanel from '../contingency/OperationDetailPanel';
-import EmptyState from '../shared/EmptyState';
-import Badge from '../shared/Badge';
+import { useFinanceData } from '../../hooks/useDomainData';
 
 const ContingencyOpsView: React.FC<any> = ({ selectedContingencyOpId, setSelectedContingencyOpId, onSelectThread }) => {
+    const { contingencyOps } = useFinanceData();
     const [searchTerm, setSearchTerm] = useState('');
     const [isPending, startTransition] = useTransition();
     
     const filteredOps = useMemo(() => 
-        MOCK_CONTINGENCY_OPERATIONS.filter(op => 
+        contingencyOps.filter(op => 
             op.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
             op.id.toLowerCase().includes(searchTerm.toLowerCase())
         ),
-    [searchTerm]);
+    [contingencyOps, searchTerm]);
 
     const selectedOp = useMemo(() => 
-        MOCK_CONTINGENCY_OPERATIONS.find(op => op.id === selectedContingencyOpId), 
-    [selectedContingencyOpId]);
+        contingencyOps.find(op => op.id === selectedContingencyOpId), 
+    [contingencyOps, selectedContingencyOpId]);
 
     const handleSelectOp = (id: string) => {
         startTransition(() => {

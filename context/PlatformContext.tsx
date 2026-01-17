@@ -8,6 +8,9 @@ import { expenseDisburseService } from '../services/ExpenseDisburseDataService';
 import { travelService } from '../services/TravelDataService';
 import { cwaService } from '../services/CivilWorksDataService';
 import { costTransferService } from '../services/CostTransferDataService';
+import { complianceService } from '../services/ComplianceDataService';
+import { financeService } from '../services/FinanceDataService';
+import { erpService } from '../services/ERPDataService';
 import { NavigationTab, AgencyContext, UserRole } from '../types';
 
 interface SystemStats {
@@ -32,6 +35,9 @@ interface PlatformContextType {
         travel: typeof travelService;
         cwa: typeof cwaService;
         costTransfer: typeof costTransferService;
+        compliance: typeof complianceService;
+        finance: typeof financeService;
+        erp: typeof erpService;
     };
     ui: {
         activeTab: NavigationTab;
@@ -97,7 +103,10 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             expense: expenseDisburseService,
             travel: travelService,
             cwa: cwaService,
-            costTransfer: costTransferService
+            costTransfer: costTransferService,
+            compliance: complianceService,
+            finance: financeService,
+            erp: erpService
         },
         ui: {
             activeTab, setActiveTab,

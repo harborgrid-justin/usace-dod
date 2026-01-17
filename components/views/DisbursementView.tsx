@@ -1,18 +1,21 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { ArrowRightLeft, ExternalLink, AlertOctagon, Landmark, Database, ShieldCheck, Activity } from 'lucide-react';
-import { MOCK_DIGITAL_THREADS, MOCK_BUSINESS_RULES } from '../../constants';
+import { complianceService } from '../../services/ComplianceDataService';
+import { useService } from '../../hooks/useService';
 import { evaluateRules } from '../../utils/rulesEngine';
-import { BusinessRule } from '../../types';
+import { BusinessRule, DigitalThread } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
 
 const DisbursementView: React.FC = () => {
+  const threads = useService<DigitalThread[]>(complianceService, useCallback(() => complianceService.getDigitalThreads(), []));
+  const rules = useService<BusinessRule[]>(complianceService, useCallback(() => complianceService.getBusinessRules(), []));
+
   const totals = useMemo(() => {
-    return MOCK_DIGITAL_THREADS.reduce((acc, t) => ({
+    return threads.reduce((acc, t) => ({
         settled: acc.settled + (t.eftStatus === 'Settled' ? t.disbursementAmt : 0),
         pending: acc.pending + (t.eftStatus === 'Pending' ? t.disbursementAmt : 0)
     }), { settled: 0, pending: 0 });
-  }, []);
+  }, [threads]);
 
   return (
     <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col bg-zinc-50/30 overflow-hidden">
@@ -61,9 +64,9 @@ const DisbursementView: React.FC = () => {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-50">
-                    {MOCK_DIGITAL_THREADS.map(t => {
+                    {threads.map(t => {
                         const ppaContext = { invoiceDaysPending: (t as any).invoiceDaysPending || 0 };
-                        const ppaRules: BusinessRule[] = MOCK_BUSINESS_RULES.filter(r => r.code === 'PAY-002');
+                        const ppaRules: BusinessRule[] = rules.filter(r => r.code === 'PAY-002');
                         const ppaViolation = evaluateRules(ppaRules, ppaContext).find(r => !r.passed);
 
                         return (

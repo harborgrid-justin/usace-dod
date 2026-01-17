@@ -14,7 +14,7 @@ interface ErrorBoundaryState {
  * ErrorBoundary
  * Catch-all domain for handling runtime exceptions with technical precision.
  */
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = {
     hasError: false,
     errorMessage: ''

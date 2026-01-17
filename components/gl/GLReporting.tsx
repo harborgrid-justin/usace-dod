@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
-import { Download, ExternalLink, FilePieChart, FileText, Landmark, Scale, ShieldCheck, Database, LayoutGrid, Calendar, Filter } from 'lucide-react';
+import { Download, ExternalLink, FilePieChart, FileText, Landmark, Scale, ShieldCheck, LayoutGrid, Filter } from 'lucide-react';
 import ReportPreviewModal from './ReportPreviewModal';
-import { MOCK_GL_TRANSACTIONS } from '../../constants';
+import { useGLData } from '../../hooks/useDomainData';
 
 type ReportType = 'Trial Balance' | 'Balance Sheet' | 'SBR';
 
@@ -31,6 +31,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ title, desc, icon: Icon, action
 );
 
 const GLReporting: React.FC = () => {
+    const { transactions } = useGLData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedReport, setSelectedReport] = useState<ReportType | null>(null);
     const [activePeriod, setActivePeriod] = useState('FY24-Q2');
@@ -131,7 +132,7 @@ const GLReporting: React.FC = () => {
                 <ReportPreviewModal 
                     reportType={selectedReport}
                     onClose={() => {setIsModalOpen(false); setSelectedReport(null);}}
-                    data={{ transactions: MOCK_GL_TRANSACTIONS }}
+                    data={{ transactions }}
                 />
             )}
         </div>

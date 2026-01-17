@@ -1,3 +1,4 @@
+
 import React, { useState, useTransition, useCallback, useMemo } from 'react';
 import { Users, LayoutDashboard, Brain, BarChart3, Settings, UserCircle2 } from 'lucide-react';
 import WWPDashboard from '../wwp/WWPDashboard';
@@ -9,21 +10,15 @@ import PersonnelRoster from '../wwp/PersonnelRoster';
 import {
     WorkforceScenario, WorkloadItem, WorkforcePlan, LaborRate, LaborStandard
 } from '../../types';
-
-import {
-    MOCK_WWP_SCENARIOS, MOCK_WWP_WORKLOAD_ITEMS, MOCK_WWP_WORKFORCE_PLANS, MOCK_WWP_LABOR_RATES, MOCK_WWP_LABOR_STANDARDS
-} from '../../constants';
+import { useWWPData } from '../../hooks/useDomainData';
+import { wwpService } from '../../services/WWPDataService';
 
 const WWPView: React.FC<{ onSelectProject: (id: string) => void }> = ({ onSelectProject }) => {
     const [activeTab, setActiveTab] = useState<'Dashboard' | 'Planner' | 'HR' | 'Reports' | 'Config'>('Dashboard');
     const [isPending, startTransition] = useTransition();
 
-    // Standardized States
-    const [scenarios, setScenarios] = useState<WorkforceScenario[]>(MOCK_WWP_SCENARIOS);
-    const [workloadItems, setWorkloadItems] = useState<WorkloadItem[]>(MOCK_WWP_WORKLOAD_ITEMS);
-    const [workforcePlans, setWorkforcePlans] = useState<WorkforcePlan[]>(MOCK_WWP_WORKFORCE_PLANS);
-    const [laborRates, setLaborRates] = useState<LaborRate[]>(MOCK_WWP_LABOR_RATES);
-    const [laborStandards, setLaborStandards] = useState<LaborStandard[]>(MOCK_WWP_LABOR_STANDARDS);
+    // Standardized States from Hook
+    const { scenarios, workloadItems, workforcePlans, laborRates, laborStandards } = useWWPData();
 
     const handleTabChange = useCallback((id: string) => {
         startTransition(() => {
@@ -32,19 +27,19 @@ const WWPView: React.FC<{ onSelectProject: (id: string) => void }> = ({ onSelect
     }, []);
 
     const handleUpdateWorkload = useCallback((updatedItem: WorkloadItem) => {
-        setWorkloadItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
+        wwpService.updateWorkloadItem(updatedItem);
     }, []);
 
     const handleUpdateWorkforce = useCallback((updatedPlan: WorkforcePlan) => {
-        setWorkforcePlans(prev => prev.map(p => p.id === updatedPlan.id ? updatedPlan : p));
+        wwpService.updateWorkforcePlan(updatedPlan);
     }, []);
 
     const handleUpdateScenario = useCallback((updatedScenario: WorkforceScenario) => {
-        setScenarios(prev => prev.map(s => s.id === updatedScenario.id ? updatedScenario : s));
+        wwpService.updateScenario(updatedScenario);
     }, []);
     
     const handleCreateScenario = useCallback((newScenario: WorkforceScenario) => {
-        setScenarios(prev => [...prev, newScenario]);
+        wwpService.addScenario(newScenario);
     }, []);
 
     const renderContent = () => {

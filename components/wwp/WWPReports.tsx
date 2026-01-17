@@ -4,10 +4,12 @@ import {
     FileText, Download, Printer, ChevronRight, 
     Table as TableIcon
 } from 'lucide-react';
-import { MOCK_WWP_WORKFORCE_PLANS } from '../../constants';
+import { useWWPData } from '../../hooks/useDomainData';
 import { exportToCSV } from '../../utils/formatting';
 
 const WWPReports: React.FC = () => {
+    const { workforcePlans } = useWWPData();
+    
     const reports = [
         { id: 'R1', name: 'Manpower Requirement Summary', type: 'Strategic', status: 'Available', desc: 'Consolidated demand by labor category and business line.' },
         { id: 'R2', name: 'FTE Funding Mix (Baseline)', type: 'Financial', status: 'Available', desc: 'Ratio of funded vs unfunded authorizations across all districts.' },
@@ -20,7 +22,7 @@ const WWPReports: React.FC = () => {
     };
 
     const handleExport = () => {
-        const data = MOCK_WWP_WORKFORCE_PLANS.flatMap(p => p.entries.map(e => ({
+        const data = workforcePlans.flatMap(p => p.entries.map(e => ({
             Org: p.organization,
             Area: p.functionalArea,
             Category: e.laborCategory,
@@ -104,7 +106,7 @@ const WWPReports: React.FC = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="text-[11px]">
-                                            {MOCK_WWP_WORKFORCE_PLANS[0].entries.map(e => (
+                                            {workforcePlans[0]?.entries.map(e => (
                                                 <tr key={e.laborCategory}>
                                                     <td className="border border-zinc-300 p-2">{e.laborCategory}</td>
                                                     <td className="border border-zinc-300 p-2 text-right font-mono">{(e.fundedFTE + e.unfundedFTE + 0.5).toFixed(1)}</td>

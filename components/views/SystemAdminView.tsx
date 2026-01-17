@@ -1,13 +1,12 @@
 
-import React, { useState } from 'react';
-// Added missing Clock import from lucide-react
-import { UserCheck, Shield, Key, CheckCircle, XCircle, Search, Plus, User, FileText, ChevronLeft, MoreHorizontal, Settings, FileCheck, Landmark, ShieldCheck, Database, Save, Fingerprint, Clock, ShieldAlert as LucideShieldAlert } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatting';
+import React, { useState, useTransition } from 'react';
+import { UserCheck, Shield, Key, Search, Plus, Settings, FileCheck, Database, RefreshCcw, Lock, User, MoreHorizontal, History, ShieldCheck, Fingerprint, XCircle, Send, Clock, ShieldAlert as LucideShieldAlert } from 'lucide-react';
 import Modal from '../shared/Modal';
 import Badge from '../shared/Badge';
-
-// Types & Mock Data
-interface UserRecord { id: string; name: string; email: string; role: string; org: string; status: 'Active' | 'Locked' }
+import { useToast } from '../shared/ToastContext';
+import { useSystemData } from '../../hooks/useDomainData';
+import { systemService } from '../../services/SystemDataService';
+import { formatCurrency } from '../../utils/formatting';
 
 interface ApprovalTransaction {
     id: string;
@@ -18,39 +17,40 @@ interface ApprovalTransaction {
     status: string;
 }
 
-const MOCK_USERS: UserRecord[] = [
-    { id: 'U-001', name: 'Richards, Alan', email: 'alan.richards@usace.army.mil', role: 'HQ_BUDGET_OFFICER', org: 'USACE-HQ', status: 'Active' },
-    { id: 'U-002', name: 'Henderson, Sarah', email: 's.henderson@usace.army.mil', role: 'RE_SPECIALIST', org: 'LRL-RE', status: 'Active' },
-];
-
 const MOCK_AX_QUEUE: ApprovalTransaction[] = [
     { id: 'PR-24-009', type: 'Purchase Request', amount: 12500, requestor: 'LRL-OPS', date: '2024-03-15', status: 'Pending Cert' },
     { id: 'OBL-9912', type: 'Obligation', amount: 450000, requestor: 'LRL-CT', date: '2024-03-14', status: 'Pending Sig' },
 ];
 
+interface UserRecord { id: string; name: string; email: string; role: string; org: string; status: 'Active' | 'Locked' }
+interface AdminLog { id: string; action: string; user: string; target: string; date: string; }
+
 const SystemAdminView = () => {
-    const [activeTab, setActiveTab] = useState<'AX' | 'Users' | 'Security' | 'Systems'>('AX');
-    
-    // State management
-    const [users, setUsers] = useState<UserRecord[]>(MOCK_USERS);
+    // Explicit cast for useSystemData since types are private in service
+    const { users, logs } = useSystemData() as { users: UserRecord[], logs: AdminLog[] };
+    const [activeTab, setActiveTab] = useState<'AX' | 'Users' | 'Security' | 'Integration'>('AX');
+    const [showUserForm, setShowUserForm] = useState(false);
     const [axQueue, setAxQueue] = useState<ApprovalTransaction[]>(MOCK_AX_QUEUE);
     const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
-    const [showUserForm, setShowUserForm] = useState(false);
+    const { addToast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     const selectedTx = axQueue.find(t => t.id === selectedTxId);
 
-    const handleOnboardUser = (u: UserRecord) => {
-        setUsers([u, ...users]);
+    const handleOnboardUser = (u: any) => {
+        systemService.addUser(u);
         setShowUserForm(false);
+        addToast(`Provisioned access for ${u.name}.`, 'success');
     };
 
     const handleApproveTx = (id: string) => {
         setAxQueue(axQueue.filter(item => item.id !== id));
         setSelectedTxId(null);
+        addToast(`Transaction ${id} approved and executed.`, 'success');
     };
 
     return (
-        <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col max-w-[1600px] mx-auto">
+        <div className="p-4 sm:p-8 space-y-6 animate-in h-full flex flex-col max-w-[1600px] mx-auto overflow-hidden">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-tight flex items-center gap-3">
@@ -59,14 +59,19 @@ const SystemAdminView = () => {
                     <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em] mt-1.5">Approve Transactions (AX) • Federated Identity • Crypto-Security</p>
                 </div>
                 <div className="flex bg-zinc-100 p-1 rounded-xl shadow-inner">
-                    {['AX', 'Users', 'Security'].map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab as any)} className={`px-5 py-2 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white shadow-sm text-rose-700 border border-rose-100' : 'text-zinc-500 hover:text-zinc-800'}`}>{tab === 'AX' ? 'Approval Center' : tab}</button>
+                    {['AX', 'Users', 'Security', 'Integration'].map(tab => (
+                        <button 
+                            key={tab} 
+                            onClick={() => startTransition(() => setActiveTab(tab as any))} 
+                            className={`px-5 py-2 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white shadow-sm text-rose-700 border border-rose-100' : 'text-zinc-500 hover:text-zinc-800'}`}
+                        >
+                            {tab === 'AX' ? 'Approval Center' : tab}
+                        </button>
                     ))}
                 </div>
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 min-h-0 bg-white border border-zinc-200 rounded-[32px] shadow-sm flex flex-col overflow-hidden relative">
+            <div className={`flex-1 min-h-0 bg-white border border-zinc-200 rounded-[32px] shadow-sm flex flex-col overflow-hidden relative transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}>
                 
                 {activeTab === 'AX' && (
                     <div className="flex-1 flex flex-col min-h-0">
@@ -111,9 +116,9 @@ const SystemAdminView = () => {
                 {activeTab === 'Users' && (
                     <div className="flex-1 flex flex-col min-h-0">
                         <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
-                            <div className="relative group">
+                            <div className="relative group w-full sm:w-80">
                                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-hover:text-zinc-600 transition-colors"/>
-                                <input type="text" placeholder="Search by name or email..." className="pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-xl text-xs focus:outline-none focus:border-rose-400 w-80 transition-all"/>
+                                <input type="text" placeholder="Search by name or email..." className="pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-xl text-xs w-full focus:outline-none focus:border-rose-400 transition-all"/>
                             </div>
                             <button 
                                 onClick={() => setShowUserForm(true)}
@@ -146,7 +151,7 @@ const SystemAdminView = () => {
                                             </td>
                                             <td className="p-5 text-[10px] font-bold font-mono text-zinc-600 bg-zinc-50/50 rounded">{user.role}</td>
                                             <td className="p-5 text-xs font-bold text-zinc-700">{user.org}</td>
-                                            <td className="p-5 text-center"><Badge variant="success">{user.status}</Badge></td>
+                                            <td className="p-5 text-center"><Badge variant={user.status === 'Active' ? 'success' : 'neutral'}>{user.status}</Badge></td>
                                             <td className="p-5 text-right"><button className="p-2 text-zinc-300 hover:text-zinc-600 transition-colors"><MoreHorizontal size={18}/></button></td>
                                         </tr>
                                     ))}
@@ -159,16 +164,16 @@ const SystemAdminView = () => {
                 {activeTab === 'Security' && (
                     <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 animate-in fade-in h-full overflow-y-auto custom-scrollbar">
                         <div className="bg-zinc-900 rounded-[40px] p-10 text-white shadow-2xl relative overflow-hidden border border-zinc-800 flex flex-col justify-between">
-                            <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12"><ShieldCheck size={160} /></div>
-                            <div>
-                                <h4 className="text-xs font-bold uppercase tracking-[0.2em] mb-10 flex items-center gap-3 text-emerald-400"><Fingerprint size={18}/> Digital Signature Protocol</h4>
+                             <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12"><Lock size={160} /></div>
+                             <div>
+                                <h4 className="text-sm font-bold uppercase tracking-[0.2em] mb-10 flex items-center gap-3 text-emerald-400"><Fingerprint size={18}/> Digital Signature Protocol</h4>
                                 <div className="p-6 bg-white/5 border border-white/10 rounded-3xl flex items-center gap-6 mb-10">
                                     <div className="p-4 bg-emerald-500/10 text-emerald-500 rounded-2xl border border-emerald-500/20"><ShieldCheck size={32} /></div>
                                     <div><p className="text-base font-bold text-white">X.509 Certificate Valid</p><p className="text-xs text-zinc-500 mt-1 uppercase tracking-widest">Expires: 2025-10-15</p></div>
                                 </div>
                                 <p className="text-xs text-zinc-400 leading-relaxed font-medium">Federated identity is authenticated via D-AFMP Multi-Factor Gateway. PKI signatures are enforced on all 4801/4901 series transactions.</p>
                             </div>
-                            <button className="w-full mt-10 py-4 bg-white text-zinc-900 rounded-3xl text-xs font-bold uppercase tracking-[0.3em] hover:bg-zinc-100 shadow-2xl active:scale-95 transition-all">Rotate Keys</button>
+                            <button className="w-full mt-10 py-4 bg-white text-zinc-900 rounded-3xl text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-zinc-100 shadow-2xl active:scale-95 transition-all">Rotate Keys</button>
                         </div>
                         <div className="space-y-8">
                              <div className="bg-white border border-zinc-200 rounded-[40px] p-8 shadow-sm">
@@ -193,30 +198,41 @@ const SystemAdminView = () => {
                         </div>
                     </div>
                 )}
+                
+                {activeTab === 'Integration' && (
+                     <div className="p-20 text-center flex flex-col items-center justify-center gap-8 h-full bg-zinc-50/20">
+                        <div className="p-12 bg-zinc-900 text-white rounded-[50px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] animate-pulse relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent" />
+                            <RefreshCcw size={64} className="relative z-10"/>
+                        </div>
+                        <div>
+                            <h3 className="text-3xl font-bold text-zinc-900 tracking-tighter">Federated Sync active</h3>
+                            <p className="text-sm text-zinc-500 max-w-sm mx-auto mt-4 leading-relaxed font-medium">
+                                Maintaining authoritative OData channels between <span className="text-emerald-700 font-bold">REMIS 2.0</span> and 
+                                <span className="text-rose-700 font-bold ml-1">GFEBS (ECC 6.0)</span>.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-xl">
+                            <div className="p-6 bg-white border border-zinc-200 rounded-[32px] shadow-sm">
+                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Interface Latency</p>
+                                <p className="text-3xl font-mono font-bold text-emerald-600">0.42ms</p>
+                            </div>
+                            <div className="p-6 bg-white border border-zinc-200 rounded-[32px] shadow-sm">
+                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Daily Payload</p>
+                                <p className="text-3xl font-mono font-bold text-zinc-900">4,201 <span className="text-xs uppercase font-sans text-zinc-400">TX</span></p>
+                            </div>
+                        </div>
+                        <button className="px-10 py-3 bg-zinc-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-xl transition-all active:scale-95">Restart IDOC Listener</button>
+                     </div>
+                )}
             </div>
 
-            {/* Approval Detail Workspace */}
             {selectedTx && (
                 <Modal title={`Approval Directive: ${selectedTx.id}`} subtitle={`${selectedTx.type} Evaluation`} onClose={() => setSelectedTxId(null)}>
                     <div className="space-y-12 animate-in slide-in-from-right-4">
                         <div className="flex justify-between items-start">
                             <div><h3 className="text-4xl font-bold text-zinc-900 tracking-tighter leading-none mb-2">{selectedTx.type}</h3><p className="text-sm text-zinc-500 font-bold uppercase tracking-widest">Originator: {selectedTx.requestor} • FY 2024</p></div>
                             <div className="text-right"><p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Impact Value</p><p className="text-3xl font-mono font-bold text-zinc-900 tracking-tighter">{formatCurrency(selectedTx.amount)}</p></div>
-                        </div>
-                        <div className="bg-zinc-50 border border-zinc-200 rounded-[40px] p-10 font-mono text-xs leading-loose shadow-inner min-h-[400px] relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-700 to-rose-400" />
-                            <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.3em] mb-10">Electronic Data Interchange (EDI) Snapshot</h4>
-                            <div className="space-y-4 text-zinc-600">
-                                <p>HEADER_DOC_NUM: {selectedTx.id}</p>
-                                <p>POSTING_DATE: {selectedTx.date}</p>
-                                <p>WF_STAGE: {selectedTx.status}</p>
-                                <p className="pt-4 border-t border-zinc-200 border-dashed">-- ITEMIZATION 001 --</p>
-                                <p>DESC: CONTRACTUAL SERVICES (NON-PERSONAL)</p>
-                                <p>MAGNITUDE: {formatCurrency(selectedTx.amount)}</p>
-                                <p>USSGL_ACCT: 480100 (UDO)</p>
-                                <p>FUND: 21 2020 0000</p>
-                                <p className="pt-4">-- END TRANSMISSION --</p>
-                            </div>
                         </div>
                         <div className="pt-10 border-t border-zinc-100 flex justify-end gap-6">
                             <button onClick={() => setSelectedTxId(null)} className="px-8 py-3 border border-zinc-200 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:bg-zinc-50">Return to Queue</button>
@@ -227,7 +243,6 @@ const SystemAdminView = () => {
                 </Modal>
             )}
 
-            {/* User Onboarding Workspace */}
             {showUserForm && (
                 <Modal title="Provision Federated Identity" subtitle="System User Onboarding" onClose={() => setShowUserForm(false)}>
                     <UserOnboardingForm onCancel={() => setShowUserForm(false)} onSubmit={handleOnboardUser} />
@@ -238,33 +253,56 @@ const SystemAdminView = () => {
 };
 
 const UserOnboardingForm = ({ onCancel, onSubmit }: { onCancel: () => void, onSubmit: (u: UserRecord) => void }) => {
-    const [u, setU] = useState<Partial<UserRecord>>({ role: 'Budget Analyst', org: 'USACE-LRL', status: 'Active' });
+    const [u, setU] = useState<Partial<UserRecord>>({ role: 'REMIS_APPRAISER', org: 'USACE-LRL', status: 'Active' });
     return (
-        <div className="space-y-10 animate-in slide-in-from-bottom-4">
-            <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-3xl flex gap-5 items-start">
-                <ShieldCheck size={24} className="text-emerald-600 mt-1 shrink-0" />
-                <div><p className="text-xs font-bold text-emerald-900 uppercase">IAM Certification</p><p className="text-[11px] text-emerald-700 mt-1 font-medium">Provisioning a new user requires affirmation of CAC-based authentication protocols and multi-agency role mapping.</p></div>
+        <div className="space-y-10 animate-in slide-in-from-bottom-6">
+            <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-[32px] flex gap-6 items-start shadow-inner">
+                <div className="p-3 bg-white rounded-2xl text-emerald-600 shadow-sm"><ShieldCheck size={28} /></div>
+                <div>
+                    <p className="text-sm font-bold text-emerald-900 uppercase tracking-tight">Identity Certification</p>
+                    <p className="text-[11px] text-emerald-700 mt-1 font-medium leading-relaxed">
+                        Provisioning a new user requires validation of CAC-based credentials. Role assignments are derived from standard USACE personnel data schemas.
+                    </p>
+                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-8">
-                    <div><label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 mb-2 block">Full Legal Name</label><input type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-sm font-bold bg-zinc-50/50 focus:bg-white focus:border-rose-400 outline-none" onChange={e => setU({...u, name: e.target.value})} required /></div>
-                    <div><label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 mb-2 block">Enterprise Email (.mil)</label><input type="email" className="w-full border border-zinc-200 rounded-2xl p-4 text-sm font-medium bg-zinc-50/50 focus:bg-white focus:border-rose-400 outline-none" onChange={e => setU({...u, email: e.target.value})} required /></div>
+                    <div>
+                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 mb-2 block">Full Legal Identity</label>
+                        <input type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-sm font-bold bg-zinc-50/50 focus:bg-white focus:border-emerald-500 outline-none transition-all" onChange={e => setU({...u, name: e.target.value})} required placeholder="e.g. DOE, JOHN A" />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 mb-2 block">Enterprise Mail (.mil)</label>
+                        <input type="email" className="w-full border border-zinc-200 rounded-2xl p-4 text-sm font-medium bg-zinc-50/50 focus:bg-white focus:border-emerald-500 outline-none transition-all" onChange={e => setU({...u, email: e.target.value})} required placeholder="john.a.doe@usace.army.mil" />
+                    </div>
                 </div>
                 <div className="space-y-8">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div><label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 mb-2 block">Role Allocation</label><select className="w-full border border-zinc-200 rounded-2xl p-4 text-xs font-bold bg-zinc-50/50 focus:bg-white outline-none" onChange={e => setU({...u, role: e.target.value})}><option>Budget Analyst</option><option>Approving Official</option><option>System Administrator</option></select></div>
-                        <div><label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 mb-2 block">Parent Command</label><input type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-xs font-bold bg-zinc-50/50" value={u.org} readOnly /></div>
+                    <div className="grid grid-cols-2 gap-6">
+                        <div>
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 mb-2 block">Authoritative Role</label>
+                            <select className="w-full border border-zinc-200 rounded-2xl p-4 text-xs font-bold bg-zinc-50/50 focus:bg-white outline-none transition-all" onChange={e => setU({...u, role: e.target.value})}>
+                                <option value="REMIS_APPRAISER">REMIS_APPRAISER</option>
+                                <option value="REMIS_REVIEWER">REMIS_REVIEWER</option>
+                                <option value="REMIS_ADMIN">REMIS_ADMIN</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 mb-2 block">Assigned Command</label>
+                            <input type="text" className="w-full border border-zinc-200 rounded-2xl p-4 text-xs font-bold bg-zinc-50/50" value={u.org} readOnly />
+                        </div>
                     </div>
-                    <div className="p-8 bg-zinc-900 rounded-[40px] text-white shadow-2xl relative overflow-hidden">
-                        <Key size={80} className="absolute -right-4 -bottom-4 opacity-10 rotate-12" />
-                        <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-4">Security Profile</p>
-                        <p className="text-xs text-zinc-400 leading-relaxed font-medium">User will be assigned a dynamic <strong>SHA-256 HMAC Secret</strong> for transaction signing upon first login.</p>
+                    <div className="p-8 bg-zinc-900 rounded-[40px] text-white shadow-2xl relative overflow-hidden flex flex-col justify-center gap-4">
+                        <Key size={80} className="absolute -right-4 -bottom-4 opacity-5 rotate-12" />
+                        <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest relative z-10">Provisioning Logic</p>
+                        <p className="text-xs text-zinc-400 leading-relaxed font-medium relative z-10">User will be assigned a permanent <strong>Unique User Identifier (UUID)</strong> synced with DEERS upon the first successful CAC login.</p>
                     </div>
                 </div>
             </div>
             <div className="flex justify-end gap-4 pt-10 border-t border-zinc-100">
-                <button type="button" onClick={onCancel} className="px-8 py-3 border border-zinc-200 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:bg-zinc-50">Cancel</button>
-                <button onClick={() => onSubmit({...u, id: `U-${Date.now()}`} as UserRecord)} className="px-12 py-3 bg-zinc-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-2xl active:scale-95 transition-all">Provision Federated ID</button>
+                <button type="button" onClick={onCancel} className="px-8 py-3 border border-zinc-200 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:bg-zinc-50">Cancel Provision</button>
+                <button onClick={() => onSubmit({...u, id: `U-${Date.now().toString().slice(-6)}`} as UserRecord)} className="px-12 py-3 bg-zinc-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 shadow-2xl active:scale-95 transition-all flex items-center gap-2">
+                    <Send size={16} /> Execute IAM Protocol
+                </button>
             </div>
         </div>
     );

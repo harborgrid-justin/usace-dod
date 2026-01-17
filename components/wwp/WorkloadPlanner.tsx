@@ -2,7 +2,7 @@
 import React from 'react';
 import { WorkloadItem } from '../../types';
 import { Link, Briefcase, TrendingUp, ChevronRight } from 'lucide-react';
-import { MOCK_USACE_PROJECTS } from '../../constants';
+import { useUSACEProjects } from '../../hooks/useDomainData';
 
 interface Props {
     items: WorkloadItem[];
@@ -11,6 +11,8 @@ interface Props {
 }
 
 const WorkloadPlanner: React.FC<Props> = ({ items, onSelectProject, onUpdateItem }) => {
+    const projects = useUSACEProjects();
+
     return (
         <div className="animate-in fade-in space-y-6">
             <div className="bg-zinc-900 rounded-xl p-6 text-white shadow-xl relative overflow-hidden">
@@ -29,7 +31,7 @@ const WorkloadPlanner: React.FC<Props> = ({ items, onSelectProject, onUpdateItem
 
             <div className="grid grid-cols-1 gap-4">
                 {items.map(item => {
-                    const project = MOCK_USACE_PROJECTS.find(p => p.id === item.projectId);
+                    const project = projects.find(p => p.id === item.projectId);
                     return (
                         <div key={item.id} className="bg-white border border-zinc-200 rounded-xl p-5 hover:border-zinc-300 transition-all group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
                             <div className="flex items-center gap-4">

@@ -267,3 +267,21 @@ export interface CostTransfer {
     requestedBy: string;
     auditLog: AuditLogEntry[];
 }
+
+export interface TimecardEntry {
+    project: string;
+    workItem: string;
+    hours: number[];
+    rate: number;
+}
+
+export interface Timecard {
+    id: string;
+    employeeName: string;
+    employeeGrade: string;
+    payPeriod: string;
+    status: 'Draft' | 'Signed' | 'Certified' | 'Rejected';
+    totalHours: number;
+    totalCost: number;
+    entries: TimecardEntry[];
+}

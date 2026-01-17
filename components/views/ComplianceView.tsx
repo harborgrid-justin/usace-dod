@@ -1,9 +1,10 @@
-
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useCallback } from 'react';
 import { ShieldCheck, ShieldX, CheckCircle2, Activity, Play, ListChecks, Database } from 'lucide-react';
-import { MOCK_DIGITAL_THREADS, FIAR_CONTROLS, MOCK_BUSINESS_RULES } from '../../constants';
-import { RuleEvaluationResult } from '../../types';
+import { complianceService } from '../../services/ComplianceDataService';
+import { useService } from '../../hooks/useService';
+import { RuleEvaluationResult, DigitalThread, BusinessRule } from '../../types';
 import { evaluateRules } from '../../utils/rulesEngine';
+import { FIAR_CONTROLS } from '../../constants'; // Keep static config
 
 interface ComplianceViewProps {
   onSelectThread: (threadId: string) => void;
@@ -14,6 +15,10 @@ const ComplianceView: React.FC<ComplianceViewProps> = ({ onSelectThread }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanResults, setScanResults] = useState<RuleEvaluationResult[]>([]);
+  
+  // Connect to live data service
+  const digitalThreads = useService<DigitalThread[]>(complianceService, useCallback(() => complianceService.getDigitalThreads(), []));
+  const businessRules = useService<BusinessRule[]>(complianceService, useCallback(() => complianceService.getBusinessRules(), []));
 
   const runAuditScan = () => {
     if (isScanning) return;
@@ -27,13 +32,13 @@ const ComplianceView: React.FC<ComplianceViewProps> = ({ onSelectThread }) => {
                 clearInterval(interval);
                 startTransition(() => {
                     let allResults: RuleEvaluationResult[] = [];
-                    MOCK_DIGITAL_THREADS.forEach(thread => {
+                    digitalThreads.forEach(thread => {
                         const enrichedThread = {
                             ...thread,
                             amount: thread.obligationAmt,
-                            invoiceDaysPending: thread.id === 'TR-10002' ? 45 : 10,
+                            invoiceDaysPending: thread.invoiceDaysPending || 0,
                         };
-                        const results = evaluateRules(MOCK_BUSINESS_RULES, enrichedThread);
+                        const results = evaluateRules(businessRules, enrichedThread);
                         const contextResults = results.map(r => ({...r, message: `${r.message} [Thread: ${thread.id}]`}));
                         allResults = [...allResults, ...contextResults.filter(r => !r.passed)];
                     });
@@ -89,7 +94,7 @@ const ComplianceView: React.FC<ComplianceViewProps> = ({ onSelectThread }) => {
                 <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
                     <div>
                         <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Policy Scrubber Directive</h3>
-                        <p className="text-[10px] text-zinc-400 font-medium mt-1">Executing {MOCK_BUSINESS_RULES.length} authoritative logic checks.</p>
+                        <p className="text-[10px] text-zinc-400 font-medium mt-1">Executing {businessRules.length} authoritative logic checks.</p>
                     </div>
                     <button 
                         disabled={isScanning} 

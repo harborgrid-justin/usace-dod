@@ -1,8 +1,8 @@
-
-import React, { useState, useMemo, useTransition } from 'react';
+import React, { useState, useMemo, useTransition, useCallback } from 'react';
 import { Globe, GitMerge, Loader2, Info } from 'lucide-react';
-import { MOCK_DIGITAL_THREADS, MOCK_BUSINESS_RULES } from '../../constants';
-import { NavigationTab, RuleEvaluationResult } from '../../types';
+import { complianceService } from '../../services/ComplianceDataService';
+import { useService } from '../../hooks/useService';
+import { NavigationTab, DigitalThread, BusinessRule } from '../../types';
 import { evaluateRules } from '../../utils/rulesEngine';
 import ThreadControls from '../digital_thread/ThreadControls';
 import ThreadVisualizer from '../digital_thread/ThreadVisualizer';
@@ -15,6 +15,9 @@ interface DigitalThreadViewProps {
 }
 
 const DigitalThreadView: React.FC<DigitalThreadViewProps> = ({ selectedThreadId, setSelectedThreadId, setActiveTab, onSelectContingencyOp }) => {
+  const threads = useService<DigitalThread[]>(complianceService, useCallback(() => complianceService.getDigitalThreads(), []));
+  const rules = useService<BusinessRule[]>(complianceService, useCallback(() => complianceService.getBusinessRules(), []));
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [deferredSearchTerm, setDeferredSearchTerm] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -27,22 +30,22 @@ const DigitalThreadView: React.FC<DigitalThreadViewProps> = ({ selectedThreadId,
   };
 
   const filteredThreads = useMemo(() => {
-    if (!deferredSearchTerm) return MOCK_DIGITAL_THREADS;
-    return MOCK_DIGITAL_THREADS.filter(t => 
+    if (!deferredSearchTerm) return threads;
+    return threads.filter(t => 
       Object.values(t).some(val => String(val).toLowerCase().includes(deferredSearchTerm.toLowerCase()))
     );
-  }, [deferredSearchTerm]);
+  }, [deferredSearchTerm, threads]);
 
   const selectedThread = useMemo(() => 
-    MOCK_DIGITAL_THREADS.find(t => t.id === selectedThreadId), 
-  [selectedThreadId]);
+    threads.find(t => t.id === selectedThreadId), 
+  [selectedThreadId, threads]);
 
   const ruleResults = useMemo(() => {
     if (!selectedThread) return [];
-    const activeRules = MOCK_BUSINESS_RULES.filter(r => r.isActive);
+    const activeRules = rules.filter(r => r.isActive);
     const results = evaluateRules(activeRules, selectedThread);
     return results.filter(r => !r.passed);
-  }, [selectedThread]);
+  }, [selectedThread, rules]);
 
   return (
     <div className="w-full h-full flex flex-col p-4 sm:p-8 space-y-6 animate-in overflow-hidden bg-zinc-50/50">

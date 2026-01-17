@@ -1,17 +1,17 @@
 
 import React, { useState, useMemo, useDeferredValue } from 'react';
 import { 
-    Construction, Ruler, FileText, Activity, AlertTriangle, 
-    PieChart, RefreshCcw, Search
+    Construction, Ruler, Activity, AlertTriangle, 
+    Search
 } from 'lucide-react';
-import { MOCK_USACE_PROJECTS } from '../../constants';
 import { USACEProject } from '../../types';
 import { formatCurrency } from '../../utils/formatting';
 import USACEProjectDashboard from '../usace/USACEProjectDashboard';
+import { useUSACEProjects } from '../../hooks/useDomainData';
 
 const ProjectCard: React.FC<{ project: USACEProject, onClick: () => void }> = ({ project, onClick }) => {
     const isCivil = project.programType === 'Civil Works';
-    const percentObligated = (project.financials.obligated / project.financials.currentWorkingEstimate) * 100;
+    const percentObligated = project.financials.currentWorkingEstimate ? (project.financials.obligated / project.financials.currentWorkingEstimate) * 100 : 0;
 
     return (
         <div 
@@ -60,19 +60,20 @@ const ProjectCard: React.FC<{ project: USACEProject, onClick: () => void }> = ({
 };
 
 const USACEView: React.FC<{ selectedProjectId: string | null; onSelectProject: (id: string | null) => void }> = ({ selectedProjectId, onSelectProject }) => {
+    const projects = useUSACEProjects();
     const [filter, setFilter] = useState<'All' | 'Civil Works' | 'Military Programs'>('All');
     const [searchTerm, setSearchTerm] = useState('');
     
     // React 18/19 Concurrent Pattern: useDeferredValue for filtering large lists
     const deferredSearch = useDeferredValue(searchTerm);
 
-    const filteredProjects = useMemo(() => MOCK_USACE_PROJECTS.filter(p => {
+    const filteredProjects = useMemo(() => projects.filter(p => {
         const matchesFilter = filter === 'All' || p.programType === filter;
         const matchesSearch = deferredSearch === '' || p.name.toLowerCase().includes(deferredSearch.toLowerCase()) || p.p2Number.includes(deferredSearch);
         return matchesFilter && matchesSearch;
-    }), [filter, deferredSearch]);
+    }), [filter, deferredSearch, projects]);
 
-    const currentProject = MOCK_USACE_PROJECTS.find(p => p.id === selectedProjectId);
+    const currentProject = useMemo(() => projects.find(p => p.id === selectedProjectId), [projects, selectedProjectId]);
 
     if (currentProject) {
         return <USACEProjectDashboard project={currentProject} onBack={() => onSelectProject(null)} />;
@@ -134,6 +135,11 @@ const USACEView: React.FC<{ selectedProjectId: string | null; onSelectProject: (
                         {filteredProjects.map(project => (
                             <ProjectCard key={project.id} project={project} onClick={() => onSelectProject(project.id)} />
                         ))}
+                         {filteredProjects.length === 0 && (
+                            <div className="col-span-full py-20 text-center text-zinc-400">
+                                <p className="text-sm font-bold uppercase tracking-widest">No Projects Found</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

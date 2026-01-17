@@ -1,3 +1,4 @@
+
 import { 
     RealPropertyAsset, Outgrant, EncroachmentCase, DisposalAction, 
     AppraisalRecord, HAPCase, LGHLease, BracInstallation, 
@@ -12,6 +13,21 @@ import {
 
 export const AUTHORITATIVE_SOURCE_ID = 'REMIS_AUTH_01';
 
+export interface RPA_Requirement {
+    id: string;
+    title: string;
+    priority: 'Critical' | 'High' | 'Normal';
+    estCost: number;
+    wbsCode: string;
+    status: 'Identifying' | 'Validation' | 'G-8 Review' | 'Ready for Solicitation';
+    justification: string;
+}
+
+const MOCK_REMIS_REQS: RPA_Requirement[] = [
+    { id: 'REQ-101', title: 'Perimeter Security Upgrade - Fort Knox', priority: 'High', estCost: 1250000, wbsCode: 'FK.24.S1', status: 'G-8 Review', justification: 'Mitigation of identified trespass risks at North Gate.' },
+    { id: 'REQ-102', title: 'HVAC Modernization - District HQ', priority: 'Normal', estCost: 450000, wbsCode: 'HQ.24.M2', status: 'Validation', justification: 'Energy efficiency mandate compliance.' }
+];
+
 class RemisDataService {
     private assets: RealPropertyAsset[] = JSON.parse(JSON.stringify(MOCK_REMIS_ASSETS));
     private outgrants: Outgrant[] = JSON.parse(JSON.stringify(MOCK_REMIS_OUTGRANTS));
@@ -22,8 +38,8 @@ class RemisDataService {
     private lghLeases: LGHLease[] = JSON.parse(JSON.stringify(MOCK_LGH_LEASES));
     private bracInst: BracInstallation[] = JSON.parse(JSON.stringify(MOCK_BRAC_INSTALLATIONS));
     private bracScen: BracScenario[] = JSON.parse(JSON.stringify(MOCK_BRAC_SCENARIOS));
+    private requirements: RPA_Requirement[] = JSON.parse(JSON.stringify(MOCK_REMIS_REQS));
     
-    private requirements: any[] = [];
     private costShares: CostShareRecord[] = [];
     private relocationCases: RelocationCase[] = [];
     private solicitations: Solicitation[] = [];
@@ -69,13 +85,12 @@ class RemisDataService {
     updateRelocationCase = (c: RelocationCase) => { this.relocationCases = this.relocationCases.map(x => x.id === c.id ? c : x); this.notify(); };
     addSolicitation = (s: Solicitation) => { this.solicitations = [s, ...this.solicitations]; this.notify(); };
     updateSolicitation = (s: Solicitation) => { this.solicitations = this.solicitations.map(x => x.id === s.id ? s : x); this.notify(); };
+    
+    addRequirement = (r: RPA_Requirement) => { this.requirements = [r, ...this.requirements]; this.notify(); };
+    updateRequirement = (updated: RPA_Requirement) => { this.requirements = this.requirements.map(r => r.id === updated.id ? updated : r); this.notify(); };
 
-    /**
-     * Fixed: Added missing logRetrieval method to satisfy calls from audit-enabled services
-     */
     logRetrieval = (entityId: string, entityType: string, purpose: string) => {
         console.debug(`[REMIS_AUDIT] Data Retrieval: ${entityType} ${entityId} for ${purpose}`);
-        // In a real production system, this would push to an authoritative retrievalLogs sink
     };
 
     initiateDisposalAction = (assetId: string, type: DisposalAction['type'], proceeds: number, user: string) => {

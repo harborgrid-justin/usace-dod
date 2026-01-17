@@ -1,35 +1,20 @@
 
 import React, { useState, useMemo } from 'react';
-import { FilePlus, Search, Plus, Database, ArrowRight, Gavel, History, ClipboardCheck } from 'lucide-react';
+import { FilePlus, Search, Plus, Database, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatting';
 import EmptyState from '../shared/EmptyState';
-import Badge from '../shared/Badge';
 import Modal from '../shared/Modal';
 import { useToast } from '../shared/ToastContext';
-import { remisService } from '../../services/RemisDataService';
-
-interface RPA_Requirement {
-    id: string;
-    title: string;
-    priority: 'Critical' | 'High' | 'Normal';
-    estCost: number;
-    wbsCode: string;
-    status: 'Identifying' | 'Validation' | 'G-8 Review' | 'Ready for Solicitation';
-    justification: string;
-}
+import { useRemisData } from '../../hooks/useDomainData';
+import { remisService, RPA_Requirement } from '../../services/RemisDataService';
 
 const RemisRequirementManager: React.FC = () => {
-    const [reqs, setReqs] = useState<RPA_Requirement[]>([
-        { id: 'REQ-101', title: 'Perimeter Security Upgrade - Fort Knox', priority: 'High', estCost: 1250000, wbsCode: 'FK.24.S1', status: 'G-8 Review', justification: 'Mitigation of identified trespass risks at North Gate.' },
-        { id: 'REQ-102', title: 'HVAC Modernization - District HQ', priority: 'Normal', estCost: 450000, wbsCode: 'HQ.24.M2', status: 'Validation', justification: 'Energy efficiency mandate compliance.' }
-    ]);
+    const { requirements } = useRemisData();
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [selectedReqId, setSelectedReqId] = useState<string | null>(null);
     const { addToast } = useToast();
 
-    const selectedReq = useMemo(() => reqs.find(r => r.id === selectedReqId), [reqs, selectedReqId]);
-    const filtered = reqs.filter(r => r.title.toLowerCase().includes(searchTerm.toLowerCase()) || r.id.includes(searchTerm));
+    const filtered = requirements.filter(r => r.title.toLowerCase().includes(searchTerm.toLowerCase()) || r.id.includes(searchTerm));
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
@@ -46,14 +31,17 @@ const RemisRequirementManager: React.FC = () => {
             justification: data.get('justification') as string
         };
 
-        setReqs([req, ...reqs]);
+        remisService.addRequirement(req);
         setIsFormOpen(false);
         addToast(`Requirement ${req.id} established in ledger.`, 'success');
     };
 
     const handleAdvance = (id: string) => {
-        setReqs(prev => prev.map(r => r.id === id ? { ...r, status: 'Ready for Solicitation' } : r));
-        addToast('Requirement validated for market research.', 'success');
+        const req = requirements.find(r => r.id === id);
+        if (req) {
+            remisService.updateRequirement({ ...req, status: 'Ready for Solicitation' });
+            addToast('Requirement validated for market research.', 'success');
+        }
     };
 
     return (
